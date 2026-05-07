@@ -1,0 +1,382 @@
+### PHASE 7 — BINDER SYSTEM (DO NOT BREAK EXISTING PACK FLOW)
+
+You are implementing a full binder-based collection system on top of the current working app.
+
+⚠️ CRITICAL RULES:
+
+* DO NOT modify pack opening logic
+* DO NOT modify reveal animation system
+* DO NOT modify rarity systems
+* ONLY extend collection + UI
+* All existing features must continue working exactly the same
+
+---
+
+# =========================
+
+# SECTION 1 — DATA STRUCTURE (MANDATORY)
+
+# =========================
+
+REPLACE current collection storage with this structure:
+
+```js
+// storage/collectionManager.js
+
+const STORAGE_KEY = "tcg_collection_v2";
+
+export function getCollection() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+}
+
+export function saveCollection(collection) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
+}
+
+export function addCardToCollection(card) {
+  const collection = getCollection();
+
+  const setId = card.set.id;
+  const cardId = card.id;
+
+  if (!collection[setId]) {
+    collection[setId] = {};
+  }
+
+  if (!collection[setId][cardId]) {
+    collection[setId][cardId] = {
+      cardData: card,
+      count: 0
+    };
+  }
+
+  collection[setId][cardId].count += 1;
+
+  saveCollection(collection);
+}
+```
+
+---
+
+# IMPORTANT:
+
+Update ANY place where cards are saved after pack opening to call:
+
+```js
+addCardToCollection(card);
+```
+
+---
+
+# =========================
+
+# SECTION 2 — COLLECTION PAGE (NEW SCREEN)
+
+# =========================
+
+CREATE:
+
+```html
+<div id="collection-screen" class="screen hidden"></div>
+```
+
+---
+
+Inside it render:
+
+* Title: "My Collection"
+* List of sets the user owns cards from
+
+---
+
+# =========================
+
+# SECTION 3 — SET SELECT VIEW
+
+# =========================
+
+Each set card should display:
+
+* Set name
+* Progress text: "42 / 151"
+* Click → opens binder
+
+---
+
+Example render:
+
+```js
+function renderCollectionSets() {
+  const collection = getCollection();
+
+  Object.keys(collection).forEach(setId => {
+    const cards = collection[setId];
+    const ownedCount = Object.keys(cards).length;
+
+    // total cards should come from API cache
+    const totalCards = getSetTotal(setId);
+
+    // create UI card
+  });
+}
+```
+
+---
+
+# =========================
+
+# SECTION 4 — BINDER VIEW
+
+# =========================
+
+CREATE new container:
+
+```html
+<div id="binder-screen" class="screen hidden"></div>
+```
+
+---
+
+# Layout:
+
+* Header:
+
+  * Set name
+  * Progress (e.g. 42 / 151)
+
+* Binder pages container
+
+---
+
+# =========================
+
+# SECTION 5 — PAGE SYSTEM (CORE FEATURE)
+
+# =========================
+
+Each page = 9 cards (3x3 grid)
+
+---
+
+Logic:
+
+```js
+const CARDS_PER_PAGE = 9;
+
+function chunkCards(cards) {
+  const result = [];
+  for (let i = 0; i < cards.length; i += CARDS_PER_PAGE) {
+    result.push(cards.slice(i, i + CARDS_PER_PAGE));
+  }
+  return result;
+}
+```
+
+---
+
+# IMPORTANT:
+
+You MUST get FULL set card list from API (not just owned cards)
+
+```js
+// cached earlier in Phase 6.5 preload
+getCachedSetCards(setId)
+```
+
+---
+
+# =========================
+
+# SECTION 6 — SLOT RENDERING
+
+# =========================
+
+For EACH card in the set:
+
+IF owned:
+
+* show real card image
+
+IF NOT owned:
+
+* show placeholder slot
+
+---
+
+Example slot:
+
+```js
+function createBinderSlot(card, ownedEntry) {
+  const slot = document.createElement("div");
+  slot.className = "binder-slot";
+
+  if (ownedEntry) {
+    const img = document.createElement("img");
+    img.src = card.images.small;
+    slot.appendChild(img);
+
+    if (ownedEntry.count > 1) {
+      const badge = document.createElement("div");
+      badge.className = "duplicate-badge";
+      badge.textContent = "×" + ownedEntry.count;
+      slot.appendChild(badge);
+    }
+  } else {
+    slot.classList.add("empty");
+    slot.textContent = "?";
+  }
+
+  return slot;
+}
+```
+
+---
+
+# =========================
+
+# SECTION 7 — STYLING (VERY IMPORTANT)
+
+# =========================
+
+ADD to style.css:
+
+```css
+.screen {
+  position: fixed;
+  inset: 0;
+  background: #0b0b0f;
+  z-index: 100;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Binder grid */
+.binder-page {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 20px;
+}
+
+/* Card slot */
+.binder-slot {
+  aspect-ratio: 2.5 / 3.5;
+  background: #111;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Owned card */
+.binder-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Empty slot */
+.binder-slot.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.2);
+  font-size: 24px;
+}
+
+/* Duplicate badge */
+.duplicate-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0,0,0,0.7);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+```
+
+---
+
+# =========================
+
+# SECTION 8 — NAVIGATION
+
+# =========================
+
+Add button to main UI:
+
+"My Collection"
+
+---
+
+Flow:
+
+Main → Collection Screen
+Collection → Binder Screen
+Binder → Back
+
+---
+
+# =========================
+
+# SECTION 9 — PERFORMANCE (IMPORTANT)
+
+# =========================
+
+DO NOT refetch API inside binder.
+
+Use:
+
+```js
+getCachedSetCards(setId)
+```
+
+---
+
+If not cached:
+
+* show "Loading..." overlay
+* fetch once
+* store in memory
+
+---
+
+# =========================
+
+# SECTION 10 — CARD CLICK (PREP FOR PHASE 7.4)
+
+# =========================
+
+When clicking a slot (owned):
+
+```js
+slot.addEventListener("click", () => {
+  openCardDetail(card, ownedEntry);
+});
+```
+
+---
+
+DO NOT implement full detail yet — just stub it.
+
+---
+
+# =========================
+
+# FINAL REQUIREMENTS CHECK
+
+# =========================
+
+✔ Pack opening still works
+✔ Cards are saved correctly
+✔ Collection persists on reload
+✔ Binder shows ALL cards (owned + missing)
+✔ Duplicate counts display
+✔ No API lag in binder
+
+---
+
+# END OF PHASE 7

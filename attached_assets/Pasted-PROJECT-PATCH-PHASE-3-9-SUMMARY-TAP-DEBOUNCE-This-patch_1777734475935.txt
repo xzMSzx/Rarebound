@@ -1,0 +1,115 @@
+PROJECT PATCH — PHASE 3.9 SUMMARY TAP DEBOUNCE
+
+This patch fixes an issue where the skip summary appears briefly and then disappears immediately.
+
+The cause is that the same touch event used to press Skip Pack can propagate to the overlay tap handler that closes the summary.
+
+This causes the summary to close instantly.
+
+The fix is to debounce the overlay tap listener so the first tap after rendering the summary is ignored.
+
+---
+
+CRITICAL RULE
+
+Do NOT modify:
+
+engine logic  
+RNG system  
+pity system  
+pack slot probabilities  
+Monte Carlo simulation  
+
+Only modify overlay interaction logic.
+
+---
+
+PROBLEM
+
+When Skip Pack is pressed:
+
+1. showSkipSummary() renders the summary
+2. the original touch event bubbles to the overlay
+3. the overlay tap listener triggers immediately
+4. the summary closes instantly
+
+This happens because the overlay tap handler is attached before the touch event fully completes.
+
+---
+
+GOAL
+
+Ensure the overlay ignores the first tap event immediately after the summary appears.
+
+The summary should only close when the user intentionally taps after the summary is visible.
+
+---
+
+CHANGE 1 — ADD TAP LOCK VARIABLE
+
+Introduce a variable in the overlay controller:
+
+let tapEnabled = false
+
+---
+
+CHANGE 2 — DISABLE TAP DURING SUMMARY RENDER
+
+When showSkipSummary() is called:
+
+set:
+
+tapEnabled = false
+
+Immediately after rendering the summary.
+
+---
+
+CHANGE 3 — ENABLE TAP AFTER SHORT DELAY
+
+After rendering the summary, start a small timer:
+
+setTimeout(() => {
+    tapEnabled = true
+}, 250)
+
+This delay ensures the original Skip touch event cannot trigger the close handler.
+
+---
+
+CHANGE 4 — GUARD TAP HANDLER
+
+Modify the overlay tap handler.
+
+Before closing the summary, check:
+
+if (!tapEnabled) return
+
+If tapEnabled is false, ignore the tap.
+
+---
+
+CHANGE 5 — RESET TAP STATE
+
+When the overlay closes and returns to idle state:
+
+reset:
+
+tapEnabled = false
+
+This ensures each pack starts clean.
+
+---
+
+EXPECTED RESULT
+
+When Skip Pack is pressed:
+
+• the skip summary appears  
+• the summary remains visible  
+• the original Skip tap does not close the summary  
+• tapping the screen after the delay closes the summary normally  
+
+The summary should no longer disappear instantly.
+
+END PATCH

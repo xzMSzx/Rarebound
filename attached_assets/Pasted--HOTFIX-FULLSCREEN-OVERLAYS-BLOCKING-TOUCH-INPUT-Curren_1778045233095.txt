@@ -1,0 +1,89 @@
+### HOTFIX — FULLSCREEN OVERLAYS BLOCKING TOUCH INPUT
+
+Current issue:
+The app is darkened and non-interactable because one or more fullscreen overlays are still mounted above the shop.
+
+Symptoms:
+- Cannot tap anything
+- Can still scroll
+- Entire UI appears dimmed
+
+This means a fixed fullscreen overlay is intercepting touch input.
+
+We need to identify ALL overlay/screen elements and ensure hidden ones are truly removed.
+
+---
+
+# =========================
+# SECTION 1 — FORCE ALL HIDDEN SCREENS OUT OF LAYOUT
+# =========================
+
+At app startup, immediately force ALL overlays/screens/modals hidden.
+
+Find EVERY fullscreen layer including:
+- #collection-screen
+- #binder-screen
+- #card-detail-modal
+- #pack-overlay
+- any .screen
+
+Immediately after querying them:
+
+js id="v0l5y4" screen.style.display = 'none'; screen.classList.add('hidden'); 
+
+---
+
+# =========================
+# SECTION 2 — REMOVE OLD VISIBILITY SYSTEM
+# =========================
+
+DELETE:
+- visibility:hidden logic
+- .active z-index logic
+- any lingering display:flex !important rules
+
+They are conflicting.
+
+---
+
+# =========================
+# SECTION 3 — USE ONLY THIS SHOW/HIDE SYSTEM
+# =========================
+
+CREATE:
+
+js id="nqqz7u" function showScreen(screen){    screen.style.display = 'flex';    requestAnimationFrame(() => {     screen.classList.remove('hidden');   });  }  function hideScreen(screen){    screen.classList.add('hidden');    setTimeout(() => {      if(screen.classList.contains('hidden')){       screen.style.display = 'none';     }    }, 240);  } 
+
+---
+
+# =========================
+# SECTION 4 — CSS
+# =========================
+
+Use ONLY:
+
+css id="eoqzro" .screen {    position: fixed;   inset: 0;    display: flex;    opacity: 1;    transition:     opacity 0.24s ease,     transform 0.24s ease;    transform: translateY(0);    z-index: 100; }  .screen.hidden {    opacity: 0;   transform: translateY(10px);    pointer-events: none; } 
+
+---
+
+# IMPORTANT
+# =========================
+
+DO NOT:
+- use visibility:hidden
+- use display:flex !important
+- use z-index active systems
+- leave overlays mounted permanently
+
+---
+
+# =========================
+# SECTION 5 — VERIFY
+# =========================
+
+After patch:
+- Main shop should be fully bright
+- Buttons clickable again
+- Only currently open screen visible
+- No dark overlay remaining
+- Touch interaction restored

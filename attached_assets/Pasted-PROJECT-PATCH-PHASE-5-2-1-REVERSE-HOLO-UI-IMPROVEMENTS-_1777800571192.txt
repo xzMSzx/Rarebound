@@ -1,0 +1,190 @@
+PROJECT PATCH — PHASE 5.2.1
+REVERSE HOLO UI IMPROVEMENTS
+
+Goal:
+
+Improve clarity and presentation of reverse holo cards by:
+
+• displaying a "Reverse Holo" label
+• triggering shimmer only after reveal
+• improving rarity text layout
+
+No simulation logic should change.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+RNG engine
+packSimulation.js
+pity system
+card pool builder
+API loader
+
+Only modify:
+
+ui/cardRevealAnimator.js
+ui/cardRenderer.js
+style.css
+
+---
+
+SECTION 1 — ADD REVERSE HOLO LABEL
+
+Open:
+
+ui/cardRevealAnimator.js
+
+Locate the section where the rarity icon is rendered.
+
+After the rarity symbol container is created add:
+
+if (card.isReverseHolo) {
+
+const rhLabel = document.createElement("div")
+
+rhLabel.className = "reverse-holo-label"
+
+rhLabel.textContent = "Reverse Holo"
+
+rarityContainer.appendChild(rhLabel)
+
+}
+
+This visually separates card rarity from foil treatment.
+
+---
+
+SECTION 2 — STYLE THE LABEL
+
+Open:
+
+style.css
+
+Add:
+
+.reverse-holo-label {
+
+font-size: 12px
+letter-spacing: 1px
+margin-top: 4px
+color: #cbd5e1
+text-transform: uppercase
+opacity: 0.85
+
+}
+
+This ensures the label is visible but subtle.
+
+---
+
+SECTION 3 — REMOVE ALWAYS-ON SHIMMER
+
+Find in style.css:
+
+.reverse-holo-overlay
+
+Remove the animation property:
+
+animation: reverseHoloShift 3s linear infinite;
+
+Replace with:
+
+animation: none;
+
+This prevents shimmer from starting immediately.
+
+---
+
+SECTION 4 — ADD REVEAL TRIGGER CLASS
+
+Add a new class in style.css:
+
+.reverse-holo-active .reverse-holo-overlay {
+
+animation: reverseHoloShift 3s linear infinite;
+
+}
+
+.reverse-holo-active .reverse-holo-sweep {
+
+animation: holoSweep 4s infinite;
+
+}
+
+---
+
+SECTION 5 — TRIGGER AFTER CARD FLIP
+
+Open:
+
+ui/cardRevealAnimator.js
+
+Inside the reveal completion logic (after card flip animation finishes) add:
+
+if (card.isReverseHolo) {
+
+wrapper.classList.add("reverse-holo-active")
+
+}
+
+This ensures the shimmer begins only after the reveal.
+
+---
+
+SECTION 6 — COLLECTION GRID LABEL
+
+Open:
+
+ui/cardRenderer.js
+
+After rendering the rarity icon add:
+
+if (card.isReverseHolo) {
+
+const tag = document.createElement("div")
+
+tag.className = "grid-reverse-holo"
+
+tag.textContent = "RH"
+
+cardElement.appendChild(tag)
+
+}
+
+---
+
+SECTION 7 — STYLE GRID TAG
+
+Add to style.css:
+
+.grid-reverse-holo {
+
+position: absolute
+top: 6px
+right: 6px
+font-size: 10px
+background: rgba(255,255,255,0.1)
+padding: 2px 4px
+border-radius: 4px
+color: #e5e7eb
+
+}
+
+---
+
+SECTION 8 — EXPECTED RESULT
+
+When opening packs:
+
+• reverse holo card flips
+• shimmer activates AFTER reveal
+• "Reverse Holo" text appears under rarity symbol
+
+Collection grid will show a small "RH" tag on reverse holo cards.
+
+This improves clarity without changing simulation behaviour.
+
+END PATCH

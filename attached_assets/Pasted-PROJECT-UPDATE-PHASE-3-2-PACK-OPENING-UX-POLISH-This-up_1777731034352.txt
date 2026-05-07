@@ -1,0 +1,241 @@
+PROJECT UPDATE — PHASE 3.2 PACK OPENING UX POLISH
+
+This update improves the pack opening user experience.
+
+The simulation engine and core logic must remain unchanged.
+
+Only UI behavior and layout should be modified.
+
+---
+
+CRITICAL RULE
+
+Do NOT modify:
+
+engine logic  
+RNG system  
+pity system  
+pack slot probabilities  
+Monte Carlo simulation logic  
+
+These systems are correct and must remain untouched.
+
+All changes occur in the UI layer.
+
+---
+
+GOAL OF THIS UPDATE
+
+Improve readability and polish the pack reveal experience.
+
+Changes include:
+
+• clearer instruction text  
+• improved text placement  
+• improved Skip Pack behavior  
+• removal of unused UI elements  
+• preparing the UI so pack opening becomes the primary experience
+
+---
+
+CHANGE 1 — FIX REVEAL INSTRUCTION VISIBILITY
+
+The current instruction text ("Swipe or tap for next card") is partially hidden by rarity glow effects.
+
+This makes the text difficult to read.
+
+Move the instruction text further toward the bottom of the screen.
+
+Add a subtle background to improve readability.
+
+---
+
+NEW INSTRUCTION TEXT
+
+Replace the existing instruction text with:
+
+"Swipe or tap to reveal next card"
+
+---
+
+INSTRUCTION POSITION
+
+Instruction text should be positioned near the bottom of the overlay.
+
+Example concept:
+
+position: absolute  
+bottom: 70px  
+width: 100%  
+text-align: center  
+
+---
+
+INSTRUCTION STYLE
+
+Add a subtle background overlay.
+
+Example concept:
+
+background: rgba(0,0,0,0.35)  
+padding: 8px 14px  
+border-radius: 8px  
+
+Text color:
+
+#cfcfcf
+
+This ensures readability even when glow effects overlap.
+
+---
+
+CHANGE 2 — REMOVE LAST PACK RESULT PANEL
+
+The panel labeled "Last Pack Result" is currently empty and not used.
+
+Remove this panel entirely from the main UI.
+
+Update the layout so remaining panels shift upward naturally.
+
+---
+
+CHANGE 3 — IMPROVE SKIP PACK BEHAVIOR
+
+The Skip Pack button currently exits the pack opening immediately.
+
+Update the behavior to provide a brief summary before returning to the main UI.
+
+---
+
+NEW SKIP FLOW
+
+When Skip Pack is pressed:
+
+1. Reveal all remaining cards instantly.
+2. Display all cards together in a horizontal row.
+3. Keep this summary visible for approximately 1 second.
+4. Close the overlay.
+5. Return to the main UI.
+
+This gives the user a quick overview of what they pulled.
+
+---
+
+SUMMARY DISPLAY
+
+The summary should show the 5 cards side-by-side.
+
+Each card should display its rarity color.
+
+Example visual concept:
+
+[C] [C] [C] [R] [E]
+
+Use the same rarity glow styling used in the card grid.
+
+---
+
+CHANGE 4 — IMPROVE REVEAL COUNTER
+
+Current counter:
+
+Card 4 / 5
+
+Keep this but slightly increase its visibility.
+
+Example style:
+
+font-size: 1.2rem  
+color: #d8d8d8  
+letter-spacing: 0.08em
+
+Place the counter slightly above the card.
+
+---
+
+CHANGE 5 — IMPROVE OVERLAY TEXT HIERARCHY
+
+Improve the visual hierarchy of overlay text.
+
+Example structure:
+
+Card 2 / 5  
+[Large Card Display]  
+Swipe or tap to reveal next card  
+
+Pack #12
+
+Ensure Pack #X is subtle but visible.
+
+Example color:
+
+#bdbdbd
+
+---
+
+CHANGE 6 — PREPARE FOR PACK OPENING PRIMARY UI
+
+The project will soon prioritize pack opening as the main experience.
+
+Prepare the UI structure to support this future change.
+
+---
+
+LAYOUT STRUCTURE PREPARATION
+
+Wrap the simulation tools inside a container.
+
+Example concept:
+
+simulation-tools-container
+
+This container should include:
+
+simulation state  
+probability graph  
+simulation log
+
+Later updates will move this container to a secondary page.
+
+Do NOT remove these tools yet.
+
+Just isolate them in a container element.
+
+---
+
+MAIN PACK OPENING AREA
+
+Ensure the pack opening controls remain clearly visible near the top.
+
+Example structure:
+
+Header  
+Pack Controls  
+Card Collection  
+Simulation Tools Container
+
+This prepares the project for future UI expansion.
+
+---
+
+CHANGE 7 — CLEAN UP UNUSED CSS
+
+Remove any CSS related to the removed "Last Pack Result" panel.
+
+Ensure spacing remains consistent.
+
+---
+
+EXPECTED RESULT
+
+After this update:
+
+• instruction text is readable even with glow effects  
+• reveal instructions read "Swipe or tap to reveal next card"  
+• Skip Pack shows a brief card summary before exiting  
+• unused "Last Pack Result" panel is removed  
+• UI layout is cleaner and ready for future expansion  
+
+The pack opening experience should feel more polished and readable on mobile.
+
+END OF PHASE 3.2 UPDATE

@@ -1,0 +1,676 @@
+PHASE 10.1 — FINAL ECONOMY / ATMOSPHERE / DEVELOPER TOOLS PATCH
+PROJECT: RAREBOUND
+ENGINEERING PRIORITY: STABILITY + POLISH + LONG-TERM FOUNDATION
+MODEL: REPLIT POWER
+IMPORTANT: READ FULLY BEFORE MODIFYING ANY FILES.
+
+────────────────────────────────────
+CORE DIRECTIVE
+────────────────────────────────────
+
+This patch is NOT a redesign.
+
+This is a controlled expansion and polish update focused on:
+- atmosphere
+- retention
+- immersion
+- testing tools
+- economy refinement
+- UX cleanup
+- long-session usability
+
+DO NOT rewrite existing architecture.
+DO NOT touch sacred systems unless explicitly listed.
+DO NOT break:
+- pack opening
+- binder rendering
+- market history
+- vendor economy
+- scrolling
+- overlays
+- preload pipeline
+- haptics
+- statistics
+- reputation
+- collection persistence
+
+ALL NEW FEATURES MUST:
+- integrate into current architecture
+- reuse existing managers where possible
+- maintain current visual identity
+- preserve mobile-first layout
+- preserve premium restrained aesthetic
+
+NO loud arcade styling.
+NO cartoon UI.
+NO bright saturated gradients.
+NO giant animations.
+
+Tone remains:
+premium / dark / collector-focused / subtle / elegant.
+
+────────────────────────────────────
+SECTION 1 — STARTING ECONOMY REBALANCE
+────────────────────────────────────
+
+Current starting balance:
+$250
+
+This is too generous now that:
+- vendor progression exists
+- Broker exists
+- market systems exist
+- selling systems exist
+- reputation exists
+- saving/spending decisions matter
+
+We now want:
+early progression tension.
+
+IMPLEMENT:
+
+Replace initial starting balance with:
+
+"Starter Collector Grant"
+
+Amount:
+$120
+
+Requirements:
+- ONLY affects fresh saves
+- Existing saves retain current balances
+- No migration overwrite
+
+Wherever onboarding / fresh economy init occurs:
+replace default balance 250 → 120
+
+UI polish:
+On first launch ONLY:
+show a subtle toast:
+
+"Starter Collector Grant received — $120"
+
+Use existing toast styling.
+No giant popups.
+
+────────────────────────────────────
+SECTION 2 — DEVELOPER ACCESS SYSTEM
+────────────────────────────────────
+
+Add hidden developer utilities system.
+
+GOAL:
+Allow creator testing WITHOUT:
+- exposing obvious cheats publicly
+- ruining immersion
+- contaminating progression accidentally
+
+IMPORTANT:
+This is NOT called:
+"Cheats"
+or
+"Unlimited Money"
+
+Use immersive naming.
+
+Naming:
+"Developer Access"
+
+────────────────────────────────────
+2A — SETTINGS ENTRY
+────────────────────────────────────
+
+Inside Settings screen:
+add a subtle final row at bottom.
+
+STYLE:
+- low opacity
+- muted gray text
+- smaller than normal settings rows
+- visually inactive
+
+Text:
+Developer Access
+
+No bright icon.
+Use tiny lock icon if desired.
+
+When pressed:
+open modal.
+
+────────────────────────────────────
+2B — ACCESS KEY MODAL
+────────────────────────────────────
+
+Modal title:
+Developer Access
+
+Subtitle:
+"Restricted archive utilities"
+
+Include:
+- password input
+- Cancel button
+- Unlock button
+
+Local constant only:
+const DEV_ACCESS_KEY = "rarebound-dev";
+
+NO backend auth needed.
+
+If incorrect:
+small subtle shake animation + red text:
+"Invalid access key"
+
+If correct:
+unlock developer tools panel.
+
+Persist unlocked state:
+localStorage:
+tcg_dev_access
+
+────────────────────────────────────
+2C — DEVELOPER TOOLS PANEL
+────────────────────────────────────
+
+New settings subsection appears ONLY when unlocked.
+
+Title:
+Archive Utilities
+
+STYLE:
+- visually restrained
+- dark panels
+- subtle gold labels
+- NOT arcade debug menu
+
+Include tools:
+
+1. Add Funds +100
+2. Add Funds +500
+3. Add Funds +1000
+4. Toggle Infinite Balance
+5. Refresh Vendor Inventory
+6. Force Market Refresh
+7. Force Broker Arrival
+8. Reset Reputation
+9. Reset Economy
+10. Clear Market History
+
+NO dangerous actions without confirm modal.
+
+────────────────────────────────────
+2D — INFINITE BALANCE SYSTEM
+────────────────────────────────────
+
+IMPORTANT:
+Infinite balance MUST be separate from Add Funds.
+
+Reason:
+Infinite balance trivializes economy testing.
+
+Implementation:
+Toggle:
+Infinite Balance ON/OFF
+
+Storage:
+tcg_infinite_balance
+
+When enabled:
+- purchases never reduce balance
+- selling still works normally
+
+UI:
+Show tiny subtle top-right badge:
+DEV
+
+Very small.
+Muted gold.
+Non-intrusive.
+
+IMPORTANT:
+When Infinite Balance ON:
+mark account as:
+Sandbox Mode
+
+Effects:
+- disable reputation gain
+OR
+- mark stats as sandboxed
+
+DO NOT let infinite mode contaminate progression balancing.
+
+Best approach:
+disable reputation gain while enabled.
+
+Toast:
+"Sandbox mode active — reputation gains paused"
+
+────────────────────────────────────
+SECTION 3 — AMBIENT AUDIO SYSTEM
+────────────────────────────────────
+
+We previously deferred audio.
+
+Implement lightweight atmospheric audio system.
+
+IMPORTANT:
+NO copyrighted Pokémon music.
+NO external streaming.
+NO giant audio assets.
+
+Use:
+- subtle ambient loops
+- UI sound effects
+- soft environmental tones
+
+Tone:
+minimal
+clean
+premium
+non-annoying
+
+────────────────────────────────────
+3A — AUDIO MANAGER
+────────────────────────────────────
+
+Create:
+data/ambientAudioManager.js
+
+Responsibilities:
+- preload audio
+- global mute state
+- volume management
+- fade transitions
+- ambient switching
+
+Settings integration:
+Use existing:
+Ambient Audio toggle
+
+If disabled:
+NO audio loaded.
+
+────────────────────────────────────
+3B — VENDOR AMBIENCE
+────────────────────────────────────
+
+Each vendor gets subtle ambient layer:
+
+PokéMart:
+- soft electronic hum
+- modern store ambience
+
+Retro Vault:
+- warm vinyl/static ambience
+- archive atmosphere
+
+Night Market:
+- low neon buzz
+- distant city ambience
+
+Broker:
+- low cinematic bass drone
+- mysterious atmosphere
+
+Transitions:
+crossfade between vendors.
+
+DO NOT abruptly cut audio.
+
+────────────────────────────────────
+3C — UI AUDIO
+────────────────────────────────────
+
+Add VERY subtle SFX:
+
+Pack purchase:
+soft click
+
+Rare pull:
+soft crystalline shimmer
+
+Binder page turn:
+paper flip
+
+Wishlist:
+tiny metallic tick
+
+Market graph open:
+subtle digital sweep
+
+NO loud casino sounds.
+NO exaggerated effects.
+
+Volume:
+low by default.
+
+────────────────────────────────────
+SECTION 4 — MYSTERY BOX SYSTEM
+────────────────────────────────────
+
+Implement first version of mystery boxes.
+
+────────────────────────────────────
+4A — CORE CONCEPT
+────────────────────────────────────
+
+Mystery Boxes:
+mixed vendor products containing:
+- random packs
+- weighted vendor selection
+- slight gamble value
+
+Purpose:
+- excitement
+- economy sink
+- decision variety
+
+────────────────────────────────────
+4B — VENDOR IMPLEMENTATION
+────────────────────────────────────
+
+Night Market:
+Always sells:
+1 mystery box
+
+Retro Vault:
+Occasionally sells:
+Vintage Archive Crate
+
+Broker:
+Can occasionally sell:
+Collector Cache
+
+────────────────────────────────────
+4C — BOX OPENING
+────────────────────────────────────
+
+Mystery box reveals:
+3 sealed packs.
+
+Animation:
+- subtle reveal
+- NOT full pack-opening cinematic
+- lightweight
+
+Possible outcomes:
+- profit
+- fair value
+- slight loss
+- rare jackpot combination
+
+Weighted logic:
+Mostly balanced around EV.
+
+NO exploitative outcomes.
+
+────────────────────────────────────
+4D — UI
+────────────────────────────────────
+
+Mystery boxes visually distinct:
+- darker packaging
+- subtle glow border
+- gold mystery symbol
+
+Tooltip:
+"Contains randomized sealed packs."
+
+────────────────────────────────────
+SECTION 5 — FLOATING BUTTON UX FIX
+────────────────────────────────────
+
+Current issue:
+Help + Settings buttons overlap top balance area while at page top.
+
+Fix layout.
+
+Requirements:
+- buttons remain floating
+- buttons remain accessible
+- no overlap with money display
+- mobile safe-area respected
+
+Best solution:
+Move floating utility stack slightly downward/rightward.
+
+OR:
+convert into compact expandable utility dock.
+
+Preferred implementation:
+Expandable utility dock.
+
+────────────────────────────────────
+5A — UTILITY DOCK
+────────────────────────────────────
+
+Top-right:
+single circular utility button.
+
+Icon:
+3 small dots OR sliders icon.
+
+When pressed:
+expand vertically:
+- Help
+- Settings
+
+Smooth fade/slide animation.
+
+Collapsed by default.
+
+This prevents:
+- permanent overlap
+- visual clutter
+- floating collisions
+
+────────────────────────────────────
+5B — SETTINGS ICON
+────────────────────────────────────
+
+Current settings icon does not visually read as settings.
+
+Replace with:
+actual cog icon.
+
+Thin-line premium style.
+Muted white/gold.
+
+────────────────────────────────────
+SECTION 6 — MARKET SCREEN ENHANCEMENTS
+────────────────────────────────────
+
+Enhance graph readability.
+
+────────────────────────────────────
+6A — GRAPH TOOLTIP
+────────────────────────────────────
+
+When touching graph:
+show small floating tooltip:
+- date point
+- value
+
+Mobile-friendly.
+
+────────────────────────────────────
+6B — TREND LABELS
+────────────────────────────────────
+
+Expand graph trend reasoning.
+
+Examples:
+- "Collector demand rising after recent chase boost."
+- "Market cooling after weekend selloff."
+- "Stable movement with low volatility."
+- "Retro Vault inventory shortage increasing demand."
+
+Use existing market systems to generate contextual reasoning.
+
+────────────────────────────────────
+SECTION 7 — RECENTLY PULLED RAIL POLISH
+────────────────────────────────────
+
+Current recent pulls system works.
+
+Enhance:
+- smoother horizontal scroll
+- snap behavior
+- subtle glow for ultra rares
+- click card → open detail modal directly
+
+Add:
+tiny rarity labels.
+
+────────────────────────────────────
+SECTION 8 — PERFORMANCE + STABILITY PASS
+────────────────────────────────────
+
+CRITICAL:
+This section matters most.
+
+Do NOT skip.
+
+────────────────────────────────────
+8A — PRELOAD OPTIMIZATION
+────────────────────────────────────
+
+Current boot preload good.
+
+Improve:
+- stagger preload batches
+- avoid blocking main thread
+- preserve smooth loading bar progression
+
+Goal:
+reduce mobile jank.
+
+────────────────────────────────────
+8B — MEMORY SAFETY
+────────────────────────────────────
+
+Audit:
+- overlay cleanup
+- event listeners
+- audio cleanup
+- intervals
+- graph modal listeners
+
+Prevent leaks.
+
+────────────────────────────────────
+8C — LOCALSTORAGE SAFETY
+────────────────────────────────────
+
+All new storage keys MUST:
+- use tcg_ prefix
+- merge safely with defaults
+- never overwrite unrelated keys
+
+────────────────────────────────────
+8D — MOBILE POLISH
+────────────────────────────────────
+
+Ensure:
+- no accidental horizontal scrolling
+- no overscroll flashing
+- no stuck body locks
+- no ghost taps
+- no viewport clipping
+- no hidden buttons behind browser bars
+
+Test:
+iOS Safari viewport behavior.
+
+────────────────────────────────────
+SECTION 9 — HELP CENTER EXPANSION
+────────────────────────────────────
+
+Add new help topics:
+
+- Mystery Boxes
+- Developer Access
+- Sandbox Mode
+- Market Trends
+- Chase Card System
+- Vendor Rotations
+- Infinite Balance explanation
+
+Tone:
+clean
+clear
+immersive
+not overly technical
+
+────────────────────────────────────
+SECTION 10 — FINAL VISUAL POLISH
+────────────────────────────────────
+
+Maintain restrained premium identity.
+
+Add:
+- subtle ambient gradient drift behind vendor hub
+- extremely low-opacity animated noise layer
+- slightly improved panel depth
+
+DO NOT:
+- add neon overload
+- add giant particles
+- add flashy arcade effects
+
+Everything should feel:
+expensive
+minimal
+clean
+collectible
+
+────────────────────────────────────
+SECTION 11 — IMPORTANT RESTRICTIONS
+────────────────────────────────────
+
+DO NOT TOUCH:
+- packSimulation
+- packRevealAnimator
+- fullscreenOverlay
+- rarityMapper
+- binder core logic
+- preload architecture
+- market history persistence
+
+DO NOT:
+- rewrite scrolling again
+- rewrite overlay system again
+- alter pack opening timing
+- alter existing storage formats unnecessarily
+
+Build ON TOP of current architecture.
+
+────────────────────────────────────
+SECTION 12 — FINAL VERIFICATION
+────────────────────────────────────
+
+Before completion:
+verify ALL:
+
+- typecheck passes
+- no console runtime errors
+- no stuck body scroll
+- no overlay deadlocks
+- no infinite balance corruption
+- no market graph crashes
+- no audio autoplay failures
+- no mobile viewport clipping
+- no vendor overlap
+- mystery boxes functional
+- utility dock functional
+- help/settings accessible
+- reputation pause works in sandbox mode
+
+Final response MUST include:
+- files added
+- files modified
+- systems added
+- any deferred items
+- confirmation of clean runtime
+- confirmation of typecheck success

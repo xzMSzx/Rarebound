@@ -1,0 +1,141 @@
+PROJECT PATCH — PHASE 5.1.1
+ENFORCE PACK SLOT POOL RESTRICTIONS
+
+Goal:
+
+Some packs currently contain high-rarity cards in early slots (e.g., EX appearing in slot 5).
+This happens because the pack generator does not strictly enforce slot-to-pool mapping.
+
+This patch locks each slot to the correct rarity pools.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+RNG implementation
+pity system
+probability tables
+reverse holo flag logic
+
+Only modify:
+
+simulations/packSimulation.js
+
+---
+
+SECTION 1 — DEFINE SLOT RULES
+
+Inside packSimulation.js create a slot rule function.
+
+Example:
+
+function getSlotPool(slot) {
+
+if (slot <= 5) return 'common'
+
+if (slot <= 7) return 'uncommon'
+
+if (slot === 8) return 'reverse'
+
+if (slot === 9) return 'rare'
+
+if (slot === 10) return 'hit'
+
+}
+
+---
+
+SECTION 2 — APPLY SLOT RULES DURING PACK GENERATION
+
+Locate the pack generation loop.
+
+Replace generic card generation with slot-specific pools.
+
+Example:
+
+for (let slot = 1; slot <= 10; slot++) {
+
+const slotType = getSlotPool(slot)
+
+let card
+
+if (slotType === 'common') {
+card = pool.getRandomCard('common')
+}
+
+else if (slotType === 'uncommon') {
+card = pool.getRandomCard('uncommon')
+}
+
+else if (slotType === 'reverse') {
+
+const roll = Math.random()
+
+if (roll < 0.7) card = pool.getRandomCard('common')
+else if (roll < 0.95) card = pool.getRandomCard('uncommon')
+else card = pool.getRandomCard('rare')
+
+card.isReverseHolo = true
+}
+
+else if (slotType === 'rare') {
+card = pool.getRandomCard('rare')
+}
+
+else if (slotType === 'hit') {
+const rarity = rollHitSlot(currentSetId)
+card = pool.getRandomCard(rarity)
+}
+
+pack.push(card)
+
+}
+
+---
+
+SECTION 3 — REMOVE FALLBACK RANDOM POOL CALLS
+
+Search for any logic that calls:
+
+getRandomCard() without specifying a rarity.
+
+Remove or replace it so every call uses a defined pool.
+
+---
+
+SECTION 4 — VERIFY RESULT
+
+Opening a pack must now produce:
+
+Slot 1–5 → Commons only
+Slot 6–7 → Uncommons only
+Slot 8 → Reverse holo (common/uncommon/rare)
+Slot 9 → Rare
+Slot 10 → Hit card
+
+Example pack:
+
+Common
+Common
+Common
+Common
+Common
+Uncommon
+Uncommon
+Reverse Holo Eevee
+Rare Gyarados
+Ultra Rare Umbreon
+
+---
+
+SECTION 5 — TEST
+
+Open 10 packs and verify:
+
+• No EX/Ultra cards appear before slot 10
+• Reverse holo only appears in slot 8
+• Rare always appears in slot 9
+
+END PATCH

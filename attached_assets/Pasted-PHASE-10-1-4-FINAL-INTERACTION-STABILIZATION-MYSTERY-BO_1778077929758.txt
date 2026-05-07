@@ -1,0 +1,268 @@
+PHASE 10.1.4 — FINAL INTERACTION STABILIZATION + MYSTERY BOX PREMIUMIZATION
+PROJECT: RAREBOUND
+
+THIS PATCH HAS 2 GOALS ONLY:
+1. permanently restore ALL top navigation interaction
+2. make mystery boxes feel like real premium sealed products
+
+DO NOT add new gameplay systems.
+DO NOT redesign existing vendor layouts.
+DO NOT touch economy balance.
+
+────────────────────────────────────
+SECTION 1 — TOP NAV STILL BROKEN
+────────────────────────────────────
+
+CRITICAL:
+The previous boot-lock timeout fix improved stability but the top buttons are STILL not clickable.
+
+Current behavior:
+- scrolling works
+- vendors scroll normally
+- buttons visually render
+- taps do nothing
+
+This still indicates interaction interception.
+
+────────────────────────────────────
+1A — HARD DOM HIT-TEST DIAGNOSTIC
+────────────────────────────────────
+
+I want an ACTUAL runtime hit-test audit.
+
+At runtime:
+inspect what element receives taps over:
+- My Collection
+- Market
+- Stats
+
+Use:
+document.elementFromPoint()
+
+and log:
+- tag
+- class
+- z-index
+- pointer-events
+- opacity
+- visibility
+- position
+
+DO NOT GUESS.
+
+────────────────────────────────────
+1B — INSPECT THESE SPECIFIC LAYERS
+────────────────────────────────────
+
+Audit:
+- utility dock wrapper
+- utility dock menu
+- boot overlay
+- fullscreen overlay
+- modal backdrop
+- vendor hub overlay
+- any fixed positioned ancestor
+- pseudo elements (::before/::after)
+- overlay gradients
+- ambient visual layers
+
+One of these is still intercepting taps.
+
+────────────────────────────────────
+1C — FORCE SAFE INTERACTION STRUCTURE
+────────────────────────────────────
+
+After diagnosis:
+ensure ONLY these elements can receive taps:
+- visible buttons
+- visible modals
+- visible menus
+
+Everything else MUST:
+pointer-events: none
+
+Especially:
+- decorative gradients
+- floating visual overlays
+- ambient layers
+- glow layers
+- dock containers
+- hidden menus
+
+────────────────────────────────────
+1D — VERIFY BUTTONS ACTUALLY FIRE
+────────────────────────────────────
+
+After fix:
+CONFIRM:
+- My Collection opens
+- Market opens
+- Stats opens
+- buttons visibly depress
+- no dead zones remain
+
+────────────────────────────────────
+SECTION 2 — MYSTERY BOX VISUAL PREMIUMIZATION
+────────────────────────────────────
+
+The current boxes technically render but visually feel unfinished.
+
+The empty center rectangle currently reads as:
+“missing image placeholder”
+
+NOT:
+“sealed mystery product”
+
+We need premium collector-product psychology.
+
+────────────────────────────────────
+2A — KEEP CURRENT STRUCTURE
+────────────────────────────────────
+
+DO NOT redesign the whole tile.
+
+Keep:
+- current sizing
+- current gradients
+- current vendor themes
+- current typography
+- current button placement
+
+ONLY improve the center visual.
+
+────────────────────────────────────
+2B — REPLACE EMPTY PANEL WITH SEALED PRODUCT ART
+────────────────────────────────────
+
+The center area should feel like:
+a sealed luxury collector crate.
+
+Create this using PURE CSS/SVG.
+
+NO external assets required.
+
+Per vendor:
+
+Night Market:
+- glowing neon crate
+- diagonal hazard stripes
+- subtle “classified” style markings
+- faint purple bloom
+
+Retro Vault:
+- brass archive case
+- metallic trim
+- subtle embossed archive crest
+- vintage collector label feel
+
+Broker Cache:
+- matte obsidian slab
+- gold trim
+- geometric luxury insignia
+- ultra-clean premium aesthetic
+
+These should feel:
+mysterious
+valuable
+sealed
+rare
+
+NOT like missing images.
+
+────────────────────────────────────
+2C — ADD VERY SUBTLE DEPTH
+────────────────────────────────────
+
+Add:
+- inner shadows
+- layered borders
+- subtle animated sheen sweep
+- restrained glow
+
+NO flashy arcade effects.
+
+────────────────────────────────────
+2D — SEALED PRODUCT PSYCHOLOGY
+────────────────────────────────────
+
+The boxes should psychologically communicate:
+“I don’t fully know what’s inside, but this is valuable.”
+
+Think:
+luxury blind-box packaging
+high-end collector crate
+premium vault container
+
+────────────────────────────────────
+SECTION 3 — BROKER LOCKED STATE
+────────────────────────────────────
+
+Currently:
+Broker is closed
+BUT mystery box still appears underneath.
+
+That weakens the anticipation system.
+
+Fix:
+If Broker unavailable:
+- hide ALL broker inventory
+- hide broker mystery box
+- show ONLY:
+lock icon
+return timer
+short flavor text
+
+When Broker opens Fri–Sun:
+THEN reveal:
+- chase cards
+- collector cache
+- premium offerings
+
+────────────────────────────────────
+SECTION 4 — AUDIO VERIFICATION
+────────────────────────────────────
+
+Ambient audio now technically starts.
+
+Verify:
+- scrolling between vendors actually crossfades ambience
+- gains normalize correctly
+- no overlapping runaway layers
+- only ONE active dominant ambience at a time
+
+Keep ambience subtle.
+
+────────────────────────────────────
+SECTION 5 — DO NOT TOUCH
+────────────────────────────────────
+
+DO NOT MODIFY:
+- economy
+- reputation
+- save schema
+- pack odds
+- graph systems
+- market history
+- binder
+- pack opening flow
+
+This is stabilization + premiumization only.
+
+────────────────────────────────────
+SECTION 6 — REQUIRED FINAL REPORT
+────────────────────────────────────
+
+Must include:
+
+1. Exact remaining interaction blocker discovered
+2. Exact file(s) causing dead nav
+3. Exact fix used
+4. Confirmation nav fully works
+5. Confirmation mystery boxes redesigned
+6. Confirmation Broker hidden while unavailable
+7. Confirmation ambient crossfade verified
+8. Confirmation runtime clean
+9. Confirmation typecheck passes
+
+DO NOT give generic summaries.
+TRACE THE REAL CAUSE.

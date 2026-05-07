@@ -1,0 +1,223 @@
+PROJECT PATCH — PHASE 4.4.1 RARITY ICON + SKIP SUMMARY FIX
+
+This patch fixes three UI issues introduced in Phase 4.4.
+
+Fixes:
+
+• rarity symbols rendering as basic ASCII text
+• skip summary cards stacking vertically
+• rarity guide tooltip not appearing
+
+No simulation logic may be modified.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+engine RNG
+pack generation logic
+pity system
+rarity probability tables
+card pool manager
+overlay animation system
+
+Only modify UI rendering and layout.
+
+---
+
+SECTION 1 — REPLACE TEXT SYMBOLS WITH SVG ICONS
+
+Create a new file:
+
+ui/rarityIcons.js
+
+Example structure:
+
+export const RARITY_ICONS = {
+common: <svg viewBox="0 0 24 24" class="rarity-icon diamond">       <polygon points="12,2 22,12 12,22 2,12"></polygon>   </svg>,
+
+uncommon: `
+
+
+
+rare: <svg viewBox="0 0 24 24" class="rarity-icon star"></svg>,
+
+holoRare: <svg viewBox="0 0 24 24" class="rarity-icon star"></svg>,
+
+doubleRare: `
+
+
+
+illustrationRare: `
+
+
+
+ultraRare: `
+
+
+
+
+specialIllustrationRare: <svg class="rarity-icon sparkle"></svg>,
+
+hyperRare: <svg class="rarity-icon crown"></svg>
+}
+
+---
+
+SECTION 2 — UPDATE CARD RENDERER
+
+File:
+
+ui/cardRenderer.js
+
+Replace text badge rendering with:
+
+RARITY_ICONS[card.rarityType]
+
+Example:
+
+rarityContainer.innerHTML = RARITY_ICONS[card.rarityType]
+
+---
+
+SECTION 3 — FIX SKIP SUMMARY LAYOUT
+
+File:
+
+style.css
+
+Locate:
+
+.skip-summary-container
+
+Replace with:
+
+display: grid
+grid-template-columns: repeat(5, 1fr)
+grid-template-rows: repeat(2, auto)
+gap: 14px
+justify-items: center
+
+Ensure cards automatically wrap into two rows.
+
+---
+
+SECTION 4 — INCREASE RARITY ICON SIZE
+
+Add CSS:
+
+.rarity-icon {
+
+width: 22px
+height: 22px
+opacity: 0.85
+
+}
+
+.rarity-double,
+.rarity-triple {
+
+display: flex
+gap: 4px
+justify-content: center
+
+}
+
+---
+
+SECTION 5 — PREMIUM RARITY EFFECT
+
+For:
+
+ultraRare
+specialIllustrationRare
+hyperRare
+
+Apply gradient styling.
+
+Example:
+
+background: linear-gradient(90deg,#fbbf24,#fde047)
+-webkit-background-clip: text
+color: transparent
+
+Add shimmer animation.
+
+---
+
+SECTION 6 — ADD RARITY GUIDE BUTTON
+
+In index.html inside Pack Controls section add:
+
+Rarity Guide
+
+---
+
+SECTION 7 — CREATE POPUP MODAL
+
+Add element to index.html:
+
+◇ Common
+◇◇ Uncommon
+★ Rare
+★★ Double Rare / Illustration Rare
+★★★ Ultra Rare
+✦ Special Illustration Rare
+👑 Hyper Rare
+
+Close
+
+---
+
+SECTION 8 — MODAL CSS
+
+Add styling:
+
+.rarity-modal {
+
+position: fixed
+top:0
+left:0
+width:100%
+height:100%
+background: rgba(0,0,0,0.7)
+display
+align-items
+justify-content
+
+}
+
+.hidden { display }
+
+---
+
+SECTION 9 — MODAL JAVASCRIPT
+
+Add simple toggle logic:
+
+rarityHelpBtn.onclick = () => {
+modal.classList.remove("hidden")
+}
+
+closeBtn.onclick = () => {
+modal.classList.add("hidden")
+}
+
+---
+
+EXPECTED RESULT
+
+Rarity icons render as crisp vector symbols.
+
+Skip summary displays:
+
+5 cards per row
+2 rows total
+
+Rarity Guide button opens a popup explaining the symbols.
+
+The UI now looks cleaner and more polished.
+
+END

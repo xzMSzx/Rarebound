@@ -1,0 +1,151 @@
+PROJECT PATCH — PHASE 4.5.1
+FULL API DIAGNOSTIC FOR SET LOADING
+
+Goal:
+
+Evolving Skies (set id: swsh7) is failing to load even though the loader already includes retry logic and error handling.
+
+This patch does NOT change behavior yet.
+
+Instead it instruments the entire loading pipeline so we can see exactly where the failure occurs.
+
+Only logging and diagnostics should be added.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+RNG engine
+pack generation
+rarity probabilities
+card reveal animations
+UI rendering
+
+Only add logging and diagnostics.
+
+---
+
+SECTION 1 — LOG RAW API REQUEST
+
+File:
+
+data/setLoader.js
+
+Immediately before the fetch call add:
+
+console.log("========== API REQUEST ==========")
+console.log("Set ID:", setId)
+console.log("Request URL:", url)
+
+---
+
+SECTION 2 — LOG RAW API RESPONSE
+
+After:
+
+const data = await response.json()
+
+Add:
+
+console.log("========== API RESPONSE ==========")
+console.log("Total cards received:", data.data?.length)
+console.log("Sample card:", data.data?.[0])
+
+This confirms the API is actually returning cards.
+
+---
+
+SECTION 3 — LOG IMAGE FILTERING
+
+After the image filter step:
+
+const cards = data.data.filter(card => card.images && card.images.small)
+
+Add:
+
+console.log("Cards after image filter:", cards.length)
+
+If this number becomes 0, the filter is wrong.
+
+---
+
+SECTION 4 — LOG RARITY MAPPING
+
+File:
+
+data/cardPoolManager.js
+
+Immediately after mapping cards into rarity pools add:
+
+console.log("========== POOL DISTRIBUTION ==========")
+console.log("Commons:", pool.common.length)
+console.log("Uncommons:", pool.uncommon.length)
+console.log("Rares:", pool.rare.length)
+console.log("Double Rare:", pool.doubleRare?.length)
+console.log("Illustration Rare:", pool.illustrationRare?.length)
+console.log("Ultra Rare:", pool.ultraRare?.length)
+
+This will reveal if the rarity mapper is rejecting cards.
+
+---
+
+SECTION 5 — LOG CARD SAMPLE BEFORE POOL BUILD
+
+Still inside cardPoolManager.js, before rarity mapping add:
+
+console.log("Sample cards before rarity mapping:")
+cards.slice(0,5).forEach(card => {
+console.log(card.name, card.rarity)
+})
+
+This confirms the rarity strings returned by the API.
+
+---
+
+SECTION 6 — LOG FINAL ACTIVATION
+
+File:
+
+main.js
+
+After the set loads successfully add:
+
+console.log("========== SET LOADED ==========")
+console.log("Active set:", setId)
+
+---
+
+SECTION 7 — EXPECTED DEBUG OUTPUT
+
+After this patch, selecting Evolving Skies should show logs like:
+
+API REQUEST
+Set ID: swsh7
+
+API RESPONSE
+Total cards received: 237
+
+Cards after image filter: 237
+
+POOL DISTRIBUTION
+Commons: X
+Uncommons: X
+Rares: X
+
+If any of these numbers are zero we immediately know where the failure occurs.
+
+---
+
+SECTION 8 — NEXT STEP
+
+Once the logs appear in the console:
+
+Copy the output from:
+
+API RESPONSE
+Cards after image filter
+POOL DISTRIBUTION
+
+Then we will determine the exact fix.

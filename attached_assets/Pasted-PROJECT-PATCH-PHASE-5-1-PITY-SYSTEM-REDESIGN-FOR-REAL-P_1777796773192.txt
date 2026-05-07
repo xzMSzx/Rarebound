@@ -1,0 +1,118 @@
+PROJECT PATCH — PHASE 5.1
+PITY SYSTEM REDESIGN FOR REAL PACK STRUCTURE
+
+Goal:
+
+The current pity system resets whenever a pack contains an "epic" or "legendary" card.
+
+After Phase 5.0 every pack now contains a guaranteed hit slot (doubleRare or higher), which causes the pity counter to reset every pack.
+
+This patch updates the pity system so it only resets on **high-tier chase cards**.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+RNG implementation
+pack slot structure
+set probability tables
+card rendering system
+
+Only modify:
+
+simulations/packSimulation.js
+
+---
+
+SECTION 1 — DEFINE HIGH TIER CARDS
+
+High tier cards are:
+
+ultraRare
+specialIllustrationRare
+hyperRare
+
+These represent the real chase pulls.
+
+---
+
+SECTION 2 — UPDATE PITY RESET CONDITION
+
+Locate the current pity reset logic.
+
+It likely resembles:
+
+if (rarity === 'epic' || rarity === 'legendary') {
+state.pityCounter = 0
+}
+
+Replace this logic.
+
+New condition:
+
+const isHighTier =
+card.rarityType === 'ultraRare' ||
+card.rarityType === 'specialIllustrationRare' ||
+card.rarityType === 'hyperRare'
+
+if (isHighTier) {
+state.pityCounter = 0
+} else {
+state.pityCounter += 1
+}
+
+---
+
+SECTION 3 — ENSURE HIT SLOT COUNTS
+
+The pity check must run **after the pack is generated** so the hit slot card is included in the evaluation.
+
+Example flow:
+
+generatePack()
+↓
+evaluatePackForPity()
+↓
+updatePityCounter()
+
+---
+
+SECTION 4 — PREPARE FUTURE GUARANTEE TIERS
+
+Add placeholder logic for future pity guarantees.
+
+Example:
+
+if (state.pityCounter >= 40) {
+console.log("Hyper Rare pity threshold reached")
+}
+
+Do NOT change pack probabilities yet.
+
+This prepares the engine for Phase 7 economy features.
+
+---
+
+SECTION 5 — MONTE CARLO COMPATIBILITY
+
+Ensure Monte Carlo simulations still count rarity correctly.
+
+Reverse holo cards should not affect pity evaluation.
+
+Only the highest rarity card in the pack should be considered.
+
+---
+
+SECTION 6 — EXPECTED RESULT
+
+After this patch:
+
+• pity counter increases when packs do not contain UR+ cards
+• pulling Ultra Rare or higher resets pity
+• doubleRare and illustrationRare no longer reset pity
+
+This restores meaningful long-term pity behaviour under the new pack structure.
+
+END PATCH

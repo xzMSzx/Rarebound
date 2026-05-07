@@ -1,0 +1,247 @@
+PROJECT PATCH — PHASE 5.4
+INTERACTIVE HOLOGRAPHIC CARD SYSTEM
+
+Goal:
+
+Add an interactive holographic effect to cards during pack reveal.
+
+Cards should respond to mouse or touch movement by tilting slightly and shifting a reflective holo layer.
+
+This simulates the real-life behaviour of foil trading cards.
+
+No changes to simulation logic are allowed.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+RNG engine
+packSimulation.js
+pity system
+rarity tables
+API loader
+card pool manager
+
+Only modify:
+
+style.css
+ui/cardRevealAnimator.js
+OR any other necessary styling files
+
+---
+
+SECTION 1 — ADD HOLO LAYER
+
+Open:
+
+style.css
+
+Add a new holographic layer style:
+
+.holo-reflection {
+
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+
+pointer-events: none;
+
+background: linear-gradient(
+120deg,
+rgba(255,255,255,0.0) 0%,
+rgba(255,255,255,0.15) 35%,
+rgba(255,255,255,0.35) 50%,
+rgba(255,255,255,0.15) 65%,
+rgba(255,255,255,0.0) 100%
+);
+
+mix-blend-mode: screen;
+
+opacity: 0.6;
+
+transition: opacity 0.2s;
+
+}
+
+This layer simulates reflected light.
+
+---
+
+SECTION 2 — ADD RAINBOW FOIL
+
+Still in style.css add:
+
+.holo-rainbow {
+
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+
+pointer-events: none;
+
+background: linear-gradient(
+60deg,
+rgba(255,0,0,0.2),
+rgba(255,255,0,0.2),
+rgba(0,255,255,0.2),
+rgba(0,0,255,0.2),
+rgba(255,0,255,0.2)
+);
+
+mix-blend-mode: color-dodge;
+
+opacity: 0.25;
+
+}
+
+This creates the classic Pokémon holo rainbow shimmer.
+
+---
+
+SECTION 3 — ENABLE 3D CARD SPACE
+
+Locate the card wrapper styling.
+
+Add:
+
+.card-tilt-container {
+
+transform-style: preserve-3d;
+transition: transform 0.1s ease-out;
+
+}
+
+This allows the card to rotate in 3D space.
+
+---
+
+SECTION 4 — INJECT HOLO LAYERS
+
+Open:
+
+ui/cardRevealAnimator.js
+
+Inside the function that renders the revealed card element add:
+
+const holo = document.createElement("div");
+holo.className = "holo-reflection";
+
+const rainbow = document.createElement("div");
+rainbow.className = "holo-rainbow";
+
+cardElement.appendChild(rainbow);
+cardElement.appendChild(holo);
+
+These layers sit above the card image.
+
+---
+
+SECTION 5 — TRACK POINTER MOVEMENT
+
+Still in cardRevealAnimator.js add:
+
+function applyCardTilt(cardElement) {
+
+cardElement.addEventListener("mousemove", (e) => {
+
+const rect = cardElement.getBoundingClientRect();
+
+const x = e.clientX - rect.left;
+const y = e.clientY - rect.top;
+
+const rotateY = (x / rect.width - 0.5) * 10;
+const rotateX = (0.5 - y / rect.height) * 10;
+
+cardElement.style.transform =
+`rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+
+});
+
+cardElement.addEventListener("mouseleave", () => {
+
+cardElement.style.transform = "rotateX(0deg) rotateY(0deg)";
+
+});
+
+}
+
+---
+
+SECTION 6 — TOUCH SUPPORT
+
+Add touch tracking for mobile:
+
+cardElement.addEventListener("touchmove", (e) => {
+
+const rect = cardElement.getBoundingClientRect();
+
+const touch = e.touches[0];
+
+const x = touch.clientX - rect.left;
+const y = touch.clientY - rect.top;
+
+const rotateY = (x / rect.width - 0.5) * 10;
+const rotateX = (0.5 - y / rect.height) * 10;
+
+cardElement.style.transform =
+`rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+
+});
+
+---
+
+SECTION 7 — ACTIVATE TILT
+
+After the card element is created add:
+
+applyCardTilt(cardElement);
+
+This activates the interactive behaviour.
+
+---
+
+SECTION 8 — PERFORMANCE SAFETY
+
+Add this CSS to limit GPU cost:
+
+.card-tilt-container {
+
+will-change: transform;
+
+}
+
+This ensures smooth performance on phones.
+
+---
+
+SECTION 9 — TEST RESULT
+
+When moving the mouse or tilting a phone finger:
+
+• the card tilts slightly
+• rainbow foil shifts
+• light reflection moves
+
+Cards now appear physically reflective.
+
+---
+
+SECTION 10 — DESIGN GOAL
+
+Cards should feel like real foil cards under light.
+
+Movement should be subtle.
+
+Do NOT exceed:
+
+rotateX / rotateY = 10 degrees
+
+This keeps the animation natural.
+
+END PATCH

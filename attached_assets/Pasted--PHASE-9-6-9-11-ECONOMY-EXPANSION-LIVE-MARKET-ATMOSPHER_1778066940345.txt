@@ -1,0 +1,710 @@
+# PHASE 9.6 → 9.11 — ECONOMY EXPANSION + LIVE MARKET + ATMOSPHERE + SENSORY POLISH
+
+IMPORTANT:
+This is a continuation patch on top of the existing fully working Phase 9 vendor/economy system. Preserve ALL current functionality exactly as-is unless explicitly changed below.
+
+DO NOT rewrite:
+
+* pack opening system
+* reveal system
+* holo shaders
+* audioManager core reveal sounds
+* binder foundations
+* statistics foundations
+* current vendor cards/layout structure
+* market value persistence system
+* current reputation/favor systems
+
+This patch ADDS layered systems and polish.
+
+The goal:
+Transform the app from:
+“pack opening simulator”
+into:
+“living collectible ecosystem.”
+
+Maintain the premium restrained aesthetic.
+NO arcade UI.
+NO flashy mobile-game spam.
+Everything should feel:
+slow, tactile, atmospheric, premium.
+
+---
+
+## SECTION 1 — BROKER WEEKEND SYSTEM (PHASE 9.6)
+
+The Broker must become a real rotating chase vendor.
+
+Current Broker card already exists.
+Extend it.
+
+Behavior:
+
+* Broker only opens Friday 00:00 → Sunday 23:59 LOCAL USER TIME.
+* Outside those windows:
+
+  * locked state remains
+  * countdown timer shown
+  * no purchases allowed
+
+When active:
+
+* card glows subtly gold
+* lock icon removed
+* inventory visible
+
+Inventory:
+
+* 2 chase singles maximum
+* chosen from:
+
+  * specialIllustrationRare
+  * hyperRare
+  * ultraRare
+* prioritize:
+
+  * highest market value cards
+  * fan-favorite cards
+  * cards not already heavily owned by player
+
+Broker prices:
+
+* intentionally expensive
+* range:
+
+  * $350 → $2000+
+* generated dynamically from:
+  baseMarketValue * rarityMultiplier * scarcityMultiplier
+
+Broker stock refresh:
+
+* every Friday reset
+
+Add:
+vendorManager.generateBrokerInventory()
+
+Persist Broker inventory in localStorage.
+
+DO NOT regenerate on every reload.
+
+---
+
+## SECTION 2 — CHASE CARD SYSTEM (PHASE 9.6)
+
+Add:
+“Today’s Chase”
+
+Displayed near top strip under market trend ticker.
+
+Structure:
+🔥 Today’s Chase: Giratina V Alt Art (+18%)
+
+Behavior:
+
+* chosen every 24h
+* boosts:
+
+  * market value
+  * pull desirability
+* DOES NOT secretly boost pull rates
+* purely economic + aspirational
+
+Effects:
+
+* +10–25% temporary market value
+* extra visual glow in binder slots
+* optional gold pulse border in card detail
+
+Add:
+economyManager.generateDailyChase()
+
+Persist:
+
+* chase card id
+* expiry timestamp
+
+---
+
+## SECTION 3 — VALUE HISTORY SYSTEM (PHASE 9.8)
+
+Implement real historical market tracking.
+
+Every card should now store:
+valueHistory: [
+{ timestamp, value }
+]
+
+Rules:
+
+* append only on market refresh
+* keep:
+  max 30 entries
+  OR
+  last 7 days
+  (whichever simpler)
+
+This powers:
+market graph UI.
+
+---
+
+## SECTION 4 — MARKET GRAPH UI (PHASE 9.8)
+
+Add:
+“Market” button beside:
+
+* My Collection
+* Stats
+
+This opens:
+marketScreen overlay.
+
+UI Structure:
+TOP:
+
+* Back button
+* “Market Trends”
+
+Below:
+search/filter controls:
+
+* Set dropdown
+* Search card name
+* Sort:
+
+  * highest gainers
+  * biggest drops
+  * most valuable
+  * trending
+
+Main area:
+card trend list.
+
+Each row:
+
+* small card image
+* name
+* current value
+* % movement
+* mini sparkline graph
+
+Clicking row:
+opens dedicated graph modal.
+
+---
+
+## SECTION 5 — GRAPH MODAL
+
+Graph modal structure:
+
+TOP:
+
+* large card art
+* card name
+* rarity
+* current value
+
+CENTER:
+interactive line graph
+
+Graph:
+
+* dark premium styling
+* smooth curves
+* green/red trend coloring
+* animated line draw on open
+
+UNDER GRAPH:
+trend reasoning text.
+
+Examples:
+
+* “Illustration rares trending upward.”
+* “Retro Vault demand increased.”
+* “Fire-type market cooling.”
+* “Weekend Broker demand spike.”
+
+BOTTOM:
+quick stats:
+
+* 7-day high
+* 7-day low
+* volatility
+* ownership %
+
+NO external graph libraries unless already installed.
+
+Prefer lightweight canvas or SVG implementation.
+
+---
+
+## SECTION 6 — SELLING SYSTEM EXPANSION (PHASE 9.7)
+
+Current sell system already works.
+Expand it.
+
+Allow selling:
+
+* first copies
+* BUT locked by default
+
+If selling last owned copy:
+show premium warning modal:
+
+⚠ Selling Final Copy
+“You are about to remove this card from your binder.”
+
+Buttons:
+
+* Cancel
+* Unlock & Sell
+
+This already partially exists.
+Polish it visually.
+
+---
+
+## SECTION 7 — COLLECTOR REPUTATION EXPANSION
+
+Current ranks exist.
+Expand progression sources.
+
+Gain reputation from:
+
+* discovering new cards
+* completing binder pages
+* completing sets
+* pulling chase cards
+* vendor loyalty
+* wishlist completion
+
+DO NOT reward reputation from mass-selling.
+
+Add:
+small reputation gain toasts:
++4 Reputation
+
+Subtle only.
+
+---
+
+## SECTION 8 — VENDOR MEMBERSHIP SYSTEM
+
+Add optional memberships.
+
+Each vendor offers:
+Membership Pass.
+
+Example:
+PokéMart+ Membership
+
+Cost:
+monthly simulated fee.
+
+Benefits:
+
+* early refresh previews
+* slight discounts
+* larger stock pool
+* bonus stipend
+* exclusive cosmetic vendor themes
+
+ONLY one membership active at once.
+
+Membership duration:
+30 real days.
+
+Persist expiration timestamps.
+
+---
+
+## SECTION 9 — DAILY STIPEND SYSTEM
+
+Add:
+daily collector stipend.
+
+Behavior:
+
+* once every 24h
+* claimable button near top bar
+
+Base:
+$10/day
+
+Modifiers:
+
+* reputation rank
+* vendor membership
+* collection completion %
+
+Examples:
+Rookie:
+$10
+
+Elite:
+$22
+
+Master:
+$40+
+
+UI:
+small elegant claim panel.
+
+NOT flashy reward chest.
+
+---
+
+## SECTION 10 — MYSTERY BOX SYSTEM
+
+Add:
+Mystery Boxes sold occasionally by Night Market.
+
+Examples:
+
+* Mixed Era Box
+* High Risk Box
+* Vintage Box
+
+Behavior:
+contains:
+
+* random packs from multiple sets
+
+Price:
+slightly discounted compared to individual packs
+
+High Risk Box:
+
+* higher rare chance
+* worse average EV
+
+Add:
+hover/expand tooltip explaining risk profile.
+
+---
+
+## SECTION 11 — MARKET TREND ENGINE EXPANSION
+
+Current trend engine exists.
+Expand depth.
+
+Trend influences:
+
+* rarity
+* Pokémon type
+* set popularity
+* vendor demand
+* chase spotlight
+* nostalgia cycles
+
+Examples:
+
+* “Dragon-type surge”
+* “151 nostalgia spike”
+* “Illustration rare correction”
+* “Vintage slowdown”
+
+Trend engine should feel:
+semi-believable.
+
+NOT random nonsense.
+
+---
+
+## SECTION 12 — RECENTLY PULLED PANEL (PHASE 9.9)
+
+Add:
+“Recent Hits” section on home screen.
+
+Shows:
+last 5 notable pulls.
+
+Display:
+
+* small card thumbnail
+* pull timestamp
+* rarity color border
+
+Only include:
+rare or better.
+
+Clicking:
+opens card detail modal.
+
+This creates emotional attachment/history.
+
+---
+
+## SECTION 13 — WISHLIST EXPANSION
+
+Current wishlist exists.
+Expand it.
+
+Add:
+Wishlist page/button.
+
+Shows:
+
+* all wishlisted cards
+* current market value
+* market movement
+* owned/not owned
+
+If pulled:
+card animates into:
+“Wishlist Completed.”
+
+Add subtle gold shimmer effect.
+
+---
+
+## SECTION 14 — BINDER ATMOSPHERE POLISH (PHASE 9.10)
+
+DO NOT redesign binder completely.
+
+Enhance realism subtly.
+
+Add:
+
+* faint paper texture background
+* soft inner page shadows
+* slight page depth
+* subtle slot reflections
+* extremely light plastic sleeve sheen on owned cards
+
+VERY subtle.
+Opacity:
+5–10%.
+
+NO cheesy fake 3D binder.
+
+Goal:
+premium realism.
+
+---
+
+## SECTION 15 — VENDOR ATMOSPHERE SYSTEM (PHASE 9.10)
+
+Implement layered vendor ambience.
+
+Each vendor card gets:
+
+1. base gradient
+2. ambient texture
+3. animated particles
+4. atmospheric glow
+
+DO NOT use:
+real Pokémon artwork backgrounds.
+
+Use:
+CSS atmospheric design only.
+
+---
+
+## SECTION 16 — VENDOR ATMOSPHERE DETAILS
+
+PokéMart:
+
+* cool blue gradients
+* floating soft dots
+* clean tech glow
+
+Retro Vault:
+
+* warm amber gradients
+* drifting dust particles
+* archival atmosphere
+
+Night Market:
+
+* magenta/purple gradients
+* faint neon shimmer
+* subtle animated streaks
+
+Broker:
+
+* black/gold luxury glow
+* sparse gold sparks
+* deep vignette
+
+Animations:
+EXTREMELY slow.
+
+Luxury feel.
+NOT game-y.
+
+---
+
+## SECTION 17 — PARTICLE IMPLEMENTATION
+
+DO NOT use heavy canvas rendering.
+
+Use:
+6–10 lightweight absolutely positioned div particles.
+
+CSS animations only.
+
+Performance priority:
+mobile smoothness.
+
+---
+
+## SECTION 18 — HAPTIC FEEDBACK SYSTEM (PHASE 9.11)
+
+Add:
+ui/hapticsManager.js
+
+Use:
+navigator.vibrate?.()
+
+Three tiers:
+
+Tiny:
+8ms
+Used:
+
+* taps
+* navigation
+* wishlist
+* toggles
+
+Medium:
+18ms
+Used:
+
+* purchases
+* card reveal land
+* selling
+* modal confirms
+
+Heavy:
+[30,20,40]
+Used:
+
+* ultra rare pull
+* hyper rare pull
+* Broker purchase
+* chase card pull
+
+NEVER spam haptics.
+
+Only trigger:
+interaction peaks.
+
+---
+
+## SECTION 19 — AMBIENT AUDIO SYSTEM (PHASE 9.11)
+
+Extend existing audioManager.
+
+DO NOT add music.
+
+Add:
+ambient vendor identities.
+
+Use:
+Web Audio API synthesis only.
+
+NO external audio assets.
+
+NO mp3 downloads.
+
+Vendor ambiences:
+
+PokéMart:
+
+* soft digital hum
+* airy synth texture
+
+Retro Vault:
+
+* warm analog hum
+* faint vinyl crackle
+
+Night Market:
+
+* neon buzz
+* distant synth pulses
+
+Broker:
+
+* low-frequency luxury ambience
+* sparse metallic resonance
+
+Behavior:
+
+* fade between vendors
+* no abrupt cuts
+* very low volume
+* ambient only
+
+---
+
+## SECTION 20 — AUDIO PERMISSION UX
+
+On first vendor interaction:
+show small modal:
+
+🔊 Enable Ambient Audio?
+
+Buttons:
+
+* Enable
+* Not Now
+
+Default:
+OFF.
+
+Persist choice in localStorage.
+
+If disabled:
+never autoplay ambience.
+
+---
+
+## SECTION 21 — PERFORMANCE REQUIREMENTS
+
+CRITICAL:
+Maintain smooth mobile performance.
+
+DO NOT:
+
+* re-render entire binder unnecessarily
+* regenerate market every frame
+* run excessive intervals
+* use massive particle counts
+* create memory leaks
+
+Use:
+requestAnimationFrame only where needed.
+
+All intervals/timers:
+clean up correctly.
+
+---
+
+## SECTION 22 — PRESERVE EXISTING VISUAL STYLE
+
+IMPORTANT:
+Keep:
+
+* dark premium aesthetic
+* restrained typography
+* slow animations
+* elegant spacing
+
+DO NOT:
+
+* add bright arcade colors
+* overuse glows
+* create clutter
+* spam notifications
+* add cartoonish UI
+
+Everything should feel:
+expensive,
+quiet,
+collector-focused,
+premium,
+tactile.

@@ -1,0 +1,166 @@
+PHASE 10.1.7 — CLICK LIFECYCLE FAILURE TRACE
+PROJECT: RAREBOUND
+
+The .screen.hidden specificity fix was correct and should remain in place.
+
+However:
+THE ISSUE STILL EXISTS.
+
+Current behavior:
+- scrolling works
+- utility dock works
+- buttons visually depress (:active state fires)
+- BUT navigation/actions still do not occur
+
+This means:
+pointerdown/touchstart IS firing,
+but click completion is failing.
+
+STOP investigating z-index.
+STOP investigating visibility.
+STOP investigating display flex.
+
+We now need a TRUE click lifecycle trace.
+
+────────────────────────────────────
+SECTION 1 — REQUIRED REAL DIAGNOSTIC
+────────────────────────────────────
+
+For ONE affected button:
+#view-collection-btn
+
+Attach TEMP listeners for:
+- pointerdown
+- pointerup
+- touchstart
+- touchend
+- click
+
+Log:
+- exact order
+- timestamp
+- event.defaultPrevented
+- event.cancelable
+- event.eventPhase
+- event.target
+- event.currentTarget
+
+We need to know:
+WHICH EVENT IN THE CHAIN DIES.
+
+────────────────────────────────────
+SECTION 2 — GLOBAL PREVENTDEFAULT AUDIT
+────────────────────────────────────
+
+Search ENTIRE CODEBASE for:
+- preventDefault(
+- stopPropagation(
+- stopImmediatePropagation(
+- setPointerCapture(
+- releasePointerCapture(
+
+Especially inspect:
+- scrollManager
+- ambientAudioManager
+- utility dock
+- boot screen
+- overlay systems
+- fullscreen systems
+- touch gesture handlers
+
+For EACH:
+document:
+- file
+- line
+- exact reason it exists
+- whether it affects touch/click propagation
+
+────────────────────────────────────
+SECTION 3 — IOS SAFARI CLICK FAILURE
+────────────────────────────────────
+
+This is now likely:
+touchstart fires
+touchend fires
+BUT synthetic click never dispatches.
+
+Common causes:
+- preventDefault on touchstart/touchend
+- passive:false touch listeners
+- touch-action conflicts
+- pointer capture
+- transformed overlay ancestor
+- fixed-position gesture interception
+
+You MUST determine:
+why click is never emitted.
+
+────────────────────────────────────
+SECTION 4 — IMPORTANT TEST
+────────────────────────────────────
+
+TEMPORARILY add:
+
+document.addEventListener('click', e => {
+  console.log('[GlobalClick]', e.target);
+}, true);
+
+If NO global click fires when tapping broken buttons:
+the browser itself is suppressing click generation.
+
+If global click DOES fire:
+something later in propagation is killing it.
+
+This distinction is critical.
+
+────────────────────────────────────
+SECTION 5 — VERIFY BUTTON HANDLERS
+────────────────────────────────────
+
+Confirm:
+#view-collection-btn
+actually has:
+- listener attached
+- listener survives rerenders
+- listener not replaced
+- no cloned node issue
+- no stale DOM reference
+
+Log:
+[NavBinding] attached successfully
+
+────────────────────────────────────
+SECTION 6 — DO NOT PATCH BLINDLY
+────────────────────────────────────
+
+No more speculative CSS changes.
+
+No more z-index changes.
+
+No more overlay assumptions.
+
+Trace:
+touchstart
+→ touchend
+→ click
+
+Find EXACTLY where it breaks.
+
+────────────────────────────────────
+SECTION 7 — REQUIRED FINAL REPORT
+────────────────────────────────────
+
+Must include:
+1. Exact event sequence observed
+2. Whether click event dispatches at all
+3. Exact listener suppressing click (if any)
+4. Exact file + line responsible
+5. Exact surgical fix
+6. Why dock still worked
+7. Confirmation all interactions restored
+8. Confirmation runtime clean
+9. Confirmation typecheck passes
+
+No guesses.
+No theory.
+Only traced event flow.

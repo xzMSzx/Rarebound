@@ -1,0 +1,116 @@
+/**
+ * ui/cardRenderer.js
+ * Renders the card collection grid from engine.state.cards.
+ *
+ * When a Pokémon set is loaded, cards carry imageUrl + name and are displayed
+ * as thumbnail artwork.  Without a set, an SVG rarity icon badge is shown.
+ * Both modes share the same grid and rarity border colours.
+ *
+ * Displays the most recent MAX_DISPLAY_CARDS cards (newest first)
+ * to keep DOM size manageable after large batch runs.
+ *
+ * Phase 4.4.5: SVG icon system restored with explicit hex fills (no
+ * currentColor). This eliminates the invisible-icon bug that occurred when
+ * the parent container used color:transparent for gradient-text effects.
+ */
+
+import { RARITY_ICONS, RARITY_ICON_FALLBACK } from './rarityIcons.js';
+
+const MAX_DISPLAY_CARDS = 300;
+
+/**
+ * Build a single card element for the collection grid.
+ *
+ * @param {Object} card - { id, rarity, packNumber, name?, imageUrl? }
+ * @returns {HTMLElement}
+ */
+export function createCardElement(card) {
+  const el = document.createElement('div');
+  el.className = `grid-card grid-card-${card.rarity}`;
+
+  if (card.imageUrl) {
+    el.classList.add('grid-card-has-img');
+    el.title = `${card.name ?? card.rarity} — Pack #${card.packNumber}`;
+
+    const img = document.createElement('img');
+    img.className = 'grid-card-img';
+    img.src     = card.imageUrl;
+    img.alt     = card.name ?? card.rarity;
+    img.loading = 'lazy';
+    el.appendChild(img);
+  } else {
+    el.title = `${card.rarity} — Pack #${card.packNumber}`;
+
+    const iconWrap = document.createElement('span');
+    iconWrap.className = 'grid-card-icon';
+    iconWrap.innerHTML = RARITY_ICONS[card.rarity] ?? RARITY_ICON_FALLBACK;
+
+    const pack = document.createElement('span');
+    pack.className = 'grid-card-pack';
+    pack.textContent = '#' + card.packNumber;
+
+    el.appendChild(iconWrap);
+    el.appendChild(pack);
+  }
+
+  // Phase 5.2 — reverse-holo foil shimmer.
+  // Slot-8 cards carry isReverseHolo from the engine. Append the foil + sweep
+  // overlays last so they paint above the artwork. .grid-card already has
+  // position:relative + overflow:hidden so the layers anchor and clip cleanly.
+  //
+  // Phase 5.2.1 — animations are gated by .reverse-holo-active. Grid cards
+  // have no reveal moment to trigger that class, so we add it on creation —
+  // the collection gallery is a static display where always-on shimmer is the
+  // desired behaviour. Also append a small "RH" badge in the corner.
+  if (card.isReverseHolo) {
+    el.classList.add('reverse-holo-active');
+
+    const foil = document.createElement('div');
+    foil.className = 'reverse-holo-overlay';
+
+    const sweep = document.createElement('div');
+    sweep.className = 'reverse-holo-sweep';
+
+    const tag = document.createElement('div');
+    tag.className   = 'grid-reverse-holo';
+    tag.textContent = 'RH';
+
+    el.appendChild(foil);
+    el.appendChild(sweep);
+    el.appendChild(tag);
+  }
+
+  return el;
+}
+
+/**
+ * Render all collected cards to #card-grid.
+ * Shows the most recent MAX_DISPLAY_CARDS entries, newest first.
+ *
+ * @param {Object[]} cards - engine.state.cards
+ */
+export function renderCardGrid(cards) {
+  const grid    = document.getElementById('card-grid');
+  const countEl = document.getElementById('collection-count');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  const displayCards = cards.slice(-MAX_DISPLAY_CARDS).reverse();
+
+  const fragment = document.createDocumentFragment();
+  for (const card of displayCards) {
+    fragment.appendChild(createCardElement(card));
+  }
+  grid.appendChild(fragment);
+
+  if (countEl) {
+    if (cards.length === 0) {
+      countEl.textContent = '';
+    } else if (cards.length > MAX_DISPLAY_CARDS) {
+      countEl.textContent = `(${cards.length.toLocaleString()} total — showing last ${MAX_DISPLAY_CARDS})`;
+    } else {
+      countEl.textContent = `(${cards.length.toLocaleString()} cards)`;
+    }
+  }
+}

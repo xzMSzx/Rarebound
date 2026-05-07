@@ -1,0 +1,308 @@
+PROJECT UPDATE — PHASE 4.3 REAL POKÉMON RARITY SYSTEM (BACKBONE)
+
+This update replaces the old simulator rarity system (common / rare / epic / legendary) with the real Pokémon TCG rarity structure.
+
+The goal is to create a proper backbone for realistic booster pack generation.
+
+This update does NOT change UI symbols yet. It only changes the internal rarity structure and probability logic.
+
+Symbols will be introduced later once the rarity system is stable.
+
+---
+
+CRITICAL RULE
+
+Do NOT modify:
+
+engine RNG system  
+pity system logic  
+overlay animation system  
+skip summary logic  
+swipe controller  
+card reveal animation system  
+
+Only modify the Pokémon card data layer and pack generation logic.
+
+---
+
+SECTION 1 — REMOVE OLD SIMULATOR TIERS
+
+Remove the following rarity categories from the system:
+
+common  
+rare  
+epic  
+legendary  
+
+These categories should no longer exist anywhere in the data layer.
+
+---
+
+SECTION 2 — CREATE REAL POKÉMON RARITY TYPES
+
+Define the following internal rarity categories.
+
+common  
+uncommon  
+rare  
+holoRare  
+doubleRare  
+illustrationRare  
+ultraRare  
+specialIllustrationRare  
+hyperRare
+
+These should be the new rarity identifiers used by the system.
+
+---
+
+SECTION 3 — UPDATE RARITY MAPPER
+
+File: data/rarityMapper.js
+
+Modify mapPokemonRarity() so that Pokémon API rarity strings map to the new categories.
+
+Mapping table:
+
+Common → common
+
+Uncommon → uncommon
+
+Rare → rare
+
+Rare Holo → holoRare
+
+Rare Holo EX → doubleRare  
+Rare Holo GX → doubleRare  
+Rare Holo V → doubleRare  
+Rare Holo VMAX → doubleRare  
+Double Rare → doubleRare
+
+Illustration Rare → illustrationRare
+
+Ultra Rare → ultraRare
+
+Special Illustration Rare → specialIllustrationRare
+
+Hyper Rare → hyperRare
+
+Secret Rare → hyperRare
+
+If rarity is missing:
+
+default to common
+
+---
+
+SECTION 4 — BUILD NEW CARD POOLS
+
+File: data/cardPoolManager.js
+
+Replace the existing pool structure.
+
+New structure:
+
+cardPools = {
+  common: [],
+  uncommon: [],
+  rare: [],
+  holoRare: [],
+  doubleRare: [],
+  illustrationRare: [],
+  ultraRare: [],
+  specialIllustrationRare: [],
+  hyperRare: []
+}
+
+During set loading:
+
+mappedRarity = mapPokemonRarity(card.rarity)
+
+Push card into the corresponding pool.
+
+Stored card format:
+
+{
+  name: card.name,
+  rarity: mappedRarity,
+  imageUrl: card.images.large
+}
+
+---
+
+SECTION 5 — CREATE SET-SPECIFIC PROBABILITY TABLES
+
+Create a new file:
+
+data/setProbabilityTables.js
+
+Each set must define its own probability table.
+
+Example structure:
+
+export const setProbabilities = {
+
+  evs: {
+    holoRare: 0.60,
+    doubleRare: 0.20,
+    illustrationRare: 0.10,
+    ultraRare: 0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare: 0.01
+  },
+
+  sv3pt5: {
+    holoRare: 0.62,
+    doubleRare: 0.18,
+    illustrationRare: 0.10,
+    ultraRare: 0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare: 0.01
+  },
+
+  sv04pt5: {
+    holoRare: 0.55,
+    doubleRare: 0.20,
+    illustrationRare: 0.12,
+    ultraRare: 0.07,
+    specialIllustrationRare: 0.04,
+    hyperRare: 0.02
+  },
+
+  sv2: {
+    holoRare: 0.60,
+    doubleRare: 0.20,
+    illustrationRare: 0.10,
+    ultraRare: 0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare: 0.01
+  },
+
+  swsh11: {
+    holoRare: 0.60,
+    doubleRare: 0.20,
+    illustrationRare: 0.10,
+    ultraRare: 0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare: 0.01
+  }
+
+}
+
+Probabilities should sum to 1.
+
+---
+
+SECTION 6 — UPDATE PACK STRUCTURE (10 CARD PACK)
+
+Update pack generation so each pack contains:
+
+4 commons  
+3 uncommons  
+1 reverse slot  
+1 rare slot  
+1 hit slot
+
+Structure:
+
+slot1 → common  
+slot2 → common  
+slot3 → common  
+slot4 → common  
+
+slot5 → uncommon  
+slot6 → uncommon  
+slot7 → uncommon  
+
+slot8 → reverse (rare or holo)
+
+slot9 → rare or holoRare
+
+slot10 → hit slot
+
+---
+
+SECTION 7 — HIT SLOT LOGIC
+
+The hit slot should use the set-specific probability table.
+
+Example:
+
+roll = Math.random()
+
+Use cumulative probability to determine rarity.
+
+Example:
+
+if roll < holoRare → holoRare  
+else if roll < holoRare + doubleRare → doubleRare  
+else if roll < ... → illustrationRare  
+etc
+
+Then draw a random card from the corresponding pool.
+
+---
+
+SECTION 8 — CARD AUGMENTATION
+
+File: main.js
+
+Modify augmentCards() so that each generated card receives:
+
+name  
+imageUrl  
+rarityType
+
+Example:
+
+{
+  rarity: "doubleRare",
+  name: "Miraidon ex",
+  imageUrl: "...",
+}
+
+---
+
+SECTION 9 — UI COMPATIBILITY
+
+The reveal UI must continue to work without modification.
+
+Existing rarity glow effects can remain temporarily.
+
+Symbol system will be introduced in Phase 4.4.
+
+---
+
+SECTION 10 — BACKWARD COMPATIBILITY
+
+Simulation runs (Run 10 / Run 100 / Monte Carlo) should still function.
+
+If those systems rely on old rarity tiers, map them internally to:
+
+common → common  
+rare → rare  
+epic → holoRare  
+legendary → ultraRare
+
+This allows the simulation page to keep working until it is redesigned.
+
+---
+
+EXPECTED RESULT
+
+The simulator now uses real Pokémon rarity categories.
+
+Each set has its own hit probabilities.
+
+Packs contain realistic card distributions.
+
+Future updates can easily add:
+
+reverse holo cards  
+shiny Pokémon  
+trainer gallery cards  
+alternate art cards
+
+The system is now structurally similar to real Pokémon TCG booster pack logic.
+
+END PHASE 4.3

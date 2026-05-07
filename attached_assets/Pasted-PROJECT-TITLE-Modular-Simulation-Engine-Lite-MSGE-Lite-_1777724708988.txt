@@ -1,0 +1,534 @@
+PROJECT TITLE  
+Modular Simulation Engine Lite (MSGE-Lite)
+
+PROJECT PHASE  
+Phase 1 — Core Simulation Engine
+
+IMPORTANT:  
+This phase must only build the simulation logic and a very simple UI to test it.
+
+Do NOT build:
+
+animations  
+graphs  
+visual card grids  
+complex styling
+
+Those will be added in Phase 2 later.
+
+Focus entirely on building a clean simulation engine architecture.
+
+---
+
+TECH STACK
+
+Use only:
+
+HTML  
+CSS  
+Vanilla JavaScript
+
+Do NOT use:
+
+React  
+Vue  
+Angular  
+TypeScript  
+Node.js backend  
+Databases  
+External APIs  
+Frameworks
+
+Everything must run inside the browser.
+
+---
+
+PROJECT PURPOSE
+
+This project builds a modular simulation engine that can run rule-based simulations.
+
+The first simulation implemented will be a Trading Card Game (TCG) pack opening simulator inspired by Pokémon-style booster packs.
+
+The engine must demonstrate:
+
+modular architecture  
+probabilistic systems  
+simulation loops  
+state-driven systems
+
+The simulation engine must be reusable so that other simulations could be added later.
+
+---
+
+VERY IMPORTANT ARCHITECTURE RULE
+
+The simulation engine must NOT depend on the UI.
+
+The UI can read engine data.
+
+But the engine must not contain any DOM manipulation.
+
+Example:
+
+Correct:
+
+engine produces simulation state  
+UI reads state and displays it
+
+Incorrect:
+
+engine directly updates HTML elements
+
+---
+
+APPLICATION STRUCTURE
+
+The project must use this file structure.
+
+index.html  
+style.css  
+main.js
+
+engine/
+
+engine.js  
+state.js  
+rules.js  
+rng.js
+
+simulations/
+
+packSimulation.js
+
+ui/
+
+uiRenderer.js
+
+---
+
+PAGE LAYOUT
+
+Keep the UI extremely simple.
+
+Use basic HTML.
+
+Sections required:
+
+Header  
+Control Buttons  
+Simulation Log  
+Simulation State
+
+No advanced styling required.
+
+The UI only exists so we can test the engine.
+
+---
+
+HEADER
+
+Display title:
+
+Modular Simulation Engine Lite
+
+Subtitle:
+
+Phase 1 — Pack Simulation Engine
+
+---
+
+CONTROL PANEL
+
+Buttons required:
+
+Open Pack  
+Run 10 Packs  
+Run 100 Packs  
+Reset Simulation
+
+Button behavior:
+
+Open Pack → run one simulation step
+
+Run 10 Packs → run simulation step 10 times
+
+Run 100 Packs → run simulation step 100 times
+
+Reset → clear simulation state
+
+---
+
+SIMULATION LOG PANEL
+
+Display text logs.
+
+Example log messages:
+
+Pack #1 opened  
+Slot 1: Common  
+Slot 2: Common  
+Slot 3: Common  
+Slot 4: Rare  
+Slot 5: Epic  
+
+Epic card pulled
+
+Pity system activated
+
+Log should append new messages.
+
+---
+
+SIMULATION STATE PANEL
+
+Display the following values:
+
+Total Packs Opened  
+Total Cards Generated  
+Current Pity Counter
+
+Rarity counts:
+
+Common  
+Rare  
+Epic  
+Legendary
+
+These values must update after each simulation step.
+
+---
+
+ENGINE ARCHITECTURE
+
+The engine must be modular and separated into layers.
+
+---
+
+LAYER 1 — ENGINE CORE
+
+Create an Engine class.
+
+Responsibilities:
+
+store simulation state  
+execute simulation steps  
+run rules  
+record event logs
+
+Functions required:
+
+initializeSimulation()
+
+Creates initial simulation state.
+
+stepSimulation()
+
+Runs one simulation step.
+
+runBatchSimulation(n)
+
+Runs stepSimulation n times.
+
+resetSimulation()
+
+Resets state back to initial values.
+
+The engine should maintain:
+
+state  
+entities  
+rules  
+eventLog
+
+---
+
+LAYER 2 — ENTITY SYSTEM
+
+Entities represent objects in the simulation.
+
+Examples:
+
+Player  
+Card  
+Pack
+
+Entity format example:
+
+{
+ id: "card_1042",
+ type: "card",
+ data: {
+  rarity: "rare"
+ }
+}
+
+Entities should be stored in an array.
+
+---
+
+LAYER 3 — RULES SYSTEM
+
+Rules are functions that modify the simulation state.
+
+Rules must follow this format:
+
+function rule(state, engine)
+
+Rules must return the updated state.
+
+Example rules:
+
+openPackRule  
+generateCardRule  
+applyPityRule  
+updateStatisticsRule
+
+Rules must not interact with the UI.
+
+---
+
+LAYER 4 — RNG SYSTEM
+
+Create a dedicated RNG module.
+
+File:
+
+engine/rng.js
+
+Functions required:
+
+weightedRandom(options)
+
+Example input:
+
+[
+{ value: "common", weight: 70 },
+{ value: "rare", weight: 25 },
+{ value: "epic", weight: 4 },
+{ value: "legendary", weight: 1 }
+]
+
+The function returns one selected value.
+
+---
+
+SEEDED RANDOMNESS
+
+Add seeded RNG capability.
+
+The engine should contain a seed value.
+
+Each random roll increments the seed.
+
+This allows deterministic simulations.
+
+Example:
+
+engine.seed = 12345
+
+This ensures the same simulation can be reproduced.
+
+---
+
+SIMULATION IMPLEMENTATION
+
+Create one simulation:
+
+Pack Opening Simulator
+
+File:
+
+simulations/packSimulation.js
+
+---
+
+PACK STRUCTURE
+
+Each pack contains exactly 5 cards.
+
+Slots:
+
+Slot 1 — Common  
+Slot 2 — Common  
+Slot 3 — Common  
+Slot 4 — Rare Slot  
+Slot 5 — Hit Slot
+
+---
+
+RARITY PROBABILITIES
+
+Rare Slot probabilities:
+
+Rare = 80%  
+Epic = 18%  
+Legendary = 2%
+
+Hit Slot probabilities:
+
+Common = 90%  
+Rare = 8%  
+Epic = 1.8%  
+Legendary = 0.2%
+
+Common slots always produce Common cards.
+
+---
+
+PITY SYSTEM
+
+Implement a pity mechanic.
+
+Rule:
+
+If the player opens 10 packs without receiving an Epic or Legendary card, the next pack guarantees an Epic.
+
+Implementation steps:
+
+Maintain pityCounter.
+
+Increase pityCounter after each pack that contains no Epic or Legendary.
+
+Reset pityCounter to zero when Epic or Legendary appears.
+
+When pityCounter reaches 10:
+
+Override Slot 4 rarity to Epic.
+
+Log message:
+
+"PITY SYSTEM ACTIVATED"
+
+---
+
+PACK OPENING PROCESS
+
+When stepSimulation runs:
+
+1. increment pack counter  
+2. generate 5 cards based on slot rules  
+3. create card entities  
+4. update rarity statistics  
+5. apply pity system  
+6. update state values  
+7. record log messages
+
+---
+
+CARD ENTITY STRUCTURE
+
+Each card must contain:
+
+id  
+rarity  
+packNumber
+
+Example:
+
+{
+ id: "card_2083",
+ rarity: "epic",
+ packNumber: 42
+}
+
+---
+
+SIMULATION STATE STRUCTURE
+
+State should look like this:
+
+{
+ packsOpened: 0,
+ cards: [],
+ pityCounter: 0,
+ rarityStats: {
+  common: 0,
+  rare: 0,
+  epic: 0,
+  legendary: 0
+ }
+}
+
+---
+
+LOGGING SYSTEM
+
+Engine must store an eventLog array.
+
+Each event pushes a message.
+
+Example messages:
+
+Pack opened  
+Card generated  
+Rarity hit  
+Pity triggered
+
+The UI renderer reads this log and displays it.
+
+---
+
+UI RENDERING
+
+The UI should be handled by ui/uiRenderer.js.
+
+Responsibilities:
+
+render logs  
+render simulation state  
+refresh display after each simulation step
+
+Use simple DOM manipulation.
+
+---
+
+BATCH SIMULATION
+
+runBatchSimulation(n) should run multiple simulation steps quickly.
+
+Examples:
+
+Run 10 Packs  
+Run 100 Packs
+
+Batch simulation must still update statistics correctly.
+
+---
+
+CODE QUALITY REQUIREMENTS
+
+Code must be:
+
+modular  
+well commented  
+organized into logical files
+
+Avoid:
+
+large single scripts  
+duplicate logic  
+mixing UI and engine code
+
+Each file should have a single responsibility.
+
+---
+
+EXPECTED RESULT AFTER PHASE 1
+
+The application should allow the user to:
+
+Open packs using buttons  
+Run batch pack simulations  
+See pack results in logs  
+Track rarity statistics  
+Observe pity system behavior
+
+All logic should run correctly in the browser.
+
+No animations or graphs yet.
+
+Those will be implemented in Phase 2.
+
+---
+
+END OF PHASE 1 SPECIFICATION

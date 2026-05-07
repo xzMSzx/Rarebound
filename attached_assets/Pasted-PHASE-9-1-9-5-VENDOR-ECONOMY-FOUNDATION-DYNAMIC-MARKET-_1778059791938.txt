@@ -1,0 +1,766 @@
+PHASE 9.1–9.5 — VENDOR ECONOMY FOUNDATION, DYNAMIC MARKET SIMULATION, SELLING SYSTEMS, FAVOR/REPUTATION, DAILY ROTATIONS, AND COLLECTOR PROGRESSION
+
+IMPORTANT:
+This is one of the largest architectural phases in the entire project.
+
+This phase transforms the app from:
+“collection simulator”
+into:
+“living collectible economy.”
+
+DO NOT rewrite or destabilize:
+
+* pack opening systems
+* rarity FX
+* holo systems
+* audio systems
+* reveal systems
+* binder systems
+* wishlist systems
+* statistics systems
+* preload systems
+* card detail modal systems
+
+This phase EXTENDS the current architecture.
+
+Everything must feel:
+
+* premium
+* immersive
+* believable
+* psychologically rewarding
+* elegant
+* NOT like a mobile cash-grab game
+
+Avoid:
+
+* flashing reward spam
+* exaggerated monetization feel
+* pay-to-win design
+* giant cluttered dashboards
+* confusing currencies
+
+The app should feel:
+“like a premium collectible collecting experience.”
+
+========================================================
+SECTION 0 — ECONOMY PHILOSOPHY
+==============================
+
+The economy must create:
+
+* tension
+* decision-making
+* collection attachment
+* aspiration
+* anticipation
+
+NOT:
+
+* infinite profit
+* effortless progression
+* grind exhaustion
+* constant bankruptcy
+
+Users should constantly ask:
+“Do I open packs, save money, or sell cards?”
+
+THAT is the core emotional loop.
+
+========================================================
+SECTION 1 — MAIN SHOP → VENDOR HUB CONVERSION
+=============================================
+
+The app should NO LONGER feel like:
+a single generic pack shop.
+
+Convert the main shop into:
+“Vendor Hub”
+
+========================================================
+1.1 — VENDOR HUB LAYOUT
+=======================
+
+Main screen becomes:
+a vertically scrollable vendor marketplace.
+
+Each vendor gets:
+
+* large premium card section
+* atmosphere
+* logo/header
+* short description
+* reputation/favor progress
+* featured inventory
+
+DO NOT overcrowd the screen.
+
+Each vendor section should breathe visually.
+
+========================================================
+1.2 — REQUIRED VENDORS
+======================
+
+Create these four vendors:
+
+========================================================
+POKÉMART
+========
+
+Theme:
+clean modern retail.
+
+Visuals:
+
+* blue-white accents
+* soft glow
+* polished storefront feel
+
+Behavior:
+
+* reliable stock
+* lowest pack prices
+* newest sets
+
+Description:
+“Reliable modern stock refreshed daily.”
+
+========================================================
+RETRO VAULT
+===========
+
+Theme:
+premium vintage collector shop.
+
+Visuals:
+
+* warm gold tones
+* dark wood textures
+* subtle luxury
+
+Behavior:
+
+* older sets
+* expensive inventory
+* higher rarity stock chances
+
+Description:
+“Curated inventory sourced from private collector archives.”
+
+========================================================
+NIGHT MARKET
+============
+
+Theme:
+chaotic underground reseller.
+
+Visuals:
+
+* neon purple/red
+* dark atmosphere
+* unstable pricing
+
+Behavior:
+
+* random discounts
+* mystery products
+* volatile economy
+
+Description:
+“Unpredictable inventory with dangerous prices and rare finds.”
+
+========================================================
+THE BROKER
+==========
+
+Theme:
+minimalist luxury prestige vendor.
+
+Visuals:
+
+* black/gold
+* elegant minimal UI
+* premium spacing
+
+Behavior:
+
+* DOES NOT sell normal packs
+* sells rotating chase cards
+* only active Friday–Sunday local real-world time
+
+Description:
+“A mysterious collector dealing in the rarest cards available.”
+
+========================================================
+1.3 — VENDOR VISUAL STRUCTURE
+=============================
+
+Each vendor card should include:
+
+TOP:
+
+* vendor name
+* atmosphere image/banner
+* short lore line
+
+MIDDLE:
+
+* current featured stock
+
+BOTTOM:
+
+* favor/reputation progress
+* refresh timer
+* vendor-specific bonus
+
+========================================================
+SECTION 2 — VENDOR FAVOR SYSTEM
+===============================
+
+CRITICAL:
+Vendor Favor is NOT global reputation.
+
+Each vendor tracks its own favor separately.
+
+========================================================
+2.1 — FAVOR SOURCES
+===================
+
+Favor increases from:
+
+* buying packs
+* selling cards
+* purchasing featured items
+* interacting consistently with a vendor
+
+Favor should increase slowly.
+
+NOT:
+instantly grindable.
+
+========================================================
+2.2 — FAVOR LEVELS
+==================
+
+Each vendor has:
+Level 1–5.
+
+Display:
+small elegant progress bar.
+
+========================================================
+2.3 — FAVOR REWARDS
+===================
+
+DO NOT make rewards overpowered.
+
+Keep them subtle and classy.
+
+========================================================
+LEVEL 1
+=======
+
+Tiny pack discount.
+
+========================================================
+LEVEL 2
+=======
+
++0.5% holo odds at THIS vendor only.
+
+========================================================
+LEVEL 3
+=======
+
+Preview tomorrow’s stock rotation.
+
+========================================================
+LEVEL 4
+=======
+
+Access to exclusive mystery products.
+
+========================================================
+LEVEL 5
+=======
+
+Early Broker access window.
+
+========================================================
+2.4 — FAVOR UX
+==============
+
+After purchases/sales:
+show:
+“Retro Vault Favor +2”
+
+Very subtle fade-in.
+
+NOT giant arcade popups.
+
+========================================================
+SECTION 3 — GLOBAL COLLECTOR REPUTATION
+=======================================
+
+Separate from vendor favor.
+
+This reflects:
+“How serious of a collector is this user?”
+
+========================================================
+3.1 — REPUTATION SOURCES
+========================
+
+Increase reputation slowly from:
+
+* opening packs
+* discovering new cards
+* completing binder pages
+* completing sets
+* wishlist completions
+* maintaining collection value
+* obtaining rare pulls
+
+DO NOT increase reputation heavily from selling.
+
+========================================================
+3.2 — REPUTATION REWARDS
+========================
+
+Reputation unlocks:
+
+* larger daily stipend
+* cosmetic prestige
+* expanded wishlist size
+* advanced statistics
+* future premium binder themes
+
+NOT:
+massive odds boosts.
+
+========================================================
+3.3 — REPUTATION DISPLAY
+========================
+
+Show:
+Collector Rank.
+
+Examples:
+
+* Rookie Collector
+* Experienced Collector
+* Archivist
+* Master Collector
+
+Very classy presentation.
+
+========================================================
+SECTION 4 — SELLING SYSTEM
+==========================
+
+CRITICAL:
+Users MUST be allowed to sell first copies.
+
+Duplicate-only selling is too restrictive.
+
+BUT:
+users should emotionally hesitate before selling their only copy.
+
+========================================================
+4.1 — COLLECTION LOCK SYSTEM
+============================
+
+Every card has:
+Locked / Unlocked state.
+
+FIRST COPIES:
+auto-lock by default.
+
+Locked cards:
+display small lock icon.
+
+========================================================
+4.2 — SELLING LOCKED CARDS
+==========================
+
+Attempting to sell a locked card triggers:
+
+WARNING MODAL:
+
+“You are about to sell your only copy.”
+
+Buttons:
+
+* Cancel
+* Unlock & Sell
+
+This creates emotional friction.
+
+========================================================
+4.3 — SELL VALUE SYSTEM
+=======================
+
+Card sell values derive from:
+
+* market value
+* rarity
+* market trends
+* vendor demand
+
+========================================================
+4.4 — COMMISSION SYSTEM
+=======================
+
+Different rarities have different commissions.
+
+Example:
+
+Common:
+2%
+
+Rare:
+5%
+
+Double Rare:
+8%
+
+Ultra Rare:
+12%
+
+Hyper Rare:
+15%
+
+========================================================
+4.5 — COMMISSION PURPOSE
+========================
+
+Commission contributes toward:
+Vendor Favor.
+
+This is CRITICAL.
+
+The economy loop becomes:
+
+sell cards
+→ gain money
+→ increase vendor favor
+→ unlock better vendor perks
+
+Elegant ecosystem.
+
+========================================================
+4.6 — SELL UX
+=============
+
+Selling flow:
+
+Tap card
+→ Sell modal
+
+Display:
+
+* card image
+* current value
+* commission
+* final payout
+* owned count
+* lock state
+
+Confirm:
+card animates sliding away toward currency display.
+
+Very smooth.
+Very premium.
+
+========================================================
+SECTION 5 — DYNAMIC MARKET VALUE SYSTEM
+=======================================
+
+This is one of the MOST IMPORTANT systems.
+
+========================================================
+5.1 — MARKET VALUES ARE NOT STATIC
+==================================
+
+Values should fluctuate slowly over time.
+
+DO NOT:
+reroll wildly.
+
+This should feel:
+believable.
+
+========================================================
+5.2 — VALUE FACTORS
+===================
+
+Value influenced by:
+
+* rarity
+* pull rate
+* vendor demand
+* market trends
+* set age
+* popularity multiplier
+* random volatility band
+
+========================================================
+5.3 — VOLATILITY BY RARITY
+==========================
+
+Commons:
+very stable.
+
+Ultra rares:
+more volatile.
+
+Hyper rares:
+most volatile.
+
+This creates:
+investment psychology.
+
+========================================================
+5.4 — PRICE MOVEMENT LIMITS
+===========================
+
+Prevent economy chaos.
+
+Suggested:
+
+* commons: ±1–2%
+* rares: ±3–5%
+* ultra rares: ±5–10%
+
+per refresh cycle.
+
+========================================================
+5.5 — VALUE PERSISTENCE
+=======================
+
+Card values MUST persist.
+
+Do NOT regenerate values every render.
+
+Store:
+
+* by card ID
+* persist in local storage/player state
+
+========================================================
+SECTION 6 — DAILY REFRESH SYSTEM
+================================
+
+This system makes the world feel alive.
+
+========================================================
+6.1 — REFRESH TIMING
+====================
+
+During development:
+allow accelerated refresh cycle:
+every 30–60 minutes.
+
+Architecture should support:
+real daily refresh later.
+
+========================================================
+6.2 — WHAT REFRESHES
+====================
+
+Refresh:
+
+* vendor stock
+* discounts
+* featured packs
+* mystery products
+* market values
+* chase cards
+* market trends
+
+========================================================
+6.3 — REFRESH UX
+================
+
+Show:
+small elegant timer.
+
+Examples:
+“Refreshes in 23m”
+“Next Market Rotation: 11h”
+
+DO NOT use giant countdowns.
+
+========================================================
+SECTION 7 — MARKET TRENDS SYSTEM
+================================
+
+This system gives life to the economy.
+
+========================================================
+7.1 — TREND TYPES
+=================
+
+Examples:
+
+“Fire-type cards trending”
+“Vintage demand rising”
+“Illustration rares surging”
+“Trainer cards cooling”
+
+========================================================
+7.2 — TREND EFFECTS
+===================
+
+Trends subtly affect:
+
+* card values
+* vendor inventory
+* featured stock
+* Broker inventory
+
+========================================================
+7.3 — TREND PRESENTATION
+========================
+
+Display:
+small ticker or insight panel.
+
+NOT:
+stock-market overload.
+
+========================================================
+SECTION 8 — MYSTERY PRODUCT SYSTEM
+==================================
+
+Night Market + future vendors can sell:
+Mystery Products.
+
+========================================================
+8.1 — MYSTERY BOX CONTENTS
+==========================
+
+Possible contents:
+
+* random packs
+* premium packs
+* guaranteed holo
+* random singles
+* rare chance bundles
+
+========================================================
+8.2 — ECONOMY SAFETY
+====================
+
+Expected value MUST remain slightly below purchase price.
+
+Pack EV should NOT exceed cost.
+
+This prevents infinite farming.
+
+========================================================
+SECTION 9 — THE BROKER SYSTEM
+=============================
+
+One of the most important retention systems.
+
+========================================================
+9.1 — BROKER SCHEDULE
+=====================
+
+The Broker appears:
+Friday–Sunday real-world local time.
+
+If unavailable:
+vendor shows:
+“Returns Friday.”
+
+========================================================
+9.2 — BROKER INVENTORY
+======================
+
+The Broker sells:
+
+* ultra chase singles
+* rare bundles
+* occasional premium sealed products
+
+NOT normal inventory.
+
+========================================================
+9.3 — BROKER PRICING
+====================
+
+Broker inventory MUST feel expensive.
+
+Examples:
+$400+
+$900+
+$1200+
+
+This creates:
+save vs gamble tension.
+
+========================================================
+9.4 — BROKER ROTATION
+=====================
+
+Inventory rotates weekly.
+
+This creates anticipation.
+
+========================================================
+SECTION 10 — PERFORMANCE + ARCHITECTURE
+=======================================
+
+DO NOT:
+
+* rerender entire economy repeatedly
+* recalculate every card value every frame
+* block UI with refresh logic
+
+========================================================
+10.1 — CACHE ECONOMY DATA
+=========================
+
+Persist:
+
+* market values
+* favor
+* reputation
+* vendor stock
+* refresh timestamps
+* trend states
+
+========================================================
+10.2 — ECONOMY ENGINE
+=====================
+
+Create centralized:
+economyManager.js
+
+Responsible for:
+
+* trends
+* rotations
+* value updates
+* Broker schedule
+* stock generation
+
+DO NOT scatter economy logic across random files.
+
+========================================================
+SECTION 11 — FINAL PSYCHOLOGICAL GOAL
+=====================================
+
+After Phase 9.1–9.5:
+
+Users should feel:
+
+“I have favorite vendors.”
+“I’m building a valuable collection.”
+“I should save for that Broker card.”
+“I wonder what refreshes tomorrow.”
+“I don’t want to sell this… but I need money.”
+
+THAT emotional tension is the core of the entire economy phase.

@@ -1,0 +1,456 @@
+PHASE 10.1.1 — CRITICAL STABILIZATION + UX POLISH PATCH
+PROJECT: RAREBOUND
+PRIORITY: HIGH
+MODEL: REPLIT POWER
+
+IMPORTANT:
+This patch is a STABILIZATION + POLISH PASS.
+DO NOT redesign architecture.
+DO NOT rewrite systems.
+DO NOT touch sacred gameplay flows.
+
+This patch exists to:
+- fix broken interactions
+- stabilize overlay behavior
+- restore audio UX
+- polish mystery box visuals
+- refine floating utility dock behavior
+
+Maintain current premium restrained aesthetic.
+
+────────────────────────────────────
+SECTION 1 — CRITICAL NAVIGATION HOTFIX
+────────────────────────────────────
+
+CURRENT ISSUE:
+Top navigation buttons:
+- My Collection
+- Market
+- Stats
+
+are no longer clickable after the new Utility Dock implementation.
+
+The 3-dot utility dock still works.
+
+This strongly indicates:
+an invisible overlay/container from the dock is intercepting pointer events.
+
+THIS IS THE HIGHEST PRIORITY ISSUE.
+
+────────────────────────────────────
+1A — ROOT CAUSE FIX
+────────────────────────────────────
+
+Audit the entire utility dock hierarchy.
+
+Likely issue:
+outer dock wrapper is:
+- full-width
+- fixed positioned
+- intercepting touch input
+
+Correct architecture:
+
+OUTER WRAPPER:
+must have:
+pointer-events: none;
+
+ONLY:
+- the floating dock button
+- the expanded menu panel
+should use:
+pointer-events: auto;
+
+IMPORTANT:
+The wrapper itself must NEVER block interaction underneath.
+
+────────────────────────────────────
+1B — REQUIRED BEHAVIOR
+────────────────────────────────────
+
+After patch:
+- My Collection clickable
+- Market clickable
+- Stats clickable
+- Balance area unaffected
+- Vendor cards clickable
+- Utility dock still functional
+- Expanded menu still clickable
+
+Test:
+touch interactions across entire upper viewport.
+
+────────────────────────────────────
+1C — Z-INDEX AUDIT
+────────────────────────────────────
+
+Audit z-index stacking for:
+- utility dock
+- overlays
+- floating panels
+- top navigation
+- mystery box modal
+- settings screen
+- help screen
+
+Ensure:
+ONLY visible overlays intercept input.
+
+NO invisible fixed layers.
+
+────────────────────────────────────
+SECTION 2 — UTILITY DOCK POLISH
+────────────────────────────────────
+
+Current issue:
+3-dot icon visually too small inside the circular dock button.
+
+There is excessive empty space.
+
+────────────────────────────────────
+2A — ICON SCALE
+────────────────────────────────────
+
+Increase:
+- dot size by ~20–25%
+- improve spacing balance
+- slightly improve contrast
+
+Keep:
+minimal premium look.
+
+DO NOT:
+- make it cartoonish
+- overly bold
+- oversized
+
+────────────────────────────────────
+2B — TOUCH TARGET
+────────────────────────────────────
+
+Ensure:
+- touch target minimum 44x44
+- visually centered
+- proper mobile tap feedback
+
+────────────────────────────────────
+2C — MENU OPEN/CLOSE
+────────────────────────────────────
+
+Ensure:
+- smooth open animation
+- smooth collapse animation
+- no clipping
+- no viewport overflow
+- no accidental close while scrolling
+
+Animation tone:
+soft
+premium
+quick
+subtle
+
+────────────────────────────────────
+SECTION 3 — AMBIENT AUDIO ACTIVATION FIX
+────────────────────────────────────
+
+CURRENT ISSUE:
+Vendor ambience appears inactive.
+
+Most likely cause:
+mobile browser autoplay policy.
+
+AudioContext is probably suspended until first user interaction.
+
+────────────────────────────────────
+3A — AUDIO CONTEXT RESUME
+────────────────────────────────────
+
+Implement:
+resumeAudioContext()
+
+Trigger AFTER FIRST USER INTERACTION:
+Examples:
+- Buy Pack
+- Open Utility Dock
+- Open Collection
+- Tap anywhere meaningful
+
+Implementation:
+After first valid gesture:
+resume audio context safely.
+
+DO NOT:
+resume repeatedly every click.
+
+Track:
+hasAudioUnlocked boolean.
+
+────────────────────────────────────
+3B — AUDIO STATE FEEDBACK
+────────────────────────────────────
+
+Inside Settings:
+under Ambient Audio setting:
+
+Add subtle helper text:
+"Audio activates after first interaction."
+
+Muted styling.
+Small text.
+Premium appearance.
+
+────────────────────────────────────
+3C — VENDOR AUDIO VERIFICATION
+────────────────────────────────────
+
+Verify:
+IntersectionObserver correctly switches ambience.
+
+Requirements:
+PokéMart:
+soft electronic ambience
+
+Retro Vault:
+warm archive ambience
+
+Night Market:
+low neon ambience
+
+Broker:
+dark cinematic ambience
+
+Transitions:
+crossfade only.
+NO hard cuts.
+
+Volume:
+very low/subtle.
+
+────────────────────────────────────
+3D — AUDIO SAFETY
+────────────────────────────────────
+
+Ensure:
+- no console autoplay errors
+- no repeated AudioContext creation
+- no memory leaks
+- no duplicate ambience loops
+- audio cleanup on overlay destruction
+
+────────────────────────────────────
+SECTION 4 — MYSTERY BOX VISUAL REWORK
+────────────────────────────────────
+
+CURRENT ISSUE:
+Mystery boxes feel too placeholder-like visually.
+
+Gameplay system is good.
+Visual identity needs improvement.
+
+IMPORTANT:
+DO NOT use copyrighted Pokémon artwork.
+
+We want:
+premium collector crate aesthetic.
+
+────────────────────────────────────
+4A — MYSTERY BOX VISUAL LANGUAGE
+────────────────────────────────────
+
+Each box should feel:
+rare
+sealed
+mysterious
+premium
+
+NOT:
+arcade lootbox
+gacha spam
+cartoon reward chest
+
+────────────────────────────────────
+4B — BOX CARD REDESIGN
+────────────────────────────────────
+
+Enhance mystery box tiles with:
+
+1. Distinct emblem/logo
+Examples:
+- archive hexagon
+- neon market sigil
+- broker insignia
+
+2. Layered backgrounds
+Use:
+- subtle gradients
+- metallic reflections
+- dark textures
+- premium shading
+
+3. Foil border treatment
+Very restrained glow.
+
+4. Ambient shimmer
+Extremely subtle animated reflection sweep.
+
+LOW opacity only.
+
+────────────────────────────────────
+4C — BOX DIFFERENTIATION
+────────────────────────────────────
+
+Night Market box:
+slightly neon-magenta energy
+
+Retro Vault crate:
+aged archive gold/brass
+
+Broker cache:
+obsidian black/gold premium styling
+
+────────────────────────────────────
+4D — TYPOGRAPHY POLISH
+────────────────────────────────────
+
+Improve:
+- label hierarchy
+- spacing
+- product readability
+
+Maintain:
+RAREBOUND visual identity.
+
+────────────────────────────────────
+SECTION 5 — MYSTERY BOX OPENING POLISH
+────────────────────────────────────
+
+Enhance reveal atmosphere slightly.
+
+DO NOT:
+make it full cinematic.
+
+Add:
+- subtle seal-break sound
+- gentle shimmer
+- smoother pack reveal staging
+
+Keep:
+fast
+clean
+premium
+
+────────────────────────────────────
+SECTION 6 — ECONOMY SAVE VERIFICATION
+────────────────────────────────────
+
+User observed:
+balance still shows $260.
+
+This is EXPECTED because old saves persist.
+
+VERIFY:
+Starter Grant ($120) only applies to:
+NEW saves.
+
+DO NOT overwrite existing saves.
+
+────────────────────────────────────
+6A — OPTIONAL DEBUG MESSAGE
+────────────────────────────────────
+
+When:
+Developer Reset Economy occurs
+
+Next boot should:
+correctly initialize:
+Starter Collector Grant: $120
+
+Verify flow works correctly.
+
+────────────────────────────────────
+SECTION 7 — MOBILE UX SAFETY PASS
+────────────────────────────────────
+
+Audit:
+- floating dock on small screens
+- viewport clipping
+- scroll conflicts
+- dock overlap with balance
+- menu overflow near top-right safe-area
+- landscape orientation behavior
+
+Ensure:
+NO UI elements render behind:
+- iOS notch
+- dynamic island
+- browser bars
+
+────────────────────────────────────
+SECTION 8 — PERFORMANCE PASS
+────────────────────────────────────
+
+Ensure new mystery box visuals:
+- do NOT create FPS drops
+- do NOT use heavy blur filters excessively
+- do NOT use expensive shadows repeatedly
+
+Ambient shimmer:
+must be lightweight CSS animation.
+
+Audio:
+must not create multiple active loops.
+
+────────────────────────────────────
+SECTION 9 — CODE SAFETY
+────────────────────────────────────
+
+DO NOT TOUCH:
+- pack opening architecture
+- market history persistence
+- binder rendering logic
+- preload screen flow
+- reputation structure
+- vendor economy calculations
+
+Build ONLY on top of existing systems.
+
+────────────────────────────────────
+SECTION 10 — FINAL VERIFICATION
+────────────────────────────────────
+
+Before completion:
+verify ALL:
+
+CRITICAL:
+- top nav buttons functional
+- utility dock no longer blocks input
+- overlays clickable only when visible
+- no invisible touch interception
+
+AUDIO:
+- ambience activates after first interaction
+- settings helper text visible
+- no autoplay console spam
+- crossfades working
+
+MYSTERY BOXES:
+- visually upgraded
+- performant
+- no placeholder feel
+- still mobile responsive
+
+GENERAL:
+- no runtime errors
+- no typecheck failures
+- no body scroll deadlocks
+- no overlay stacking bugs
+- no viewport clipping
+
+Final response MUST include:
+- exact files modified
+- exact files added
+- root cause of navigation bug
+- confirmation of typecheck success
+- confirmation of clean runtime
+- confirmation mystery boxes upgraded

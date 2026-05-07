@@ -1,0 +1,273 @@
+PROJECT UPDATE — PHASE 4 REAL POKÉMON CARD INTEGRATION
+
+This update upgrades the pack simulator to use real Pokémon Trading Card Game cards.
+
+Cards will be fetched from the Pokémon TCG API and cached locally when a set is selected.  
+The existing simulation engine, pack RNG, and overlay reveal system must remain unchanged.
+
+The goal is to replace placeholder rarity cards with real Pokémon card images.
+
+---
+
+CRITICAL RULE
+
+Do NOT modify:
+
+engine RNG logic  
+pity system  
+pack slot probabilities  
+overlay animation system  
+skip summary logic  
+
+Only add a card data layer and integrate it with the reveal UI.
+
+---
+
+API SOURCE
+
+Use the public Pokémon TCG API:
+
+https://api.pokemontcg.io/v2/cards
+
+No authentication key is required for small requests.
+
+Each card entry contains fields such as:
+
+name  
+rarity  
+set  
+images.large
+
+Use images.large for card artwork.
+
+---
+
+NEW DIRECTORY
+
+Create a new folder:
+
+/data
+
+Files inside:
+
+setLoader.js  
+cardPoolManager.js  
+rarityMapper.js
+
+---
+
+FILE — setLoader.js
+
+Responsible for fetching cards from the Pokémon API.
+
+Function:
+
+async function fetchSetCards(setId)
+
+This should call:
+
+https://api.pokemontcg.io/v2/cards?q=set.id:{setId}
+
+Return the card array from the API response.
+
+Example returned card object:
+
+{
+  name: "Pikachu",
+  rarity: "Rare",
+  images: {
+    large: "card image url"
+  }
+}
+
+---
+
+FILE — rarityMapper.js
+
+Map Pokémon API rarity names into the simulator rarity tiers.
+
+Example mapping:
+
+Common → common  
+Uncommon → common  
+Rare → rare  
+Rare Holo → epic  
+Rare Ultra → legendary  
+Rare Secret → legendary
+
+Function:
+
+function mapPokemonRarity(apiRarity)
+
+Return one of:
+
+common  
+rare  
+epic  
+legendary
+
+If rarity is missing, default to common.
+
+---
+
+FILE — cardPoolManager.js
+
+This module stores the currently loaded set.
+
+Variables:
+
+currentSetId  
+cachedCards
+
+Function:
+
+async function loadSet(setId)
+
+If the set is already cached, return cached data.
+
+Otherwise:
+
+1. fetch cards via setLoader  
+2. map rarities using rarityMapper  
+3. store cards grouped by rarity
+
+Example structure:
+
+{
+  common: [],
+  rare: [],
+  epic: [],
+  legendary: []
+}
+
+Store this in cachedCards.
+
+---
+
+CARD SELECTION
+
+Modify the pack generation logic so that instead of generating placeholder cards, it pulls a random card from the correct rarity pool.
+
+Example:
+
+if rarity = "rare"
+
+choose a random card from:
+
+cachedCards.rare
+
+Return:
+
+{
+  name,
+  rarity,
+  imageUrl
+}
+
+---
+
+SET SELECTION UI
+
+Add a new UI component above the pack opening controls.
+
+Label:
+
+Select Set
+
+Provide 5 selectable Pokémon sets.
+
+Example sets:
+
+Scarlet & Violet → setId: sv1  
+Paradox Rift → setId: sv4  
+Temporal Forces → setId: sv5  
+Paldean Fates → setId: sv04pt5  
+Obsidian Flames → setId: sv3
+
+When the user selects a set:
+
+call:
+
+loadSet(setId)
+
+Display loading indicator until finished.
+
+---
+
+RENDERING CARDS
+
+Update the card renderer so that revealed cards show the real card image.
+
+Inside revealCard rendering:
+
+create an img element
+
+img.src = card.imageUrl
+
+Set styling:
+
+width: 100%  
+height: auto  
+border-radius: 6px
+
+Remove the rarity-letter placeholder from the reveal stage.
+
+The rarity glow styling should still apply to the card container.
+
+---
+
+COLLECTION GRID
+
+Update the collection display so it renders card images instead of rarity placeholders.
+
+Each collected card should display:
+
+card image  
+card name below the image
+
+Example structure:
+
+div.card-tile  
+  img  
+  div.card-name
+
+---
+
+LOADING STATE
+
+While a set is loading:
+
+disable the "Open Pack" button.
+
+Show text:
+
+Loading card set...
+
+Once the cards are cached, enable pack opening again.
+
+---
+
+ERROR HANDLING
+
+If the API request fails:
+
+display message:
+
+Failed to load card set.
+
+Allow retry.
+
+---
+
+EXPECTED RESULT
+
+After selecting a set:
+
+cards are fetched from the Pokémon API  
+cards are grouped by rarity  
+pack RNG selects real cards  
+reveals show real Pokémon artwork  
+
+Pack opening should feel identical to before, but with real cards instead of placeholders.
+
+END PHASE 4 UPDATE

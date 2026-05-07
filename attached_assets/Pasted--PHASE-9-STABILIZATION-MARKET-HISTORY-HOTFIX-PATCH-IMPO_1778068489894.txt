@@ -1,0 +1,387 @@
+# PHASE 9 STABILIZATION + MARKET HISTORY HOTFIX PATCH
+
+IMPORTANT:
+This is a refinement/stabilization patch ONLY.
+
+DO NOT redesign:
+
+* market modal
+* vendor hub
+* binder layout
+* graph modal structure
+* typography system
+* economy logic
+* chase system
+* existing animations
+
+The current UI direction is GOOD.
+This patch only fixes:
+
+* scroll lifecycle reliability
+* empty graph UX
+* history generation
+* graph discoverability
+* modal balance polish
+
+Goal:
+make the market system feel fully alive and intentional immediately, even for brand-new users with little history data.
+
+---
+
+SECTION 1 — SCROLL SYSTEM STABILIZATION
+(HIGH PRIORITY)
+---------------
+
+Current issue:
+overlay screens intermittently freeze page scrolling after closing modals/screens.
+
+Root cause:
+body scroll locking is not consistently restored across all modal close paths.
+
+Implement robust overlay-safe scroll locking.
+
+---
+
+## SECTION 2 — SAFE BODY SCROLL LOCK
+
+Create/update:
+ui/scrollManager.js
+
+Implement:
+
+let scrollY = 0;
+let overlayCount = 0;
+
+export function lockBodyScroll() {
+overlayCount++;
+
+```
+if (overlayCount > 1) return;
+
+scrollY = window.scrollY;
+
+document.body.style.position = 'fixed';
+document.body.style.top = `-${scrollY}px`;
+document.body.style.left = '0';
+document.body.style.right = '0';
+document.body.style.width = '100%';
+document.body.style.overflow = 'hidden';
+```
+
+}
+
+export function unlockBodyScroll() {
+overlayCount = Math.max(0, overlayCount - 1);
+
+```
+if (overlayCount > 0) return;
+
+const y = Math.abs(parseInt(document.body.style.top || '0'));
+
+document.body.style.position = '';
+document.body.style.top = '';
+document.body.style.left = '';
+document.body.style.right = '';
+document.body.style.width = '';
+document.body.style.overflow = '';
+
+window.scrollTo(0, y);
+```
+
+}
+
+Purpose:
+
+* prevents frozen scroll
+* prevents accidental unlock when nested modals exist
+* fixes iOS/mobile overlay bugs
+
+---
+
+## SECTION 3 — OVERLAY SCREEN INTERNAL SCROLLING
+
+All major overlays must scroll independently.
+
+Apply shared class:
+
+.overlay-scroll-screen {
+overflow-y: auto;
+overflow-x: hidden;
+height: 100vh;
+-webkit-overflow-scrolling: touch;
+overscroll-behavior: contain;
+touch-action: pan-y;
+}
+
+Apply to:
+
+* market screen
+* stats screen
+* binder screen
+* collection screen
+
+IMPORTANT:
+body stays locked while overlays scroll internally.
+
+---
+
+## SECTION 4 — GUARANTEE SCROLL CLEANUP
+
+Audit ALL close paths.
+
+Every:
+
+* back button
+* modal dismiss
+* overlay close
+* ESC handler
+* tap outside handler
+
+MUST call:
+unlockBodyScroll()
+
+INCLUDING:
+
+* graph modal
+* card detail modal
+* chase card modal
+* market screen
+* stats screen
+* binder screen
+
+This is mandatory.
+
+---
+
+SECTION 5 — MARKET GRAPH EMPTY STATE FIX
+(HIGH PRIORITY)
+---------------
+
+Current issue:
+new users see:
+“Not enough history yet”
+
+This makes the feature feel unfinished.
+
+Fix:
+graphs should render with MINIMUM 2 points.
+
+DO NOT require:
+5+ points anymore.
+
+Even tiny history should display:
+
+* subtle line
+* minimal trend motion
+* starter market feel
+
+---
+
+SECTION 6 — HISTORY SEEDING SYSTEM
+(HIGH PRIORITY)
+---------------
+
+When a card first enters market history,
+automatically seed realistic prior history.
+
+Add:
+marketHistory.seedInitialHistory(cardId, baseValue)
+
+Generate:
+3–5 historical points.
+
+Rules:
+
+* tiny realistic movement only
+* ±1–3% variance
+* chronological timestamps
+
+Example:
+0.36
+0.37
+0.38
+0.37
+0.38
+
+Purpose:
+Every graph instantly feels alive.
+
+---
+
+## SECTION 7 — HISTORY SEEDING RULES
+
+Seed generation must:
+
+* stay inside rarity value ranges
+* avoid massive jumps
+* preserve realism
+
+Commons:
+very flat movement
+
+Higher rarity:
+slightly more variance
+
+Examples:
+Common:
+±1%
+
+Illustration Rare:
+±3–5%
+
+Hyper Rare:
+±4–7%
+
+---
+
+## SECTION 8 — AUTO-SEED TRIGGER
+
+If:
+history.length === 0
+
+Then:
+auto-seed immediately before rendering market row OR graph modal.
+
+Persist seeded history to storage immediately.
+
+DO NOT reseed existing cards.
+
+---
+
+SECTION 9 — GRAPH MODAL IMPROVEMENTS
+(LOW PRIORITY)
+--------------
+
+Current modal layout is GOOD.
+Only refine lightly.
+
+DO NOT redesign.
+
+---
+
+## SECTION 10 — TREND STATUS LABEL
+
+Under current price:
+add tiny status label.
+
+Examples:
+
+* Stable
+* Rising
+* Cooling
+* Volatile
+* Surging
+
+Rules:
+Based on:
+
+* recent slope
+* volatility
+* percent change
+
+Styling:
+small muted uppercase label.
+
+Premium minimal look.
+
+---
+
+## SECTION 11 — GRAPH LINE BEHAVIOR
+
+Ensure graph always renders smoothly.
+
+Requirements:
+
+* smooth SVG curve
+* animated draw-in
+* subtle glow
+* restrained motion
+
+NO:
+flashy neon charts.
+
+Keep:
+luxury fintech aesthetic.
+
+---
+
+## SECTION 12 — EMPTY GRAPH UX
+
+If graph has only seeded history:
+show tiny helper text:
+
+“Market history is still developing.”
+
+Instead of:
+“Not enough history yet”
+
+This feels intentional and alive.
+
+---
+
+## SECTION 13 — MARKET SCREEN DISCOVERABILITY
+
+Add subtle helper text below filters:
+
+“Tap a card to inspect market history”
+
+Small opacity:
+~0.55
+
+This improves discoverability massively.
+
+---
+
+## SECTION 14 — TOUCH INTERACTION RELIABILITY
+
+Ensure:
+market rows always register taps reliably.
+
+Add:
+cursor: pointer;
+touch-action: manipulation;
+
+Prevent:
+ghost click delays on mobile.
+
+---
+
+## SECTION 15 — GRAPH PERFORMANCE
+
+Optimize history access.
+
+DO NOT parse localStorage:
+for every row render.
+
+Snapshot:
+all histories once per render cycle.
+
+Reuse memory object.
+
+Avoid:
+O(n) storage reads.
+
+---
+
+## SECTION 16 — VISUAL PRESERVATION
+
+CRITICAL:
+Preserve current visual direction.
+
+DO NOT:
+
+* enlarge modal
+* add bright colors
+* clutter graph
+* add giant labels
+* overanimate
+
+Keep:
+
+* dark restrained UI
+* spacious layout
+* elegant typography
+* premium collector atmosphere
+
+This is now refinement,
+not rebuilding.

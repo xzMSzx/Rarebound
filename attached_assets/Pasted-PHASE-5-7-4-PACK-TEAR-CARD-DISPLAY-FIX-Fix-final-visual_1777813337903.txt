@@ -1,0 +1,183 @@
+PHASE 5.7.4 — PACK TEAR + CARD DISPLAY FIX
+
+Fix final visual bugs in the pack opening system.
+
+Observed issues:
+
+• duplicated pack art slices when touching seam  
+• seam guide still visible after tear  
+• pack remains behind cards after opening  
+• card borders cropped  
+• tear clip-path not activating  
+
+Do NOT modify:
+
+RNG engine  
+cardRevealAnimator  
+packSimulation  
+rarity logic  
+
+Only modify pack-opening UI.
+
+---
+
+SECTION 1 — FIX PACK TOP DUPLICATION
+
+Do NOT redraw pack art as background.
+
+Use clipped image instead.
+
+HTML structure:
+
+<div class="booster-pack">
+  <div class="pack-top">
+     <img src="pack-art.png">
+  </div>
+
+  <div class="pack-bottom">
+     <img src="pack-art.png">
+  </div>
+</div>
+
+CSS:
+
+.pack-top{
+
+position:absolute;
+top:0;
+left:0;
+
+width:100%;
+height:22%;
+
+overflow:hidden;
+
+}
+
+.pack-bottom{
+
+position:absolute;
+top:22%;
+left:0;
+
+width:100%;
+height:78%;
+
+overflow:hidden;
+
+}
+
+.pack-bottom img{
+
+position:absolute;
+top:-22%;
+
+width:100%;
+height:auto;
+
+}
+
+This ensures the top and bottom sections show the SAME image without repetition.
+
+---
+
+SECTION 2 — REMOVE SEAM AFTER TEAR
+
+When tear completes:
+
+JS:
+
+seamLine.remove()
+
+OR
+
+document.body.classList.add("pack-opened")
+
+CSS:
+
+.pack-opened .pack-seam{
+display:none;
+}
+
+---
+
+SECTION 3 — ACTIVATE TEAR CLIP
+
+Ensure the class is applied.
+
+JS:
+
+boosterPack.classList.add("torn")
+
+CSS:
+
+.booster-pack.torn{
+
+clip-path: polygon(
+0% 12%,
+100% 12%,
+100% 100%,
+0% 100%
+);
+
+}
+
+This removes the top portion visually.
+
+---
+
+SECTION 4 — REMOVE PACK AFTER CARDS EMERGE
+
+After cards slide up:
+
+JS:
+
+boosterPack.remove()
+
+This prevents the wrapper from being visible behind cards.
+
+---
+
+SECTION 5 — FIX CARD CROPPING
+
+.card-back img{
+
+width:100%;
+height:100%;
+
+object-fit:contain;
+
+border-radius:10px;
+
+}
+
+Remove any:
+
+overflow:hidden
+object-fit:cover
+
+from the card container.
+
+---
+
+SECTION 6 — EXPECTED RESULT
+
+User opens pack:
+
+Pack appears.
+
+User drags across seam.
+
+Top foil tears away.
+
+Seam disappears.
+
+Cards slide upward.
+
+Pack wrapper disappears.
+
+Full card borders visible.
+
+Reveal system proceeds normally.
+
+END PATCH

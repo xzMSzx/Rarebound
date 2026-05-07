@@ -1,0 +1,117 @@
+PROJECT PATCH — PHASE 4.5.5  
+FIX EVOLVING SKIES SET ID MISMATCH
+
+Goal:
+
+Evolving Skies fails to load because the pack tile uses the incorrect set ID "evs".  
+The official Pokémon TCG API set ID for Evolving Skies is "swsh7".
+
+The tile ID, API request, and probability table key must all match.
+
+This patch updates the incorrect ID so the loader requests the correct set.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+engine RNG  
+pack generation logic  
+rarity probabilities  
+pity system  
+card reveal animations  
+
+Only update the incorrect set ID references.
+
+---
+
+SECTION 1 — FIX PACK TILE ID
+
+File:
+
+index.html
+
+Locate the Evolving Skies tile.
+
+Current code:
+
+<button class="pack-tile" data-set-id="evs">
+  <span class="pack-tile-name">Evolving Skies</span>
+</button>
+
+Replace with:
+
+<button class="pack-tile" data-set-id="swsh7">
+  <span class="pack-tile-name">Evolving Skies</span>
+</button>
+
+This ensures the correct ID is passed into the loader.
+
+---
+
+SECTION 2 — FIX PROBABILITY TABLE KEY
+
+File:
+
+data/setProbabilityTables.js
+
+Locate the probability table entry currently defined as:
+
+evs: {
+  holoRare: 0.60,
+  doubleRare: 0.20,
+  illustrationRare: 0.12,
+  ultraRare: 0.05,
+  specialIllustrationRare: 0.02,
+  hyperRare: 0.01
+}
+
+Change the key from evs to swsh7:
+
+swsh7: {
+  holoRare: 0.60,
+  doubleRare: 0.20,
+  illustrationRare: 0.12,
+  ultraRare: 0.05,
+  specialIllustrationRare: 0.02,
+  hyperRare: 0.01
+}
+
+This ensures the hit-slot probability table is applied when the Evolving Skies set is active.
+
+---
+
+SECTION 3 — VERIFY OTHER SET IDs
+
+Confirm the remaining pack tiles already use the correct API IDs:
+
+Scarlet & Violet 151 → sv3pt5  
+Paldean Fates → sv04pt5  
+Paldea Evolved → sv2  
+Lost Origin → swsh11  
+
+No changes should be required for these sets.
+
+---
+
+SECTION 4 — EXPECTED RESULT
+
+After applying this patch:
+
+• Evolving Skies loads successfully  
+• API returns 237 cards  
+• Card pools populate normally  
+• Packs open with real artwork  
+
+Example cards that should appear:
+
+Oddish  
+Gloom  
+Rayquaza  
+Sylveon  
+Eevee
+
+The simulator will now correctly load all five configured Pokémon sets.
+
+END PATCH

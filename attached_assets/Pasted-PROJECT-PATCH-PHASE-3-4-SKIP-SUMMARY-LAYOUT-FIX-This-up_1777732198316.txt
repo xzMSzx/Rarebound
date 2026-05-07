@@ -1,0 +1,206 @@
+PROJECT PATCH — PHASE 3.4 SKIP SUMMARY LAYOUT FIX
+
+This update fixes the layout and behavior of the Skip Pack summary screen.
+
+The current implementation renders the summary as a small text list, which does not use screen space effectively.
+
+This patch replaces the text list with a large card tile layout.
+
+The simulation engine must remain unchanged.
+
+---
+
+CRITICAL RULE
+
+Do NOT modify:
+
+engine logic
+RNG system
+pity system
+pack slot probabilities
+Monte Carlo simulation
+
+Only modify UI rendering for the skip summary overlay.
+
+---
+
+GOAL
+
+When the user presses Skip Pack:
+
+• the remaining cards should appear as large card tiles
+• the cards should use most of the screen width
+• the layout should feel like a final reveal screen
+• the summary should remain until the user taps
+
+---
+
+CHANGE 1 — CREATE SKIP SUMMARY MODE
+
+Add a dedicated overlay state called:
+
+skip-summary-mode
+
+When this mode is active:
+
+Disable the following elements:
+
+card reveal counter
+swipe instruction text
+current card display
+rarity label text
+
+Only the skip summary cards should be visible.
+
+---
+
+CHANGE 2 — LARGE CARD TILE LAYOUT
+
+Replace the current text list with card tiles.
+
+Each card should display as a rectangular tile.
+
+Recommended size:
+
+width: 70–80px
+height: 110–130px
+
+Tiles should be arranged horizontally.
+
+Example:
+
+[C] [C] [C] [R] [E]
+
+Cards should be centered on the screen.
+
+---
+
+CHANGE 3 — USE MORE SCREEN SPACE
+
+Increase spacing and tile size so the summary occupies the middle of the screen.
+
+Example layout structure:
+
+overlay container
+summary container
+card row
+instruction text
+
+Card row should use flexbox:
+
+display: flex
+justify-content: center
+gap: 16px
+
+---
+
+CHANGE 4 — CARD VISUAL STYLE
+
+Cards should reuse rarity styles used elsewhere.
+
+Common:
+
+grey border
+
+Rare:
+
+blue glow
+
+Epic:
+
+purple glow
+
+Legendary:
+
+gold glow
+
+Each tile should display:
+
+large rarity letter (C, R, E, L)
+
+and optional small label below.
+
+Example:
+
+C
+COMMON
+
+---
+
+CHANGE 5 — REMOVE TEXT LIST RENDERING
+
+Delete the existing rendering code that produces rows like:
+
+"C common"
+
+The summary must only display visual card tiles.
+
+---
+
+CHANGE 6 — MOVE INSTRUCTION TEXT LOWER
+
+The instruction text should be clearly separated from the cards.
+
+Instruction text:
+
+Tap anywhere to continue
+
+Position:
+
+centered near the bottom of the screen
+
+Example concept:
+
+position: absolute
+bottom: 120px
+text-align: center
+
+---
+
+CHANGE 7 — HIDE REVEAL UI ELEMENTS
+
+While skip summary is visible, hide:
+
+Swipe or tap to reveal next card
+rarity label below card
+current card display
+
+These elements belong only to the swipe reveal mode.
+
+---
+
+CHANGE 8 — TAP TO CLOSE
+
+The summary should close only when the user taps anywhere.
+
+Behavior:
+
+tap → close overlay → return to main UI
+
+Do not auto-close.
+
+---
+
+EXPECTED RESULT
+
+After pressing Skip Pack:
+
+Large card tiles appear across the center of the screen.
+
+Example:
+
+[C] [C] [C] [R] [C]
+
+The cards are easy to see.
+
+Instruction text appears near the bottom:
+
+Tap anywhere to continue
+
+The screen remains visible until the user taps.
+
+Other overlay UI elements are hidden.
+
+The experience should feel like a final pack reveal.
+
+EN

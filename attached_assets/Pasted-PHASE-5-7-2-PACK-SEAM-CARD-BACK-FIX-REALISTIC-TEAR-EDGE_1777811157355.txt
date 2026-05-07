@@ -1,0 +1,303 @@
+PHASE 5.7.2 — PACK SEAM + CARD BACK FIX + REALISTIC TEAR EDGE
+
+Goal:
+
+Fix visual issues in the pack opening system and introduce a more realistic torn wrapper effect.
+
+Issues being corrected:
+
+• duplicated pack top section  
+• floating rounded border around pack  
+• multiple seam guide lines  
+• seam remaining visible during card stage  
+• card backs showing large blue bars  
+• cards overflowing container  
+• tear edge looking like a straight cut
+
+This patch fixes those and upgrades the tear edge.
+
+Do NOT modify gameplay systems.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+engine RNG  
+packSimulation.js  
+pity system  
+rarity tables  
+cardPoolManager  
+rarityMapper  
+cardRevealAnimator reveal logic  
+reverse holo system  
+tilt system  
+audioManager  
+rarity cascade  
+
+Only pack-opening UI may be changed.
+
+---
+
+SECTION 1 — REMOVE DUPLICATED PACK TOP
+
+Search for any element named:
+
+.pack-top  
+.pack-open-top  
+.pack-tear-piece  
+.pack-top-piece  
+
+Delete these completely.
+
+The booster pack should use ONLY the original image:
+
+<img class="pack-image">
+
+Do not render the pack artwork twice.
+
+---
+
+SECTION 2 — REMOVE BORDER FRAME
+
+Find any CSS that adds borders around the pack container.
+
+Remove properties such as:
+
+border  
+outline  
+box-shadow frames  
+
+The pack should appear floating.
+
+Correct styling:
+
+.booster-pack {
+
+position: relative;
+
+width: min(82vw, 340px);
+
+aspect-ratio: 2.5 / 3.5;
+
+filter: drop-shadow(0 24px 40px rgba(0,0,0,0.55));
+
+border: none;
+outline: none;
+
+}
+
+---
+
+SECTION 3 — SINGLE TEAR GUIDE LINE
+
+There must be exactly ONE seam indicator.
+
+Delete any of these if they exist:
+
+.pack-seam::after  
+.overlay-guide-line  
+.card-guide-line  
+.pack-dashed-line  
+
+Replace with:
+
+.pack-seam {
+
+position: absolute;
+
+top: 6%;
+left: 6%;
+
+width: 88%;
+height: 0;
+
+border-top: 2px dashed rgba(255,255,255,0.8);
+
+pointer-events: auto;
+
+}
+
+This visually marks the foil seal.
+
+---
+
+SECTION 4 — SEAM MUST DISAPPEAR AFTER RIP
+
+When the rip animation completes, remove the seam element.
+
+In packOpeningController.js after triggerRip():
+
+seam.remove()
+
+This ensures the dashed line does NOT appear during the card stack stage.
+
+---
+
+SECTION 5 — REALISTIC TORN EDGE (NEW FEATURE)
+
+Instead of a straight split, use a jagged tear mask.
+
+Add this CSS:
+
+.pack-tear-mask {
+
+position: absolute;
+
+top: 0;
+left: 0;
+
+width: 100%;
+height: 30%;
+
+pointer-events: none;
+
+mask-image: url("/assets/tear-mask.png");
+mask-size: cover;
+
+-webkit-mask-image: url("/assets/tear-mask.png");
+-webkit-mask-size: cover;
+
+}
+
+This mask will produce a natural torn edge.
+
+Create file:
+
+/assets/tear-mask.png
+
+The mask should be a black/white jagged strip roughly like:
+
+zig-zag torn paper edge.
+
+White = visible area  
+Black = cut edge
+
+---
+
+SECTION 6 — PACK TEAR ANIMATION
+
+When ripping begins:
+
+.booster-pack.ripping {
+
+animation: packRip 0.45s ease-out forwards;
+
+}
+
+@keyframes packRip {
+
+0% {
+
+transform: scale(1);
+
+}
+
+100% {
+
+transform: translateY(-45px) rotate(-3deg) scale(0.97);
+
+}
+
+}
+
+This simulates the wrapper tearing upward.
+
+---
+
+SECTION 7 — FIX CARD BACK SCALING
+
+Find:
+
+.card-back img
+
+Replace with:
+
+.card-back img {
+
+width: 100%;
+height: 100%;
+
+object-fit: cover;
+
+border-radius: 10px;
+
+}
+
+Delete any background colors on the card container such as:
+
+background: #112060;
+
+This removes the blue bars.
+
+---
+
+SECTION 8 — FIX CARD STACK SCALE
+
+Locate the transform scaling.
+
+Replace any large scaling such as:
+
+scale(1.8)  
+scale(1.95)
+
+with:
+
+transform: scale(1.35);
+
+Cards should remain fully inside the viewport.
+
+---
+
+SECTION 9 — REMOVE LEFTOVER HORIZONTAL LINES
+
+Search the codebase for:
+
+.overlay-line  
+.card-guide-line  
+.pack-guide  
+
+Delete them.
+
+Only the seam line should exist, and only during pack stage.
+
+---
+
+SECTION 10 — RESULT
+
+After applying this patch:
+
+The pack displays cleanly with full artwork.
+
+A single dashed seam shows users where to tear.
+
+Dragging across the seam triggers a rip.
+
+The wrapper tears with a jagged edge.
+
+The seam disappears after the rip.
+
+Cards rise from inside the wrapper.
+
+Card backs display correctly with no blue bars.
+
+The reveal system begins normally.
+
+---
+
+SECTION 11 — VISUAL IMPROVEMENT
+
+The tear edge now looks like:
+
+torn foil wrapper
+
+instead of:
+
+perfect straight cut.
+
+This significantly improves realism.
+
+---
+
+END PATCH

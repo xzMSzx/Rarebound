@@ -1,0 +1,221 @@
+PHASE 10.1.6 — GLOBAL INTERACTION SYSTEM FAILURE AUDIT
+PROJECT: RAREBOUND
+
+CRITICAL:
+The issue is NO LONGER isolated to navigation.
+
+Current live behavior:
+- scrolling works everywhere
+- utility dock (3 dots) works
+- BUT nearly ALL OTHER BUTTONS across the app fail
+
+Examples:
+- My Collection fails
+- Market fails
+- Stats fails
+- Binder back button fails
+- Binder page arrows fail
+- Other UI buttons fail intermittently
+
+This proves:
+THE ENTIRE GLOBAL INTERACTION SYSTEM IS COMPROMISED.
+
+DO NOT continue patching individual buttons.
+DO NOT continue patching z-index blindly.
+
+We need a SYSTEM-LEVEL audit.
+
+────────────────────────────────────
+SECTION 1 — ROOT DIAGNOSIS TARGET
+────────────────────────────────────
+
+Because scrolling still works:
+this strongly suggests one of these:
+
+- global preventDefault()
+- global stopPropagation()
+- pointerdown capture listener
+- touchstart capture listener
+- passive listener mismatch
+- invisible fullscreen interaction layer
+- body-level gesture interceptor
+- utility dock listener interference
+- boot screen cleanup issue
+- fullscreen overlay event capture
+- touch-action conflict
+- event delegation failure
+- pointer-events inheritance issue
+
+STOP GUESSING.
+
+TRACE THE ACTUAL EVENT FLOW.
+
+────────────────────────────────────
+SECTION 2 — GLOBAL EVENT LISTENER AUDIT
+────────────────────────────────────
+
+Inspect ALL listeners attached to:
+- window
+- document
+- body
+- app root
+- overlays
+- fullscreen layers
+- utility dock
+- boot screen
+- scroll manager
+
+Especially inspect:
+- pointerdown
+- pointerup
+- touchstart
+- touchend
+- click
+
+Log:
+- capture vs bubble
+- passive true/false
+- any preventDefault()
+- any stopPropagation()
+- any stopImmediatePropagation()
+
+I want the REAL blocker.
+
+────────────────────────────────────
+SECTION 3 — CLICK TRACE SYSTEM
+────────────────────────────────────
+
+Implement TEMPORARY diagnostics:
+
+For ANY tap:
+log the FULL propagation chain.
+
+Example:
+[TapTrace]
+target → currentTarget → propagation path
+
+Log:
+- element
+- class
+- listener phase
+- whether propagation stopped
+- whether default prevented
+
+This must reveal:
+WHO is killing interactions.
+
+────────────────────────────────────
+SECTION 4 — AUDIT UTILITY DOCK
+────────────────────────────────────
+
+The utility dock is suspicious because:
+- it still works
+- everything else does not
+
+Inspect:
+- global listeners attached by dock
+- pointer capture
+- menu state
+- invisible wrappers
+- fullscreen positioning
+- capture-phase listeners
+- touch handlers
+
+Strong possibility:
+the dock introduced a global listener that suppresses interactions elsewhere.
+
+────────────────────────────────────
+SECTION 5 — AUDIT SCROLL LOCK SYSTEM
+────────────────────────────────────
+
+Strong secondary suspect:
+scrollManager.
+
+Inspect:
+- body locking
+- touchmove suppression
+- iOS gesture handling
+- overflow hidden logic
+- fixed body strategy
+- touch-action manipulation
+
+Especially:
+global listeners added for mobile scroll prevention.
+
+────────────────────────────────────
+SECTION 6 — IMPORTANT RULE
+────────────────────────────────────
+
+DO NOT patch symptoms.
+
+Find the SINGLE system causing:
+app-wide button failure.
+
+This is now clearly:
+a shared infrastructure issue.
+
+────────────────────────────────────
+SECTION 7 — AFTER ROOT CAUSE FOUND
+────────────────────────────────────
+
+After identifying the exact source:
+
+REMOVE ONLY THE BROKEN PART.
+
+DO NOT rewrite:
+- navigation architecture
+- screen system
+- vendor system
+- economy system
+- overlays
+
+Keep the repair surgical.
+
+────────────────────────────────────
+SECTION 8 — REQUIRED FINAL STATE
+────────────────────────────────────
+
+ALL interactions must work simultaneously:
+
+MAIN HUB:
+- My Collection
+- Market
+- Stats
+- vendor buy buttons
+- chase card
+- recent hits
+
+BINDER:
+- back button
+- page arrows
+- cards
+
+MARKET:
+- graph opens
+- back button works
+
+SETTINGS:
+- toggles work
+- close works
+
+NO dead zones.
+NO broken propagation.
+NO blocked taps.
+
+────────────────────────────────────
+SECTION 9 — REQUIRED FINAL REPORT
+────────────────────────────────────
+
+Must include:
+
+1. Exact global system causing interaction failure
+2. Exact listener or layer responsible
+3. Exact file(s) modified
+4. Exact repair applied
+5. Why utility dock still worked
+6. Confirmation ALL buttons now work
+7. Confirmation runtime clean
+8. Confirmation typecheck passes
+
+DO NOT provide assumptions.
+TRACE THE REAL EVENT FLOW.

@@ -1,0 +1,346 @@
+PROJECT UPDATE — PHASE 3 MOBILE PACK OPENING EXPERIENCE
+
+This update improves the user experience of the Modular Simulation Engine Lite application.
+
+Phase 1 implemented the simulation engine and pack system.
+
+Phase 2 implemented the basic UI including pack opening display, card grid, probability graph, and logs.
+
+All core systems are already working correctly.
+
+This update focuses only on improving the visual experience and pack opening interaction for mobile devices.
+
+---
+
+CRITICAL RULE
+
+Do NOT modify the simulation engine.
+
+Do NOT change:
+
+engine logic  
+RNG system  
+pack slot probabilities  
+pity system  
+Monte Carlo simulation  
+card generation rules
+
+These systems are already correct.
+
+All new work must occur in the UI layer only.
+
+---
+
+PRIMARY GOAL
+
+Transform the pack opening experience into a mobile-style interactive card reveal system.
+
+Instead of showing all cards in a small row, the app should open a fullscreen pack reveal mode.
+
+Cards will appear one at a time and be revealed by swiping left.
+
+---
+
+FEATURE 1 — FULLSCREEN PACK OPENING OVERLAY
+
+When the user presses the "Open Pack" button:
+
+1) fade out the normal UI
+2) open a fullscreen overlay
+3) display a large card back in the center of the screen
+4) allow swipe gestures to reveal cards
+
+The overlay temporarily hides:
+
+card grid  
+simulation log  
+probability graph
+
+After all cards are revealed the overlay closes and the main UI returns.
+
+---
+
+OVERLAY DESIGN
+
+Create a fullscreen container.
+
+CSS requirements:
+
+position: fixed  
+top: 0  
+left: 0  
+width: 100%  
+height: 100%  
+background: #111  
+z-index: high value
+
+This container should center the card vertically and horizontally.
+
+---
+
+FEATURE 2 — LARGE CARD DISPLAY
+
+Cards displayed during pack opening should be much larger than the grid cards.
+
+Recommended card size:
+
+height: about 70% of screen height  
+width: proportional to trading card ratio
+
+Cards should be vertically oriented like real trading cards.
+
+---
+
+CARD BACK
+
+Before reveal the card shows a card back.
+
+Design example:
+
+dark card with subtle border  
+question mark icon or card symbol
+
+The card back should glow faintly.
+
+---
+
+FEATURE 3 — SWIPE REVEAL SYSTEM
+
+Users reveal cards by swiping left.
+
+Swipe detection should use touch events.
+
+Use:
+
+touchstart  
+touchend
+
+Record the starting X position and ending X position.
+
+If the swipe distance exceeds a threshold and direction is left, reveal the card.
+
+Pseudo logic:
+
+if swipeLeft:
+ revealNextCard()
+
+---
+
+FEATURE 4 — CARD REVEAL FLOW
+
+Each pack contains exactly 5 cards.
+
+Reveal sequence:
+
+Card 1 appears  
+User swipes left  
+Card flips and rarity appears  
+
+Next card loads automatically.
+
+Display a counter above the card:
+
+Card 1 / 5  
+Card 2 / 5  
+Card 3 / 5  
+Card 4 / 5  
+Card 5 / 5
+
+---
+
+FEATURE 5 — CARD FLIP ANIMATION
+
+When revealing a card perform a flip animation.
+
+Use CSS transforms.
+
+Example concept:
+
+transform: rotateY(180deg)
+
+Animation duration:
+
+300 milliseconds
+
+---
+
+FEATURE 6 — RARITY VISUAL EFFECTS
+
+When the card is revealed apply visual effects depending on rarity.
+
+Common:
+
+simple grey border
+
+Rare:
+
+blue glow
+
+Epic:
+
+purple glow
+
+Legendary:
+
+gold glow with pulsing animation
+
+Legendary should feel visually special.
+
+---
+
+FEATURE 7 — SUSPENSE DETECTION
+
+Before the pack opening begins check the pack contents.
+
+If the pack contains Epic or Legendary cards enable suspense effects.
+
+Suspense effects include:
+
+slightly slower card reveal  
+card back glow stronger  
+card shake before reveal
+
+This mimics suspense systems used in digital card games.
+
+---
+
+FEATURE 8 — TAP TO SKIP
+
+Users may tap the screen to instantly reveal the current card.
+
+Tap should skip the flip animation.
+
+This allows faster pack opening.
+
+---
+
+FEATURE 9 — RETURN TO MAIN UI
+
+After the fifth card is revealed:
+
+display a short message:
+
+"Pack Complete"
+
+Then close the overlay and return to the main interface.
+
+The card grid should update with the new cards.
+
+The probability graph should update as well.
+
+---
+
+FEATURE 10 — MOBILE UI IMPROVEMENTS
+
+Improve readability and layout.
+
+Increase text contrast.
+
+Heading color should be near white.
+
+Example:
+
+color: #ffffff
+
+Panel text should be lighter grey:
+
+color: #e6e6e6
+
+Panels should remain dark:
+
+background: #1b1b1b
+
+---
+
+BUTTON IMPROVEMENTS
+
+Increase button size for mobile.
+
+Buttons should be easier to tap.
+
+Add more vertical spacing between sections.
+
+---
+
+FEATURE 11 — RESPONSIVE LAYOUT
+
+Ensure the layout adapts to mobile screens.
+
+Card grid should shrink slightly on small screens.
+
+Pack animation should always remain centered.
+
+---
+
+FILE STRUCTURE ADDITIONS
+
+Add new UI modules:
+
+ui/
+
+fullscreenOverlay.js  
+swipeController.js  
+cardRevealAnimator.js  
+mobileLayoutManager.js
+
+Existing modules should call these systems when needed.
+
+---
+
+FULLSCREEN PACK FLOW
+
+User presses Open Pack
+
+↓  
+
+Engine generates pack results
+
+↓  
+
+Overlay opens
+
+↓  
+
+Card back appears
+
+↓  
+
+User swipes left
+
+↓  
+
+Card flips and reveals rarity
+
+↓  
+
+Next card loads
+
+↓  
+
+Repeat until 5 cards
+
+↓  
+
+Overlay closes
+
+↓  
+
+Main UI updates
+
+---
+
+EXPECTED FINAL RESULT
+
+The pack opening experience should feel similar to mobile trading card games.
+
+Large cards appear one by one.
+
+Players swipe to reveal each card.
+
+High rarity cards glow dramatically.
+
+The interface remains clean and readable on mobile.
+
+---
+
+END OF PHASE 3 SPECIFICATION

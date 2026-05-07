@@ -1,0 +1,5624 @@
+/* =========================================
+   MSGE-Lite — Phase 3 Stylesheet
+   Dark theme · card animations · fullscreen overlay
+   ========================================= */
+
+/* ─── Design tokens ──────────────────────────────────────────────────────── */
+
+:root {
+  --space-xs: 6px;
+  --space-sm: 10px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #111;
+  color: #e6e6e6;
+  min-height: 100vh;
+  padding: 14px;
+}
+
+/* ─── Typography hierarchy ───────────────────────────────────────────────── */
+
+.title-text {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.subtitle-text {
+  font-size: 14px;
+  opacity: 0.72;
+}
+
+.meta-text {
+  font-size: 12px;
+  opacity: 0.5;
+}
+
+/* ─── HEADER ──────────────────────────────────────────────────────────── */
+
+header {
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+header h1 {
+  font-size: 1.3rem;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+}
+
+header .subtitle {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 3px;
+}
+
+/* ─── PANELS ──────────────────────────────────────────────────────────── */
+
+.panel {
+  background-color: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.panel h2 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #cfcfcf;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #222;
+  padding-bottom: 7px;
+}
+
+.panel h3 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #666;
+  margin: 12px 0 8px;
+}
+
+/* ─── CONTROL BUTTONS ──────────────────────────────────────────────────── */
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  font-family: inherit;
+  font-size: 0.82rem;
+  padding: 10px 18px;
+  border: 1px solid #3a3a3a;
+  background-color: #1e1e1e;
+  color: #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  min-height: 40px;
+}
+
+button:hover  { background-color: #2a2a2a; border-color: #555; color: #fff; }
+button:active { background-color: #333; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+button.btn-primary {
+  border-color: #3a5a3a;
+  color: #88dd88;
+  font-weight: bold;
+}
+button.btn-primary:hover { background-color: #1a2e1a; border-color: #559955; color: #aaffaa; }
+
+button.btn-danger  { border-color: #5a2020; color: #cc7777; }
+button.btn-danger:hover { background-color: #2a1414; border-color: #994444; color: #e08888; }
+
+button.btn-analysis { border-color: #2a4a2a; color: #70c870; }
+button.btn-analysis:hover { background-color: #14281a; border-color: #449944; color: #88e088; }
+
+/* ─── LAYOUT ──────────────────────────────────────────────────────────── */
+
+/* Simulation tools container wraps state + graph + log */
+.simulation-tools-container {
+  /* intentionally unstyled — child panels have their own borders */
+}
+
+.sim-tools-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 0;   /* panels handle their own margin-bottom */
+}
+
+.sim-tools-row > .panel {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── PHASE 2 INLINE CARD FLIP ──────────────────────────────────────── */
+
+.reveal-card-wrapper {
+  perspective: 600px;
+  width: 72px;
+  height: 100px;
+  flex-shrink: 0;
+  border-radius: 5px;
+}
+
+.reveal-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+  border-radius: 5px;
+}
+
+.reveal-card-inner.flipped       { transform: rotateY(180deg); }
+.reveal-card-inner.flip-slow     { transition-duration: 0.6s; }
+
+.reveal-card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', monospace;
+}
+
+.reveal-card-mystery { background-color: #111; border: 1px solid #2e2e2e; color: #333; }
+.mystery-icon        { font-size: 2rem; color: #2a2a2a; user-select: none; }
+
+.reveal-card-back {
+  transform: rotateY(180deg);
+  border: 1px solid #333;
+  gap: 4px;
+}
+
+.reveal-rarity-label { font-size: 0.62rem; font-weight: bold; letter-spacing: 0.06em; text-transform: uppercase; }
+.reveal-slot-label   { font-size: 0.55rem; color: rgba(255,255,255,0.35); }
+
+.rarity-face-common    { background-color: #1a1a1a; color: #888; }
+.rarity-face-rare      { background-color: #0a1a33; color: #5aabff; }
+.rarity-face-epic      { background-color: #160a33; color: #c47aff; }
+.rarity-face-legendary { background-color: #221400; color: #ffcf40; }
+
+/* ─── SHARED GLOW EFFECTS ────────────────────────────────────────────── */
+
+/* Phase 4.4.2 — glow effects removed; classes kept so animator cleanup runs cleanly */
+.glow-common    { box-shadow: none !important; filter: none !important; }
+.glow-rare      { box-shadow: none !important; filter: none !important; }
+.glow-epic      { box-shadow: none !important; filter: none !important; }
+.glow-legendary { box-shadow: none !important; filter: none !important; }
+
+.suspense-glow .reveal-card-mystery {
+  border-color: #3a2a1a;
+  box-shadow: 0 0 10px 2px rgba(255,180,50,0.20);
+}
+
+/* ─── SHARED KEYFRAMES ───────────────────────────────────────────────── */
+
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-5px) rotateZ(-1.5deg); }
+  40%  { transform: translateX(5px)  rotateZ(1.5deg); }
+  60%  { transform: translateX(-4px) rotateZ(-0.8deg); }
+  80%  { transform: translateX(4px)  rotateZ(0.8deg); }
+  100% { transform: translateX(0); }
+}
+
+.suspense-shake { animation: shake 0.4s ease; }
+
+/* Phase 4.4.2 — legendary-pulse disabled; keyframe kept for parser safety */
+@keyframes legendary-pulse {
+  0%, 100% { box-shadow: none; }
+}
+
+.legendary-pulse { animation: none !important; box-shadow: none !important; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PHASE 3 — FULLSCREEN OVERLAY
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+#pack-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: #0e0e0e;
+  background-image: radial-gradient(circle at center, rgba(255,255,255,0.03), transparent 60%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;             /* keep horizontal centering — patch said
+                                    * to switch to flex-start, but that would
+                                    * left-align every child. The real lever
+                                    * for "lift the card upward" is the
+                                    * padding-top below. */
+  justify-content: flex-start;
+  padding-top: 14vh;               /* Phase 5.2.6 — nudged from 8vh so the
+                                    * counter / card / rarity / RH caption
+                                    * stack sits a bit further below the
+                                    * Skip Pack button instead of hugging
+                                    * the very top of the screen. */
+  gap: 18px;
+  transition: opacity 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.overlay-hidden  { opacity: 0; pointer-events: none; }
+.overlay-visible { opacity: 1; pointer-events: all; }
+
+/* ─── Skip Pack button (top-right of overlay) ────────────────────────── */
+
+.overlay-skip-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  padding: 7px 14px;
+  border: 1px solid #3a3a3a;
+  /* Phase 5.2.2 — slightly more opaque background so the button stays legible
+   * over card artwork now that the card occupies most of the screen. */
+  background-color: rgba(20, 20, 20, 0.92);
+  color: #888;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  /* Phase 5.2.2 — bumped from 10 → 50 so the larger card (and its foil
+   * z-index 2/3/4 children) can never paint over the skip target. */
+  z-index: 50;
+  min-height: 36px;
+}
+
+.overlay-skip-btn:hover  { background-color: rgba(50,50,50,0.95); border-color: #555; color: #ccc; }
+.overlay-skip-btn:active { background-color: rgba(70,70,70,0.95); }
+
+/* ─── Overlay counter ("Card 2 / 5") ─────────────────────────────────── */
+
+.overlay-counter {
+  font-size: 1.2rem;
+  color: #d8d8d8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  min-height: 1.2em;
+  font-weight: bold;
+}
+
+/* ─── Card stage (holds the large flipping card) ─────────────────────── */
+
+.overlay-card-stage {
+  position: relative;
+  /* Phase 5.2.2 — base size grown so cards dominate the screen on phones and
+   * remain comfortably readable on tablets/desktop. Patch named
+   * .overlay-card-wrapper, but in our DOM that is a 100%-of-stage container
+   * inside the perspective context, so resizing belongs on the stage. */
+  /* Phase 5.2.4 — final balanced sizing matching the Numel reference layout. */
+  width: min(74vw, 340px);
+  height: min(52vh, 460px);
+  perspective: 900px;
+}
+
+/* ─── Large card wrapper (glow target + shake target) ────────────────── */
+
+.overlay-card-wrapper {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  position: relative;
+
+  /* Phase 5.4 — interactive 3D tilt target. The inner element handles the
+   * flip (rotateY 180), but the wrapper is what tilts in response to pointer
+   * movement. preserve-3d keeps the inner's flipped face oriented correctly
+   * inside the tilted wrapper. */
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.12s ease-out;
+}
+
+/* ─── Large card inner (flip container) ──────────────────────────────── */
+
+.overlay-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+  border-radius: 12px;
+  /* Phase 5.4.1 — DO NOT add isolation/opacity<1/filter/mix-blend-mode here.
+   * Per CSS spec, any of those force this element to FLATTEN its 3D rendering
+   * context, which breaks the rotateY(180deg) flip + backface-visibility chain
+   * and leaves the card stuck on its mystery face. The previous patch put
+   * isolation:isolate here and the entire reveal disappeared. The mix-blend
+   * isolation now lives on .overlay-card-back-face below — a leaf node in the
+   * 3D context where flattening is harmless. */
+}
+
+.overlay-card-inner.overlay-flipped { transform: rotateY(180deg); }
+
+/* ─── Both card faces share these base styles ─────────────────────────── */
+
+.overlay-card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Mystery (card back) face ───────────────────────────────────────── */
+
+.overlay-card-front {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+}
+
+.card-back-art {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  height: 100%;
+  border-radius: 11px;
+  background: radial-gradient(circle at 50% 40%, #1e1e1e 0%, #111 100%);
+  border: 1px solid #2a2a2a;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+.card-back-art.card-back-suspense {
+  border-color: #3a2a12;
+  box-shadow: none;
+}
+
+.card-back-symbol {
+  font-size: 4rem;
+  color: #2e2e2e;
+  line-height: 1;
+  user-select: none;
+}
+
+.card-back-label {
+  font-size: 0.65rem;
+  color: #2e2e2e;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+/* ─── Rarity reveal face (shown after flip) ──────────────────────────── */
+
+.overlay-card-back-face {
+  transform: rotateY(180deg);
+  border: 1px solid #333;
+  position: relative;        /* anchor for .reverse-holo-overlay (Phase 5.2) */
+  overflow: hidden;          /* clip foil sweep to card bounds              */
+  /* Phase 5.4.1 — isolation lives HERE (not on .overlay-card-inner) so the
+   * mix-blend-mode holo layers blend only against the card image beneath them
+   * instead of bleeding up against the dark page background in Safari.
+   * Safe here because back-face is a leaf in the inner's 3D rendering context
+   * — flattening its own subtree doesn't break the parent's flip. */
+  isolation: isolate;
+}
+
+.card-reveal-art {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  border-radius: 11px;
+}
+
+.card-reveal-symbol {
+  font-size: 5rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.card-reveal-rarity {
+  font-size: 0.9rem;
+  font-weight: bold;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Rarity-specific reveal face backgrounds */
+.rarity-reveal-common {
+  background: linear-gradient(160deg, #1a1a1a 0%, #111 100%);
+  color: #999;
+  border-color: #2a2a2a;
+}
+
+.rarity-reveal-rare {
+  background: linear-gradient(160deg, #0a1833 0%, #060e22 100%);
+  color: #5aabff;
+  border-color: #1a3a66;
+}
+
+.rarity-reveal-epic {
+  background: linear-gradient(160deg, #150a33 0%, #0a0622 100%);
+  color: #c47aff;
+  border-color: #3a1a66;
+}
+
+.rarity-reveal-legendary {
+  background: linear-gradient(160deg, #221400 0%, #180d00 100%);
+  color: #ffcf40;
+  border-color: #664a00;
+}
+
+/* ─── Overlay glow (larger scale) ───────────────────────────────────── */
+
+/* Phase 4.4.2 — all overlay glows removed; classes kept for animator compatibility */
+.suspense-glow-large                   { box-shadow: none !important; filter: none !important; }
+.overlay-card-wrapper.glow-common      { box-shadow: none !important; filter: none !important; }
+.overlay-card-wrapper.glow-rare        { box-shadow: none !important; filter: none !important; }
+.overlay-card-wrapper.glow-epic        { box-shadow: none !important; filter: none !important; }
+.overlay-card-wrapper.glow-legendary   { box-shadow: none !important; filter: none !important; }
+
+/* ─── Overlay shake ──────────────────────────────────────────────────── */
+
+.overlay-shake { animation: shake 0.42s ease; }
+
+/* ─── Slide-out animation (card exits left between cards) ────────────── */
+
+@keyframes slide-out-left {
+  0%   { transform: translateX(0)    opacity(1); }
+  100% { transform: translateX(-120%) opacity(0); }
+}
+
+.slide-out-left {
+  animation: slide-out-left 0.24s ease-in forwards;
+}
+
+/* ─── Overlay hint (pinned to bottom of overlay, readable over glows) ── */
+
+.overlay-hint {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 90vw;
+  font-size: 0.78rem;
+  color: #cfcfcf;
+  letter-spacing: 0.06em;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 8px 18px;
+  border-radius: 8px;
+  pointer-events: none;
+  min-height: 0;
+}
+
+/* ─── Overlay status message ──────────────────────────────────────────── */
+
+.overlay-status {
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  min-height: 1.5em;
+  text-align: center;
+  color: #666;
+  transition: color 0.3s;
+}
+
+.overlay-status.overlay-rarity-common    { color: #999; }
+.overlay-status.overlay-rarity-rare      { color: #5aabff; font-weight: bold; }
+.overlay-status.overlay-rarity-epic      { color: #c47aff; font-weight: bold; }
+.overlay-status.overlay-rarity-legendary {
+  color: #ffcf40;
+  font-weight: bold;
+  letter-spacing: 0.14em;
+  font-size: 1.15rem;
+}
+.overlay-status.overlay-pack-label {
+  color: #bdbdbd;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  font-weight: normal;
+}
+
+.overlay-status.overlay-complete {
+  color: #aaffaa;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+}
+
+/* ─── Skip summary — dedicated large-card layout ─────────────────────── */
+
+/*
+ * When summary mode is active the overlay adds .overlay-summary-mode.
+ * The card stage expands; counter, status, and skip button are hidden.
+ * The hint is repositioned to the bottom of the overlay.
+ */
+#pack-overlay.overlay-summary-mode #overlay-card-stage {
+  width: min(92vw, 520px);
+  height: auto;
+  perspective: none;
+}
+
+#pack-overlay.overlay-summary-mode #overlay-counter    { display: none; }
+#pack-overlay.overlay-summary-mode #overlay-status     { display: none; }
+#pack-overlay.overlay-summary-mode .overlay-skip-btn   { display: none; }
+
+/* Reposition hint to absolute bottom in summary mode */
+#pack-overlay.overlay-summary-mode .overlay-hint {
+  bottom: 120px;
+  background: transparent;
+  font-size: 0.84rem;
+  opacity: 0.85;
+  letter-spacing: 0.1em;
+}
+
+.skip-summary-container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, auto);
+  gap: 14px;
+  padding: 12px 8px;
+  width: 100%;
+}
+
+/* Cards fill their grid cell — override the fixed 80px width */
+.skip-summary-container .skip-summary-card {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+
+.skip-summary-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* Large trading-card-ratio badges (≈2.5:3.5 aspect) */
+.skip-summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 80px;
+  height: 112px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  font-family: 'Courier New', monospace;
+  flex-shrink: 0;
+}
+
+.skip-summary-letter {
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.skip-summary-rarity {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+/* Legacy rarity colours kept for backward compatibility */
+.rarity-summary-common    { background-color: #1a1a1a; color: #888;    border-color: #2a2a2a; }
+.rarity-summary-rare      { background-color: #091830; color: #5aabff; border-color: #1a3a66; }
+.rarity-summary-epic      { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
+.rarity-summary-legendary { background-color: #201000; color: #ffcf40; border-color: #664a00; }
+
+@media (max-width: 700px) {
+  .skip-summary-card { width: 58px; height: 82px; }
+  .skip-summary-letter { font-size: 1.5rem; }
+  .skip-summary-row { gap: 8px; }
+  #pack-overlay.overlay-summary-mode #overlay-card-stage { width: min(96vw, 380px); }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CARD COLLECTION GRID
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.count-badge {
+  font-size: 0.65rem;
+  color: #555;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+#card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.grid-card {
+  border-radius: 3px;
+  border: 1px solid #222;
+  padding: 5px 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: default;
+  transition: transform 0.1s, box-shadow 0.1s;
+  position: relative;        /* anchor for .reverse-holo-overlay (Phase 5.2) */
+  overflow: hidden;          /* clip foil sweep to thumbnail bounds          */
+}
+
+.grid-card:hover { transform: scale(1.08); }
+
+.grid-card-badge { font-size: 0.78rem; font-weight: bold; }
+.grid-card-pack  { font-size: 0.5rem; color: rgba(255,255,255,0.22); }
+
+.grid-card-common    { background-color: #161616; color: #888; }
+.grid-card-rare      { background-color: #091830; color: #5aabff; border-color: #1a3a66; }
+.grid-card-epic      { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
+.grid-card-legendary { background-color: #201000; color: #ffcf40; border-color: #664a00; }
+
+#card-grid::-webkit-scrollbar       { width: 5px; }
+#card-grid::-webkit-scrollbar-track { background: #111; }
+#card-grid::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PROBABILITY GRAPH
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.graph-container { position: relative; height: 180px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SIMULATION STATE STATS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.stat-item {
+  background-color: #111;
+  border: 1px solid #222;
+  border-radius: 3px;
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #a8a8a8;
+}
+
+.stat-value { font-size: 1.1rem; color: #ffffff; font-weight: bold; }
+
+.rarity-common                  { border-color: #2a2a2a; }
+.rarity-rare                    { border-color: #1a3a66; }
+.rarity-rare      .stat-value   { color: #4a9eff; }
+.rarity-epic                    { border-color: #3a1a66; }
+.rarity-epic      .stat-value   { color: #c47aff; }
+.rarity-legendary               { border-color: #664a00; }
+.rarity-legendary .stat-value   { color: #ffcf40; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SIMULATION LOG
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+#log-output {
+  font-size: 0.72rem;
+  line-height: 1.65;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #0d0d0d;
+  border: 1px solid #1e1e1e;
+  border-radius: 3px;
+  padding: 8px 10px;
+  color: #aaa;
+}
+
+#log-output .log-separator   { border: none; border-top: 1px dashed #222; margin: 5px 0; }
+#log-output .log-pack-header { color: #6a9ccc; font-weight: bold; }
+#log-output .log-common      { color: #888; }
+#log-output .log-rare        { color: #4a9eff; }
+#log-output .log-epic        { color: #c47aff; }
+#log-output .log-legendary   { color: #ffcf40; }
+#log-output .log-pity        { color: #ff8c42; font-weight: bold; }
+#log-output .log-system      { color: #484848; font-style: italic; }
+#log-output .log-batch       { color: #4a7a4a; }
+
+#log-output::-webkit-scrollbar       { width: 5px; }
+#log-output::-webkit-scrollbar-track { background: #0a0a0a; }
+#log-output::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PACK TILE SELECTOR (Phase 4.2)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.pack-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.pack-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background-color: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+  font-family: inherit;
+  color: #ccc;
+  text-align: center;
+}
+
+.pack-tile:hover:not(:disabled) {
+  background-color: #181818;
+  border-color: #4a9eff;
+  transform: translateY(-2px);
+}
+
+.pack-tile:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pack-tile-active {
+  background-color: #0a1a30;
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 1px #4a9eff44;
+  color: #fff;
+}
+
+.pack-tile-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.pack-tile-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+
+.set-status {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  min-height: 1.2em;
+  color: #555;
+}
+
+.set-status-loading { color: #ffcf40; }
+.set-status-ok      { color: #4caf50; }
+.set-status-error   { color: #ff5555; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CARD IMAGE — OVERLAY REVEAL FACE (Phase 4)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.card-reveal-img {
+  width: 100%;
+  height: 100%;
+  /* Phase 5.2.2 — switched from cover to contain so the full card is always
+   * visible at the new larger sizes. Cover was cropping the top/bottom of
+   * Pokémon cards (~5:7) when the stage went tall. */
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CARD IMAGE — COLLECTION GRID (Phase 4)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.grid-card-has-img {
+  padding: 0;
+  overflow: hidden;
+}
+
+.grid-card-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 2px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CARD IMAGE — SKIP SUMMARY TILES (Phase 4)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.skip-summary-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   RESPONSIVE — MOBILE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@media (max-width: 700px) {
+  body { padding: 10px; }
+
+  header h1 { font-size: 1.1rem; }
+  .panel    { padding: 10px 12px; }
+
+  .button-row { gap: 6px; }
+  button      { font-size: 0.8rem; padding: 11px 14px; }
+
+  /* Stack sim-tools side-by-side panels vertically on small screens */
+  .sim-tools-row { flex-direction: column; }
+
+  #card-grid { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
+
+  /* Phase 5.2.4 — final mobile sizing matching the Numel reference. Pairs
+   * with the reduced #pack-overlay padding-top so the swipe prompt no longer
+   * sits behind the card. */
+  .overlay-card-stage {
+    width: 74vw;
+    height: 52vh;
+  }
+
+  .overlay-summary-card { width: 44px; height: 62px; }
+  .overlay-summary-card .summary-letter { font-size: 1.1rem; }
+
+  .card-back-symbol   { font-size: 3rem; }
+  .card-reveal-symbol { font-size: 3.5rem; }
+
+  .overlay-hint { bottom: 30px; }   /* Phase 5.2.6 — drop the swipe prompt closer to the bottom edge */
+}
+
+/* Give the body class .is-mobile extra spacing hints */
+body.is-mobile .button-row { gap: 8px; }
+body.is-mobile button      { min-height: 44px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PHASE 4.4.1 — RARITY SVG ICON SYSTEM
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ─── Base SVG icon ──────────────────────────────────────────────────── */
+
+.rarity-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  vertical-align: middle;
+  opacity: 1;
+  flex-shrink: 0;
+}
+
+/* ─── Multi-icon flex wrapper ────────────────────────────────────────── */
+
+.rarity-multi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rarity-double { gap: 4px; }
+.rarity-triple { gap: 3px; }
+
+/* Phase 4.4.3 — .rarity-premium nullified; premium styling now handled by
+   descendant selectors (.rarity-ultraRare .rarity-symbol etc.) which work
+   correctly on Unicode text without the color:transparent SVG visibility bug */
+.rarity-premium { /* intentionally empty — kept for any legacy references */ }
+
+/* ─── Context-specific icon sizing ──────────────────────────────────── */
+
+.overlay-status .rarity-icon  { width: 36px; height: 36px; }   /* Phase 5.2.5 — bumped from 30 */
+.overlay-status              { margin-top: 6px; }              /* Phase 5.2.5 — extra breathing room above the rarity diamond */
+.overlay-status .rarity-multi { gap: 5px; }
+
+.skip-summary-card .rarity-icon  { width: 22px; height: 22px; }
+.skip-summary-card .rarity-multi { gap: 2px; }
+
+.grid-card-icon             { display: inline-flex; align-items: center; justify-content: center; }
+.grid-card-icon .rarity-icon { width: 18px; height: 18px; }
+
+/* ─── Primary symbol style — Unicode rarity characters ──────────────── */
+
+.rarity-symbol {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  line-height: 1;
+  opacity: 0.9;
+  text-align: center;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Rarity label centering (below revealed cards / summary tiles) ──── */
+
+.rarity-label {
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* ─── Premium gold animation for SVG polygon/path fills ──────────────── */
+
+@keyframes goldPulse {
+  0%, 100% { fill: #fbbf24; }
+  50%       { fill: #fef08a; }
+}
+
+.rarity-gold-poly {
+  animation: goldPulse 2s ease-in-out infinite;
+}
+
+/* Phase 4.4.5 — Text-symbol CSS below is dead code (no .rarity-symbol
+   elements exist); kept as comments for history, not for function. */
+/* @keyframes rarityShimmer — was for background-clip:text shimmer */
+/* .rarity-ultraRare .rarity-symbol — was gold gradient text */
+/* .rarity-common .rarity-symbol etc. — was per-tier text colour */
+
+/* ─── Overlay status rarity colours (new tiers) ──────────────────────── */
+
+.overlay-status.overlay-rarity-common            { color: #888; }
+.overlay-status.overlay-rarity-uncommon          { color: #5abf88; font-weight: bold; }
+.overlay-status.overlay-rarity-rare              { color: #5aabff; font-weight: bold; }
+.overlay-status.overlay-rarity-holoRare          { color: #88ccff; font-weight: bold; }
+.overlay-status.overlay-rarity-doubleRare        { color: #c47aff; font-weight: bold; }
+.overlay-status.overlay-rarity-illustrationRare  { color: #d490ff; font-weight: bold; }
+.overlay-status.overlay-rarity-ultraRare {
+  font-weight: bold;
+  letter-spacing: 0.12em;
+}
+.overlay-status.overlay-rarity-specialIllustrationRare {
+  font-weight: bold;
+  letter-spacing: 0.14em;
+  font-size: 1.1rem;
+}
+.overlay-status.overlay-rarity-hyperRare {
+  font-weight: bold;
+  letter-spacing: 0.14em;
+  font-size: 1.15rem;
+}
+
+/* Phase 4.4.3 — overlay premium handled by .rarity-ultraRare .rarity-symbol etc. */
+
+/* ─── Rarity reveal face backgrounds (cardRevealAnimator no-image mode) ─ */
+
+.rarity-reveal-uncommon {
+  background: linear-gradient(160deg, #0a1a12 0%, #060f0a 100%);
+  color: #5abf88;
+  border-color: #1a4a2a;
+}
+.rarity-reveal-holoRare {
+  background: linear-gradient(160deg, #0a1535 0%, #060e25 100%);
+  color: #88ccff;
+  border-color: #1a3a7a;
+}
+.rarity-reveal-doubleRare {
+  background: linear-gradient(160deg, #150a33 0%, #0a0622 100%);
+  color: #c47aff;
+  border-color: #3a1a66;
+}
+.rarity-reveal-illustrationRare {
+  background: linear-gradient(160deg, #18083a 0%, #0d0525 100%);
+  color: #d490ff;
+  border-color: #4a1a78;
+}
+.rarity-reveal-ultraRare {
+  background: linear-gradient(160deg, #1e1000 0%, #120a00 100%);
+  color: #ffcf40;
+  border-color: #664a00;
+}
+.rarity-reveal-specialIllustrationRare {
+  background: linear-gradient(160deg, #1c0a15 0%, #100610 100%);
+  color: #ff90c8;
+  border-color: #661040;
+}
+.rarity-reveal-hyperRare {
+  background: linear-gradient(160deg, #1a0800 0%, #100500 100%);
+  color: #fbbf24;
+  border-color: #783200;
+}
+
+/* ─── Collection grid — new rarity card styles ───────────────────────── */
+
+.grid-card-uncommon          { background-color: #0a1a12; color: #5abf88; border-color: #1a3a22; }
+.grid-card-holoRare          { background-color: #0a1535; color: #88ccff; border-color: #1a3a7a; }
+.grid-card-doubleRare        { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
+.grid-card-illustrationRare  { background-color: #14083a; color: #d490ff; border-color: #4a1a78; }
+.grid-card-ultraRare         { background-color: #1e1000; color: #ffcf40; border-color: #664a00; }
+.grid-card-specialIllustrationRare { background-color: #1c0a15; color: #ff90c8; border-color: #661040; }
+.grid-card-hyperRare         { background-color: #1a0800; color: #fbbf24; border-color: #783200; }
+
+/* ─── Skip summary — 2×5 grid layout ────────────────────────────────── */
+
+.skip-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+.skip-summary-grid .skip-summary-card {
+  width: 100%;
+}
+
+.skip-summary-symbol {
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  opacity: 0.9;
+  line-height: 1;
+}
+
+/* ─── Skip summary rarity colours (all new tiers, no glow) ──────────── */
+
+.rarity-summary-common                  { background-color: #1a1a1a; color: #888;    border-color: #2a2a2a; }
+.rarity-summary-uncommon                { background-color: #0a1a12; color: #5abf88; border-color: #1a3a22; }
+.rarity-summary-rare                    { background-color: #091830; color: #5aabff; border-color: #1a3a66; }
+.rarity-summary-holoRare                { background-color: #0a1535; color: #88ccff; border-color: #1a3a7a; }
+.rarity-summary-doubleRare              { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
+.rarity-summary-illustrationRare        { background-color: #14083a; color: #d490ff; border-color: #4a1a78; }
+.rarity-summary-ultraRare               { background-color: #1e1000; color: #ffcf40; border-color: #664a00; }
+.rarity-summary-specialIllustrationRare { background-color: #1c0a15; color: #ff90c8; border-color: #661040; }
+.rarity-summary-hyperRare               { background-color: #1a0800; color: #fbbf24; border-color: #783200; }
+
+@media (max-width: 700px) {
+  .skip-summary-grid            { gap: 8px; }
+  .skip-summary-grid .skip-summary-card { height: 88px; }
+  #pack-overlay.overlay-summary-mode #overlay-card-stage { width: min(96vw, 420px); }
+}
+
+/* ─── Rarity Guide button (inline, small) ────────────────────────────── */
+
+.btn-guide {
+  margin-top: 10px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  color: #555;
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-guide:hover {
+  color: #aaa;
+  border-color: #444;
+}
+
+/* ─── Rarity Guide modal overlay ─────────────────────────────────────── */
+
+.rarity-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  padding: 20px;
+}
+
+.rarity-modal.hidden { display: none; }
+
+.rarity-modal-panel {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 24px 28px 20px;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+.rarity-modal-title {
+  font-size: 0.8rem;
+  color: #666;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+
+.rarity-modal-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.rarity-modal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rarity-modal-icon {
+  display: inline-flex;
+  align-items: center;
+  min-width: 52px;
+  justify-content: center;
+}
+
+.rarity-modal-icon .rarity-icon { width: 22px; height: 22px; }
+.rarity-modal-icon .rarity-multi { gap: 3px; }
+
+.rarity-modal-label {
+  font-size: 0.78rem;
+  color: #999;
+  letter-spacing: 0.04em;
+}
+
+.rarity-modal-close {
+  width: 100%;
+  padding: 8px;
+  font-size: 0.72rem;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 5px;
+  color: #666;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s;
+}
+
+.rarity-modal-close:hover {
+  background: #222;
+  color: #aaa;
+}
+
+/* ─── Phase 5.2 — Reverse-holo foil shimmer ─────────────────────────────────
+ *
+ * Applied to slot-8 reverse-holo cards via the engine's `isReverseHolo` flag.
+ * Two stacked layers create the effect:
+ *   .reverse-holo-overlay — repeating diagonal foil pattern (subtle, constant)
+ *   .reverse-holo-sweep   — single bright light bar that traverses the card
+ *
+ * Plus an optional .reverse-holo-highlight class on the reveal wrapper for a
+ * mild outer glow during the fullscreen reveal moment. Glow intentionally
+ * weaker than the gold pulse used on ultra/special-illustration/hyper rares
+ * (see .rarity-gold-poly) so reverse-holos never compete with true hits.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+.reverse-holo-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.35;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+  animation: none;            /* Phase 5.2.1 — gated by .reverse-holo-active */
+  z-index: 2;
+  /* Phase 5.2.2 — force GPU compositing so iOS Safari runs the keyframes. */
+  transform: translateZ(0);
+  will-change: transform, opacity, background-position;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@keyframes reverseHoloShift {
+  0%   { background-position: 0px 0px; }
+  100% { background-position: 200px 200px; }
+}
+
+.reverse-holo-sweep {
+  position: absolute;
+  top: -40%;
+  left: -60%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+  animation: none;            /* Phase 5.2.1 — gated by .reverse-holo-active */
+  mix-blend-mode: screen;
+  z-index: 3;
+  /* Phase 5.2.2 — force GPU compositing so iOS Safari runs the keyframes. */
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@keyframes holoSweep {
+  0%   { transform: translateX(-100%) rotate(25deg); }
+  100% { transform: translateX(100%)  rotate(25deg); }
+}
+
+/* Phase 5.2.1 — shimmer trigger.
+ * Added to the wrapper after the reveal flip completes (overlay) or on
+ * thumbnail creation (collection grid). Without this class the foil layers
+ * are mounted but static, so the reveal moment "lights up" the card. */
+.reverse-holo-active .reverse-holo-overlay { animation: reverseHoloShift 3s linear infinite; }
+.reverse-holo-active .reverse-holo-sweep   { animation: holoSweep 4s infinite; }
+
+.reverse-holo-highlight {
+  box-shadow:
+    0 0 12px rgba(255, 255, 255, 0.25),
+    0 0 25px rgba(200, 200, 255, 0.15);
+}
+
+/* ─── Phase 5.4 — interactive holographic layers ─────────────────────────────
+ * Both layers are appended on top of every revealed card image. They tilt
+ * naturally with the wrapper because they live inside .overlay-card-back-face.
+ * The card-back-face has overflow:hidden so the layers clip to the card area.
+ * ----------------------------------------------------------------------- */
+/* ─── Phase 5.4.3 — TCGP-style holographic effect ────────────────────────────
+ * Two stacked layers driven by --holo-x / --holo-y CSS vars set on the
+ * .overlay-card-wrapper from _applyCardTilt() in cardRevealAnimator.js:
+ *
+ *   .holo-rainbow    — dense iridescent bands (color-dodge) that shift their
+ *                      position as the pointer moves. This is the constant
+ *                      "shimmer" you see across the whole card.
+ *   .holo-reflection — radial spotlight (hard-light) anchored under the
+ *                      pointer. This is the bright reflection that physically
+ *                      tracks your finger like real foil under a light.
+ *
+ * Both layers use color-dodge / hard-light so they remain visible on bright
+ * AND dark card art (the previous overlay/screen pair washed out on either
+ * extreme). Defaults of 50% / 50% ensure the effect renders at rest before
+ * the first pointer event fires.
+ * ----------------------------------------------------------------------- */
+.holo-rainbow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    repeating-linear-gradient(
+      115deg,
+      rgba(255,  0,100, 0.30)  0%,
+      rgba(255,200,  0, 0.30)  8%,
+      rgba( 80,255,180, 0.30) 16%,
+      rgba( 80,140,255, 0.30) 24%,
+      rgba(220, 80,255, 0.30) 32%,
+      rgba(255,  0,100, 0.30) 40%
+    );
+  background-size: 220% 220%;
+  background-position: var(--holo-x, 50%) var(--holo-y, 50%);
+  mix-blend-mode: overlay;
+  opacity: 0.45;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.holo-reflection {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background:
+    radial-gradient(
+      ellipse 55% 55% at var(--holo-x, 50%) var(--holo-y, 50%),
+      rgba(255,255,255, 0.45)  0%,
+      rgba(255,255,255, 0.20) 18%,
+      rgba(255,255,255, 0.05) 38%,
+      rgba(255,255,255, 0.00) 60%
+    );
+  mix-blend-mode: soft-light;
+  opacity: 0.65;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* ─── Phase 5.4.4 — tier-scaled edge halo ────────────────────────────────────
+ * Painted on the back face itself via box-shadow so the glow extends OUTSIDE
+ * the card's overflow:hidden clip. An inset shadow adds a subtle inner rim
+ * so the card's own edge looks polished, not just surrounded by light.
+ *
+ * Three tiers (assigned in cardRevealAnimator.js renderBack):
+ *   .holo-tier-silver  — rare / holoRare           (calm silver-white)
+ *   .holo-tier-gold    — doubleRare / illustration (warm gold)
+ *   .holo-tier-rainbow — ultraRare / special / hyper (chromatic + pulse)
+ *
+ * Box-shadow stack: tight inner rim, mid halo, wide ambient bloom.
+ * ----------------------------------------------------------------------- */
+.overlay-card-back-face.holo-tier-silver {
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.55),
+    inset 0 0 14px rgba(200,225,255,0.35),
+    0 0 14px  rgba(220,235,255,0.55),
+    0 0 32px  rgba(180,210,255,0.40);
+}
+
+.overlay-card-back-face.holo-tier-gold {
+  box-shadow:
+    inset 0 0 0 1px rgba(255,225,140,0.70),
+    inset 0 0 18px rgba(255,200, 90,0.45),
+    0 0 18px  rgba(255,210,110,0.70),
+    0 0 42px  rgba(255,180, 70,0.50);
+}
+
+.overlay-card-back-face.holo-tier-rainbow {
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.70),
+    inset 0 0 22px rgba(255,180,255,0.45),
+    0 0 18px  rgba(255,120,200,0.75),
+    0 0 36px  rgba(120,180,255,0.60),
+    0 0 58px  rgba(255,200,100,0.45);
+  animation: holo-rainbow-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes holo-rainbow-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.70),
+      inset 0 0 22px rgba(255,180,255,0.45),
+      0 0 18px  rgba(255,120,200,0.75),
+      0 0 36px  rgba(120,180,255,0.60),
+      0 0 58px  rgba(255,200,100,0.45);
+  }
+  33% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.70),
+      inset 0 0 22px rgba(180,255,220,0.45),
+      0 0 18px  rgba(120,255,180,0.75),
+      0 0 36px  rgba(255,180,120,0.60),
+      0 0 58px  rgba(180,120,255,0.45);
+  }
+  66% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.70),
+      inset 0 0 22px rgba(180,210,255,0.45),
+      0 0 18px  rgba(140,170,255,0.75),
+      0 0 36px  rgba(255,140,200,0.60),
+      0 0 58px  rgba(120,255,200,0.45);
+  }
+}
+
+/* ─── Phase 5.5 — premium reveal animation system ────────────────────────────
+ * Three layered effects fire after the flip completes for high-tier pulls.
+ * All three are absolutely positioned children of .overlay-card-wrapper and
+ * self-remove via setTimeout from cardRevealAnimator.js.
+ *
+ * Tier scaling (gated in JS, not CSS):
+ *   doubleRare/illustrationRare       → .reveal-burst only
+ *   ultraRare                         → .reveal-burst + .sparkle ×14
+ *   specialIllustrationRare/hyperRare → all three + .reveal-background
+ *
+ * Burst sits behind the card's back face by virtue of being appended to the
+ * wrapper before tilt rewires; pointer-events:none on every layer so the
+ * tilt handler still receives mousemove on the wrapper underneath.
+ * ----------------------------------------------------------------------- */
+.reveal-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  height: 600px;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  z-index: 5;
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,0.90)  0%,
+      rgba(255,255,200,0.70) 15%,
+      rgba(255,200,120,0.35) 35%,
+      transparent             60%
+    );
+  opacity: 0;
+  animation: revealBurst 0.8s ease-out forwards;
+}
+
+@keyframes revealBurst {
+  0%   { transform: translate(-50%, -50%) scale(0.1); opacity: 1;   }
+  70%  { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0;   }
+}
+
+.sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  pointer-events: none;
+  z-index: 6;
+  box-shadow:
+    0 0 8px  rgba(255,255,255,0.9),
+    0 0 14px rgba(255,230,160,0.7);
+  animation: sparkleFloat 1.6s ease-out forwards;
+}
+
+@keyframes sparkleFloat {
+  0%   { transform: translate(0, 0) scale(0.6);                    opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0);      opacity: 0; }
+}
+
+.reveal-background {
+  position: absolute;
+  inset: -40px;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255,255,255,0.25),
+      transparent 60%
+    );
+  opacity: 0;
+  animation: revealBackground 1.2s ease-out forwards;
+}
+
+@keyframes revealBackground {
+  0%   { opacity: 0.8; }
+  100% { opacity: 0;   }
+}
+
+/* ─── Phase 5.7.1 — interactive 3D booster-pack opening ──────────────────────
+ * The pack is a real 3D box: 6 faces (front, back, 4 edges) sharing one
+ * preserve-3d coordinate space. A pointer-driven tilt rotates the whole
+ * box on rotateX/rotateY while the pack is sealed, selling depth.
+ *
+ * Behind the front face sits a stack of card-backs at a Z between front
+ * and back. They're naturally occluded by the front while the wrapper
+ * is closed; once the top piece peels away, they become visible peeking
+ * out of the open top — the "cards inside" illusion.
+ *
+ * Pack art: real PNG loaded from `${BASE_URL}packs/{setId}.png` if present
+ * (the .has-real-art class hides the procedural foil background); falls
+ * back to the silver-foil gradient + set logo from the Pokémon TCG CDN.
+ * ----------------------------------------------------------------------- */
+.pack-opening-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.97);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  /* Prevent mobile browsers from triggering text-selection on drag gestures */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.pack-opening-overlay.hidden { display: none; }
+
+.pack-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* The stage holds the 3D coordinate space — perspective gives the pack
+ * real depth so rotations look like a physical object being inspected. */
+.pack-stage {
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+}
+
+.booster-pack {
+  --pack-w: min(82vw, 340px);     /* larger so the seam area isn't cut off */
+  --pack-d: 8px;                  /* tiny depth — foil pack, not a box */
+  position: relative;
+  width: var(--pack-w);
+  aspect-ratio: 5 / 8;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 18px 32px rgba(0,0,0,0.55));
+  /* Hidden until pack art is loaded — prevents the grey foil flash */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+/* JS adds pack-ready once the artwork img fires onload */
+.booster-pack.pack-ready {
+  opacity: 1;
+}
+
+.booster-pack.idle .pack-3d {
+  animation: packShake 2.4s ease-in-out infinite;
+}
+@keyframes packShake {
+  0%, 100% { transform: rotateY(-1.5deg) rotateX(-0.5deg); }
+  50%      { transform: rotateY( 1.5deg) rotateX( 0.5deg); }
+}
+.booster-pack.pack-torn .pack-3d {
+  animation: none;
+}
+/* Fade out only the structural face/edge elements, leaving pack-cards-inside
+ * (which is a sibling of the faces inside pack-3d) fully visible. */
+.booster-pack.pack-faces-hidden .pack-face,
+.booster-pack.pack-faces-hidden .pack-edge,
+.booster-pack.pack-faces-hidden .pack-top {
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+}
+/* Short one-shot bounce played as the pack tears open */
+.booster-pack.ripping {
+  animation: packRip 0.45s ease-out forwards;
+}
+@keyframes packRip {
+  0%   { transform: scale(1) translateY(0); }
+  35%  { transform: scale(0.96) translateY(-12px) rotate(-1.5deg); }
+  65%  { transform: scale(0.97) translateY(-8px)  rotate( 0.8deg); }
+  100% { transform: scale(0.97) translateY(-6px)  rotate(0deg); }
+}
+
+/* After tear: clip the pack-front art face so the top 22% is hidden.
+ * The top edge of the visible region uses the same jagged-teeth profile
+ * as the tear animation's final frame — this looks like a real ripped seam
+ * rather than a ruler-straight cut line. */
+.booster-pack.torn .pack-front {
+  clip-path: polygon(
+    0%   23.3%,  7%  21.3%,  15%  23.9%,  23%  21.1%,
+    31%  22.7%,  39%  21.4%,  47%  23.0%,  55%  21.2%,
+    63%  22.6%,  71%  21.1%,  79%  22.8%,  86%  21.0%,
+    93%  22.5%, 100%  21.8%, 100% 100%,   0%  100%
+  );
+  transition: clip-path 0.25s ease-out;
+}
+
+/* The 3D inner wrapper that all 6 faces and the cards-inside share. JS
+ * sets transform here for pointer-driven tilt while sealed, then locks
+ * a forward tilt after tear so you're "looking into" the open top. */
+.pack-3d {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+}
+
+/* ── 3D faces ─────────────────────────────────────────────────────────── */
+.pack-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.pack-front {
+  transform: translateZ(calc(var(--pack-d) / 2));
+}
+
+.pack-back {
+  transform: translateZ(calc(var(--pack-d) / -2)) rotateY(180deg);
+  background:
+    linear-gradient(135deg, #6f7d99 0%, #4a5570 50%, #6f7d99 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.20);
+}
+
+/* The 4 edges form the pack's "thickness" — narrow strips rotated to
+ * meet the front and back face at the correct angles. */
+.pack-edge {
+  position: absolute;
+  background:
+    linear-gradient(to right, #4a5570 0%, #8a98b4 50%, #4a5570 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+}
+.pack-edge-left {
+  top: 0; bottom: 0; left: 0;
+  width: var(--pack-d);
+  transform: translateX(calc(var(--pack-d) / -2)) rotateY(-90deg);
+}
+.pack-edge-right {
+  top: 0; bottom: 0; right: 0;
+  width: var(--pack-d);
+  transform: translateX(calc(var(--pack-d) / 2)) rotateY(90deg);
+}
+.pack-edge-top {
+  top: 0; left: 0; right: 0;
+  height: var(--pack-d);
+  transform: translateY(calc(var(--pack-d) / -2)) rotateX(90deg);
+  /* Invisible — at the pack's rotateX(-18°) tilt after tear, the top
+   * edge would appear as a thin horizontal bar above the pack art. */
+  background: transparent;
+  box-shadow: none;
+}
+.pack-edge-bottom {
+  bottom: 0; left: 0; right: 0;
+  height: var(--pack-d);
+  transform: translateY(calc(var(--pack-d) / 2)) rotateX(-90deg);
+  /* Invisible — same tilt causes this to show as a bar below the pack. */
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Procedural foil body (silver/blue gradient) — visible only when no real
+ * pack art was found. The .has-real-art class hides it and the shimmer. */
+.pack-foil-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg,
+      #d4dce8 0%, #8a98b4 25%, #c9d4e6 50%, #6f7d99 75%, #b8c4d9 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.35),
+    inset 0 0 24px rgba(0,0,0,0.20);
+}
+.pack-front.has-real-art .pack-foil-bg,
+.pack-front.has-real-art .pack-shimmer { display: none; }
+
+/* Logo (fallback path). When real art is present, the .pack-image element
+ * IS the full pack artwork and fills the front face edge-to-edge. */
+.pack-image {
+  position: absolute;
+  inset: 14% 10% 22% 10%;
+  max-width: 80%;
+  max-height: 64%;
+  margin: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+.pack-front.has-real-art .pack-image {
+  inset: 0;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
+}
+
+.pack-shimmer {
+  position: absolute;
+  inset: 0;
+  background:
+    conic-gradient(
+      from 35deg at 50% 50%,
+      rgba(255,255,255,0.00)  0%,
+      rgba(255,255,255,0.18) 12%,
+      rgba(255,255,255,0.00) 24%,
+      rgba(255,255,255,0.10) 50%,
+      rgba(255,255,255,0.00) 62%,
+      rgba(255,255,255,0.20) 80%,
+      rgba(255,255,255,0.00) 92%);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* The torn-off top piece. Sits a hair in front of the front face in Z so
+ * it's the visible surface until the tear completes. Its background mirrors
+ * the top portion of the same pack art (background-image set by JS), or
+ * uses the foil gradient as a fallback. The clip-path is rewritten live
+ * during the drag to draw the jagged rip line. */
+/* The torn-off top piece uses overflow:hidden + a full-size <img> inside it
+ * so the visible top 22% is pixel-identical to the same artwork shown on
+ * pack-front — no background-image mis-alignment or duplication artefact.
+ * The foil gradient is kept as a background for the no-real-art fallback. */
+.pack-top {
+  position: absolute;
+  inset: 0;                 /* same footprint as pack-front — clip-path controls the visible strip */
+  border-radius: 14px 14px 0 0;
+  /* Default clip: show only the top 22% before any drag starts.
+   * This prevents a one-frame flash when opacity is set to 1 on pointerdown,
+   * because the clip is already in place via CSS (no JS needed at that instant).
+   * onSeamMove overwrites this clip-path live during the drag gesture. */
+  clip-path: polygon(0 0, 100% 0, 100% 22%, 0 22%);
+  /* Fallback foil gradient shown when no local pack art is available */
+  background-image:
+    linear-gradient(135deg,
+      #d4dce8 0%, #8a98b4 25%, #c9d4e6 50%, #6f7d99 75%, #b8c4d9 100%);
+  background-size: 100% 100%;
+  pointer-events: none;
+  transform: translateZ(calc(var(--pack-d) / 2 + 0.5px));
+  opacity: 0;               /* hidden until onSeamDown; JS sets opacity:1 */
+}
+/* The img inside pack-top fills the exact same area as pack-front's img
+ * (inset:0 / 100%×100%) so the visible 22% strip is a pixel-perfect match
+ * to the top of the pack art — no scaling artefacts or duplication. */
+.pack-top img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* The seam drag target lives outside .pack-3d so 3D transforms don't
+ * mangle its hit-testing. Sits over the top 22% in screen space. */
+.pack-seam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 22%;
+  cursor: ew-resize;
+  z-index: 3;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+/* Perforation line — separate DOM element so JS can hide it after the tear.
+ * Positioned at 21% from pack top (just below the seam's 22% drag area). */
+.pack-seam-line {
+  position: absolute;
+  top: 21%;
+  left: 6%;
+  right: 6%;
+  height: 0;
+  border-top: 2px dashed rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+  z-index: 4;
+}
+.pack-seam-line.hidden { display: none; }
+
+.pack-tear-hint {
+  position: absolute;
+  top: -54px;               /* higher up so it clears the seam & pack frame */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: #fff;
+  /* Dark shadow halo for high contrast on any background */
+  text-shadow:
+    0 1px 4px rgba(0,0,0,0.9),
+    0 0 12px rgba(0,0,0,0.7);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: tearHintPulse 1.6s ease-in-out infinite;
+  z-index: 4;
+  background: rgba(0,0,0,0.45);
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+.pack-tear-hint.hidden { display: none; }
+@keyframes tearHintPulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+/* ── Cards INSIDE the pack ────────────────────────────────────────────────
+ * Positioned with their Z between front and back, so the front face
+ * naturally hides them while the pack is sealed. Once the top peels and
+ * the cards-peek class lands, they translate up so they protrude through
+ * the now-open top of the wrapper.
+ */
+/* Card stack INSIDE the pack — sized to comfortably fit within the wrapper
+ * outline so the rotated stack never spills past the pack edges. The 22%
+ * horizontal inset gives the cards a realistic ~56% pack-width footprint,
+ * matching how cards actually sit inside a real foil booster. */
+.pack-cards-inside {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 14%;
+  bottom: 16%;
+  /* scale(0.9) while sealed: slightly smaller so the stack reads as sitting
+   * inside the pack rather than flush with the surface */
+  transform: translateZ(calc(var(--pack-d) / 2 - 2px)) scale(0.9);
+  pointer-events: none;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pack-cards-inside.cards-peek {
+  /* 1.3× on the 56%-wide container → ~73% of pack width while peeking:
+   * clearly bigger than the inner pocket, a tiny bit narrower than the
+   * full pack face — cards look like they're bursting out of the top. */
+  transform: translateZ(calc(var(--pack-d) / 2 - 1px)) translateY(-32%) scale(1.1);
+}
+/* Show only the top card while peeking — the fan of 4 at this scale is
+ * too wide for the pack opening. All 4 cards are revealed on swipe-up. */
+.pack-cards-inside.cards-peek .card-back:not(:first-child) {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Straighten the visible card during peek so no rotated edges poke out. */
+.pack-cards-inside.cards-peek .card-back:first-child {
+  transform: translate(0, 0) rotate(0deg);
+}
+.pack-cards-inside.cards-present {
+  /* Swipe-up complete: cards float front-and-centre. 1.8× on a 56%-wide
+   * container brings cards to roughly full pack width, filling the screen. */
+  transform: translateZ(calc(var(--pack-d) / 2 + 18px)) translateY(0%) scale(1.8);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pack-cards-inside.cards-fade-out {
+  opacity: 0;
+  transition: opacity 0.22s ease-out;
+}
+
+/* Authentic Pokémon card back — uses the official artwork PNG served from
+ * /cards/card-back.png. Each .card-back is a frame holding the image, with
+ * a subtle drop shadow. Four backs stacked with small offset/rotation to
+ * read as a deck rather than a single card. */
+.card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  /* No overflow:hidden — contain mode must show the full image including
+   * the frame border without clipping on any edge */
+  box-shadow: 0 6px 14px rgba(0,0,0,0.55);
+}
+.card-back img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.02);
+  border-radius: 10px;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.card-back:nth-child(1) { transform: translate( 5px,  3px) rotate( 2.2deg); }
+.card-back:nth-child(2) { transform: translate( 2px,  1px) rotate( 0.7deg); }
+.card-back:nth-child(3) { transform: translate(-2px, -1px) rotate(-0.7deg); }
+.card-back:nth-child(4) { transform: translate(-5px, -3px) rotate(-2.2deg); }
+
+.swipe-prompt {
+  position: absolute;
+  bottom: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.92);
+  background: rgba(0,0,0,0.35);
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  animation: swipePulse 1.4s ease-in-out infinite;
+  z-index: 5;
+}
+.swipe-prompt.hidden { display: none; }
+@keyframes swipePulse {
+  0%, 100% { transform: translate(-50%, 0);    opacity: 0.85; }
+  50%      { transform: translate(-50%, -6px); opacity: 1; }
+}
+
+/* Phase 5.2.5 — "Reverse Holo" caption is now an overlay-flow sibling rendered
+ * BELOW the rarity diamond, not pinned inside the card. This avoids the chip
+ * overlapping the card's body text and helps fill the empty band between the
+ * rarity icon and the swipe prompt. */
+/* ═══ PHASE 6 — STORE SYSTEM ══════════════════════════════════════════════ */
+
+#store-screen {
+  padding: 20px;
+  color: white;
+}
+
+#top-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+#balance-display {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+#store-title {
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+
+#pack-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.pack-tile {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 0.14s ease, box-shadow 0.18s ease;
+}
+
+.pack-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.pack-tile:active {
+  transform: scale(0.97);
+}
+
+.pack-art {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.pack-name {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.pack-price {
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+
+.buy-btn {
+  background: #4CAF50;
+  border: none;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.buy-btn:active {
+  transform: scale(0.96);
+}
+
+.buy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.reverse-holo-label {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  opacity: 0.9;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 5px 12px;
+  border-radius: 6px;
+  pointer-events: none;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Phase 5.2.1 — "RH" badge in the collection grid corner. */
+.grid-reverse-holo {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #e5e7eb;
+  pointer-events: none;
+  z-index: 4;                 /* above foil + sweep */
+  letter-spacing: 0.5px;
+}
+
+/* ─── Phase 5.2.4 — desktop stage cap (matched to new 460px base height) ──── */
+@media (min-width: 900px) {
+  .overlay-card-stage { max-height: 480px; }
+}
+
+/* ═══ PHASE 6.5.1 — LOADING GATE + CARD BACK FIX ════════════════════════ */
+
+/* 2.2 — In-overlay pack loading indicator */
+#pack-loading-indicator.hidden {
+  display: none;
+}
+
+#pack-loading-indicator {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+  z-index: 10000;
+  pointer-events: none;
+}
+
+#pack-loading-indicator p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.loading-dots span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  animation: dotPulse 1.2s infinite;
+}
+
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(1); }
+  40%           { opacity: 1;   transform: scale(1.4); }
+}
+
+/* 3.3 / 3.4 — Official card back image inside the reveal overlay */
+.card-back-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.6),
+    inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+
+/* Remove any old background colour from the front face (mystery card) */
+.overlay-card-front {
+  background: transparent;
+}
+
+/* 2.1 — Remove stray pseudo-element lines that cause ghost flicker */
+.overlay-card-stage::before,
+.overlay-card-stage::after {
+  display: none !important;
+}
+
+/* ═══ PHASE 7 — BINDER SYSTEM ════════════════════════════════════════════ */
+
+/* Global hidden utility */
+.hidden {
+  display: none;
+}
+
+/* Full-screen overlay base */
+.screen {
+  position: fixed;
+  inset: 0;
+  background: #0b0b0f;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: white;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.24s ease,
+    transform 0.24s ease;
+}
+
+/* Faded state — JS sets display:none after transition completes.
+ *
+ * CRITICAL — DO NOT REMOVE display:none or touch-action:none from this rule.
+ *
+ * Cascade problem: `.screen { display:flex }` (specificity 0-1-0, below) appears
+ * AFTER `.hidden { display:none }` (also 0-1-0) in the file, so the later rule
+ * wins and every element with class="screen hidden" computes display:flex from CSS
+ * alone — including #settings-screen and #help-screen, which are position:fixed;
+ * inset:0; z-index:100 full-viewport layers on top of #store-screen.
+ *
+ * On iOS WebKit, touch-action:pan-y (inherited from .overlay-scroll-screen) is
+ * evaluated by the native gesture recogniser BEFORE pointer-events filtering.
+ * Those invisible pan-y layers cause iOS to classify all taps in their z-plane as
+ * potential scroll gestures, silently swallowing click events on every button in
+ * #store-screen (My Collection, Market, Stats, vendor buy, binder nav, etc.).
+ *
+ * Fix: `.screen.hidden` has specificity 0-2-0 — beats both conflicting rules —
+ * and sets display:none (removes the layer entirely) plus touch-action:none
+ * (kills any residual gesture claim during the 240 ms close animation window).
+ * Animations are unaffected: openXxxScreen() sets style.display='flex' (inline,
+ * highest priority) which overrides this rule during the open transition; JS then
+ * sets style.display='none' to finalise after 240 ms. */
+.screen.hidden {
+  display: none;
+  touch-action: none;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+
+/* ─── Phase 10.1.7 — ID-rule modal cascade fix ───────────────────────────────
+ *
+ * #card-detail-modal { display:flex; z-index:300 } and
+ * #sell-modal        { display:flex; z-index:320 } are written at ID specificity
+ * (1-0-0) which BEATS .hidden { display:none } (0-1-0).  Neither element has
+ * the .screen class so Phase 10.1.6's .screen.hidden fix does not protect them.
+ *
+ * The #id.hidden selector has specificity 1-1-0, which beats both the ID rule
+ * (1-0-0) and .hidden (0-1-0), ensuring these modals are truly hidden when
+ * .hidden is present on them.
+ *
+ * touch-action:none + pointer-events:none are belt-and-suspenders:
+ * - pointer-events:none prevents any residual hit-test participation.
+ * - touch-action:none eliminates gesture-recogniser interference during the
+ *   240ms JS close animation window when style.display is still inline 'flex'.
+ *
+ * DO NOT REMOVE — without this rule, both modals are full-viewport fixed
+ * position:fixed layers (z-index 300 / 320) with pointer-events:auto, covering
+ * every button in the app.  The utility dock survives only because its trigger
+ * has an explicit pointer-events:auto at z-index:320. */
+#card-detail-modal.hidden,
+#sell-modal.hidden {
+  display: none;
+  touch-action: none;
+  pointer-events: none;
+}
+
+/* Screen header — back button + title + right slot */
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.screen-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+}
+
+.screen-back-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.screen-back-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Collection set list ──────────────────────────────────────────────── */
+
+#set-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.set-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.set-card:active {
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.set-card-art {
+  width: 56px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.set-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.set-card-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.set-card-progress {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.set-card-progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.set-card-progress-fill {
+  height: 100%;
+  background: #4caf50;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.set-complete {
+  border: 2px solid gold;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+/* ── Binder screen ────────────────────────────────────────────────────── */
+
+/* Override .overlay-scroll-screen — binder manages its own scroll
+   inside #binder-pages so the nav bar stays pinned at the bottom.  */
+#binder-screen {
+  display: flex;
+  flex-direction: column;
+  /* 100dvh = dynamic viewport height — accounts for mobile browser chrome
+     that shrinks/expands (iOS Safari, Android Chrome). 100vh is unreliable
+     on mobile and causes the nav to be clipped below the visible area.   */
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.binder-progress-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+#binder-pages {
+  flex: 1;
+  min-height: 0;           /* critical: lets flex child shrink below content size */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  perspective: 1200px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.binder-page {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  transform-style: preserve-3d;
+  transition: transform 0.28s ease, opacity 0.28s ease;
+  backface-visibility: hidden;
+}
+
+.binder-page.flip-left {
+  transform: rotateY(-35deg) scale(0.92);
+  opacity: 0;
+}
+
+.binder-page.flip-right {
+  transform: rotateY(35deg) scale(0.92);
+  opacity: 0;
+}
+
+.binder-slot {
+  aspect-ratio: 2.5 / 3.5;
+  background: #111;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.15s ease;
+}
+
+.binder-slot:hover {
+  transform: scale(1.05);
+}
+
+.binder-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+}
+
+.binder-slot.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 22px;
+  font-weight: 700;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.binder-slot.empty:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: none;
+}
+
+/* ── Rarity glow system (7.4) ─────────────────────────────────────────── */
+
+.binder-slot.rarity-common       { box-shadow: none; }
+.binder-slot.rarity-uncommon     { box-shadow: none; }
+.binder-slot.rarity-rare         { box-shadow: 0 0 8px rgba(255, 255, 255, 0.35); }
+.binder-slot.rarity-holoRare     { box-shadow: 0 0 8px rgba(255, 255, 255, 0.3); }
+.binder-slot.rarity-doubleRare   { box-shadow: 0 0 14px rgba(255, 215, 0, 0.6); }
+.binder-slot.rarity-illustrationRare {
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.5);
+}
+.binder-slot.rarity-ultraRare    { box-shadow: 0 0 18px rgba(0, 200, 255, 0.7); }
+.binder-slot.rarity-specialIllustrationRare {
+  box-shadow: 0 0 20px rgba(0, 200, 255, 0.6);
+}
+.binder-slot.rarity-hyperRare    { box-shadow: 0 0 22px rgba(255, 0, 200, 0.9); }
+
+.duplicate-badge {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* ── Binder navigation ────────────────────────────────────────────────── */
+
+.binder-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.binder-nav-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  /* visible hit area */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  /* invisible touch padding to guarantee ≥44×44 tap target */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.binder-nav-btn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+
+.binder-nav-btn:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.binder-nav-btn:not(:disabled):active {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(0.94);
+}
+
+#binder-page-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 100px;
+  text-align: center;
+}
+
+.binder-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+}
+
+/* ═══ PHASE 6.5 — PERFORMANCE FIXES + COLLECTION VIEWER ══════════════════ */
+
+/* 1.2 — Preload indicator */
+#preload-indicator {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 10px;
+  border-radius: 8px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* 2.1 — Fix uneven card heights (151 wrapping issue) */
+.pack-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-align: center;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* Top-bar layout with collection button */
+#top-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#view-collection-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#view-collection-btn:active {
+  transform: scale(0.96);
+}
+
+/* 3.3 — Collection overlay */
+#collection-overlay {
+  position: fixed;
+  inset: 0;
+  background: #0b0b0b;
+  z-index: 9998;
+  overflow-y: auto;
+}
+
+#collection-overlay.hidden {
+  display: none;
+}
+
+.collection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 0;
+  color: white;
+}
+
+.collection-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+#close-collection {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#close-collection:active {
+  transform: scale(0.96);
+}
+
+#collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  padding: 20px;
+}
+
+.collection-card {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.collection-card:active {
+  transform: scale(0.95);
+}
+
+.collection-card img {
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+}
+
+.collection-empty {
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  padding: 40px;
+  grid-column: 1 / -1;
+}
+
+/* 4.1 / 7.3 — Card detail modal */
+#card-detail-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.card-detail-content {
+  max-width: 300px;
+  width: 90vw;
+  text-align: center;
+  animation: cardDetailFade 0.2s ease;
+}
+
+@keyframes cardDetailFade {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.card-detail-content img {
+  width: 100%;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.card-meta {
+  margin-top: 14px;
+  text-align: center;
+  color: white;
+}
+
+.card-meta h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.card-meta p {
+  margin: 0;
+  opacity: 0.6;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.card-meta-count {
+  margin-top: 4px !important;
+  opacity: 0.8 !important;
+  font-size: 12px !important;
+  color: rgba(255, 215, 0, 0.9);
+}
+
+/* ═══ PHASE 8 — COLLECTION IDENTITY ════════════════════════════════════════ */
+
+/* ── Stats button in top-bar ─────────────────────────────────────────────── */
+
+.stats-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.75);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.stats-btn:active {
+  transform: scale(0.96);
+  color: white;
+}
+
+/* ── Secret-rare line in collection cards ────────────────────────────────── */
+
+.set-card-secrets {
+  font-size: 11px;
+  color: rgba(255, 215, 0, 0.65);
+  margin-top: 2px;
+}
+
+/* ── Empty binder slot redesign ──────────────────────────────────────────── */
+
+.binder-slot.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.015);
+  cursor: default;
+}
+
+.binder-slot.empty:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: none;
+}
+
+.empty-slot-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.empty-slot-number {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.empty-slot-icon {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.1);
+  line-height: 1;
+}
+
+/* ── Wishlist corner badge ───────────────────────────────────────────────── */
+
+.wishlist-corner {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  font-size: 12px;
+  color: rgba(255, 215, 0, 0.9);
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 0 6px rgba(255, 200, 0, 0.8);
+}
+
+/* ── Card detail panel — Phase 8 full redesign ───────────────────────────── */
+
+#card-detail-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.card-detail-content {
+  max-width: 340px;
+  width: 92vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #16161e;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
+  cursor: default;
+  animation: cardDetailFade 0.18s ease;
+  scrollbar-width: none;
+}
+
+.card-detail-content::-webkit-scrollbar { display: none; }
+
+.cdp-image-wrap {
+  padding: 16px 16px 0;
+}
+
+.cdp-image {
+  width: 100%;
+  border-radius: var(--radius-md);
+  display: block;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+}
+
+.card-detail-info {
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cdp-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+}
+
+.cdp-rarity {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.cdp-rarity-hyperRare              { color: #ff60e0; opacity: 1; }
+.cdp-rarity-specialIllustrationRare { color: #a78bfa; opacity: 1; }
+.cdp-rarity-ultraRare              { color: #38d9f5; opacity: 1; }
+.cdp-rarity-illustrationRare       { color: #ffd700; opacity: 1; }
+.cdp-rarity-doubleRare             { color: #f0c040; opacity: 0.9; }
+
+.cdp-set {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.cdp-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 4px 0;
+}
+
+.cdp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cdp-row span:last-child {
+  color: rgba(255, 255, 255, 0.85);
+  text-align: right;
+  font-weight: 500;
+}
+
+.cdp-value {
+  color: #4ade80 !important;
+  font-weight: 700 !important;
+}
+
+.cdp-owned {
+  font-size: 12px;
+  color: rgba(255, 215, 0, 0.75);
+  margin-top: 4px;
+}
+
+.cdp-flavor {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.38);
+  font-style: italic;
+  line-height: 1.5;
+  margin-top: 4px;
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+  padding-left: 8px;
+}
+
+.cdp-wishlist-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  letter-spacing: 0.04em;
+}
+
+.cdp-wishlist-btn.active {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.4);
+  color: rgba(255, 215, 0, 0.9);
+}
+
+.cdp-wishlist-btn:active {
+  transform: scale(0.98);
+}
+
+/* ── Stats screen ────────────────────────────────────────────────────────── */
+
+#stats-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.1;
+  word-break: break-word;
+}
+
+.stat-value--small {
+  font-size: 13px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+.stats-showcase {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.stats-showcase-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.stats-showcase-img {
+  width: 120px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.stats-showcase-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+}
+
+.stats-showcase-value {
+  font-size: 13px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.stats-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+
+/* ═══ PHASE 8.5 — COLLECTION INTELLIGENCE ══════════════════════════════════ */
+
+/* ── Wishlist button in collection header ────────────────────────────────── */
+
+.screen-action-btn {
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.22);
+  color: rgba(255, 215, 0, 0.8);
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.screen-action-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Unowned binder slots ────────────────────────────────────────────────── */
+
+.binder-slot.unowned {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0e0e14;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.binder-slot.unowned:hover {
+  transform: scale(1.03);
+}
+
+/* Rarity-tinted border for unowned cards */
+.binder-slot.unowned-doubleRare        { border-color: rgba(240, 192, 64, 0.35); }
+.binder-slot.unowned-illustrationRare  { border-color: rgba(255, 215, 0, 0.4); }
+.binder-slot.unowned-ultraRare         { border-color: rgba(56, 217, 245, 0.45); }
+.binder-slot.unowned-specialIllustrationRare { border-color: rgba(167, 139, 250, 0.5); }
+.binder-slot.unowned-hyperRare         { border-color: rgba(255, 80, 200, 0.55); }
+
+/* Heavily darkened/blurred unowned card image */
+.binder-slot-img--unowned {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.12) blur(1.5px) saturate(0.4);
+  transform: scale(1.04); /* hide blur edges */
+}
+
+/* Overlay with card number on unowned slot */
+.unowned-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.unowned-overlay .empty-slot-number {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.28);
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+/* ── Plastic sleeve shimmer (::after on every binder slot) ───────────────── */
+
+.binder-slot::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.00) 100%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* ── Slot highlight pulse ────────────────────────────────────────────────── */
+
+@keyframes slotHighlight {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+  25%  { box-shadow: 0 0 0 6px rgba(255, 215, 0, 0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+.binder-slot.slot-highlight {
+  animation: slotHighlight 1.4s ease forwards;
+}
+
+/* ── Card preview modal ──────────────────────────────────────────────────── */
+
+.cdp-image--preview {
+  width: 100%;
+  border-radius: var(--radius-md);
+  display: block;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+  filter: brightness(0.18) saturate(0.3) blur(3px);
+  transform: scale(1.02);
+}
+
+.cdp-image-wrap {
+  position: relative;
+  padding: 16px 16px 0;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.cdp-preview-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.cdp-not-owned {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* ── View In Binder button ───────────────────────────────────────────────── */
+
+.cdp-view-binder-btn {
+  margin-top: 6px;
+  width: 100%;
+  padding: 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  letter-spacing: 0.04em;
+}
+
+.cdp-view-binder-btn:active {
+  transform: scale(0.98);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Evolution chain ─────────────────────────────────────────────────────── */
+
+.evo-chain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.evo-node {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.evo-node:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.evo-node--current {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  font-weight: 700;
+}
+
+.evo-arrow {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Wishlist screen ─────────────────────────────────────────────────────── */
+
+#wishlist-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.wishlist-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.wishlist-empty-icon {
+  font-size: 40px;
+  color: rgba(255, 215, 0, 0.25);
+}
+
+.wishlist-empty-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.wishlist-empty-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.wishlist-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wishlist-set-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.wishlist-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: transform 0.12s ease;
+}
+
+.wishlist-tile:active {
+  transform: scale(0.97);
+}
+
+.wishlist-tile-img-wrap {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  aspect-ratio: 2.5 / 3.5;
+  background: #111;
+}
+
+.wishlist-tile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wishlist-owned-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(74, 222, 128, 0.85);
+  color: #000;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.wishlist-tile-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.wishlist-tile-value {
+  font-size: 10px;
+  color: #4ade80;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Stats showcase hover feedback */
+.stats-showcase:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.15s ease;
+}
+
+
+/* ═══ PHASE 9 — VENDOR ECONOMY ═════════════════════════════════════════════ */
+
+/* ── Top market strip ────────────────────────────────────────────────────── */
+
+#market-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 12px;
+}
+
+#market-trend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.market-trend-icon { font-size: 12px; }
+
+#market-trend-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#market-refresh {
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+
+#market-refresh-label {
+  color: rgba(74, 222, 128, 0.85);
+  font-weight: 600;
+}
+
+/* ── Rank strip ──────────────────────────────────────────────────────────── */
+
+#rank-strip {
+  padding: 8px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+#rank-name {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 215, 0, 0.65);
+  font-weight: 700;
+}
+
+#rank-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#rank-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.8), rgba(255, 165, 0, 0.8));
+  transition: width 0.4s ease;
+}
+
+/* ── Vendor list ─────────────────────────────────────────────────────────── */
+
+#vendor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 12px 16px 60px;
+}
+
+.vendor-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+/* PokéMart — clean blue-white */
+.vendor-pokemart {
+  background: linear-gradient(160deg, #182238 0%, #0e1626 100%);
+  border-color: rgba(120, 180, 255, 0.18);
+}
+
+.vendor-pokemart .vendor-name {
+  color: #b8d8ff;
+  text-shadow: 0 0 14px rgba(120, 180, 255, 0.3);
+}
+
+/* Retro Vault — warm gold/wood */
+.vendor-retroVault {
+  background: linear-gradient(160deg, #2a1f12 0%, #1a1208 100%);
+  border-color: rgba(218, 165, 32, 0.25);
+}
+
+.vendor-retroVault .vendor-name {
+  color: #f0c060;
+  text-shadow: 0 0 14px rgba(218, 165, 32, 0.4);
+  font-family: 'Georgia', serif;
+}
+
+/* Night Market — neon purple/red */
+.vendor-nightMarket {
+  background: linear-gradient(160deg, #2a0e2a 0%, #1a0518 100%);
+  border-color: rgba(255, 80, 180, 0.25);
+  position: relative;
+}
+
+.vendor-nightMarket::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at top right, rgba(220, 40, 120, 0.12), transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(150, 50, 200, 0.1), transparent 50%);
+  pointer-events: none;
+}
+
+.vendor-nightMarket .vendor-name {
+  color: #ff60d0;
+  text-shadow: 0 0 16px rgba(255, 80, 180, 0.5);
+}
+
+/* The Broker — black/gold luxury */
+.vendor-broker {
+  background: linear-gradient(160deg, #0a0a0a 0%, #050505 100%);
+  border-color: rgba(255, 215, 0, 0.35);
+}
+
+.vendor-broker .vendor-name {
+  color: #ffd700;
+  text-shadow: 0 0 18px rgba(255, 215, 0, 0.4);
+  letter-spacing: 0.06em;
+}
+
+.vendor-closed { opacity: 0.55; }
+
+/* Vendor header */
+.vendor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.vendor-header-text { flex: 1; min-width: 0; }
+
+.vendor-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.vendor-tagline {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 3px;
+  font-style: italic;
+}
+
+.vendor-favor-pill {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Vendor body */
+.vendor-body {
+  position: relative;
+  z-index: 1;
+}
+
+.vendor-pack-grid,
+.broker-chase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-auto-rows: 1fr;   /* all rows same height — eliminates tall-card misalignment */
+  gap: 10px;
+  align-items: stretch;
+}
+
+.vendor-pack-tile,
+.broker-chase-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  position: relative;
+  gap: 4px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.vendor-pack-art {
+  width: 70px;
+  height: auto;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+/* Fixed-height title zone — ensures all tiles stay identical height
+   regardless of whether the name is one line or two.              */
+.vendor-pack-name {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.68rem, 2vw, 0.69rem);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  line-height: 1.25;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.vendor-pack-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.vendor-discount-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: linear-gradient(135deg, #ff60d0, #c0349a);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 12px rgba(255, 80, 180, 0.4);
+}
+
+.vendor-buy-btn {
+  margin-top: 4px;
+  width: 100%;
+  padding: 7px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: rgba(74, 222, 128, 0.85);
+  color: #0a0a0a;
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.15s ease;
+}
+
+.vendor-buy-btn:hover { background: #4ade80; }
+.vendor-buy-btn:active { transform: scale(0.97); }
+.vendor-buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.vendor-buy-btn--lux {
+  background: linear-gradient(135deg, #ffd700, #c89800);
+  color: #050505;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+}
+
+/* Broker chase tiles */
+.broker-chase-img {
+  width: 90px;
+  border-radius: 6px;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.25);
+}
+
+.broker-chase-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+}
+
+.broker-chase-tier {
+  font-size: 9px;
+  color: rgba(255, 215, 0, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.broker-chase-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffd700;
+  font-family: 'Georgia', serif;
+}
+
+/* Closed vendor message */
+.vendor-closed-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.vendor-closed-icon { font-size: 28px; opacity: 0.5; }
+
+.vendor-closed-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 215, 0, 0.7);
+}
+
+.vendor-closed-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.vendor-empty {
+  text-align: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+}
+
+/* Vendor footer / favor bar */
+.vendor-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.vendor-favor-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vendor-favor-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.85), rgba(255, 165, 0, 0.85));
+  transition: width 0.4s ease;
+}
+
+.vendor-favor-text {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.04em;
+}
+
+/* ── Lock corner badge in binder ─────────────────────────────────────────── */
+
+.lock-corner {
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  font-size: 11px;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.8));
+}
+
+/* ── Sell button in card detail ──────────────────────────────────────────── */
+
+.cdp-sell-btn {
+  margin-top: 6px;
+  width: 100%;
+  padding: 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  background: rgba(74, 222, 128, 0.08);
+  color: rgba(74, 222, 128, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  letter-spacing: 0.04em;
+}
+
+.cdp-sell-btn:active { transform: scale(0.98); }
+
+/* ── Sell modal ──────────────────────────────────────────────────────────── */
+
+#sell-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 320;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.sell-modal-content {
+  background: #16161e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  max-width: 380px;
+  width: 92vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  cursor: default;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
+  animation: cardDetailFade 0.18s ease;
+}
+
+.sell-header {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.sell-card-img {
+  width: 70px;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.sell-card-info { flex: 1; min-width: 0; }
+
+.sell-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+}
+
+.sell-card-rarity {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+
+.sell-card-owned {
+  font-size: 11px;
+  color: rgba(255, 215, 0, 0.7);
+  margin-top: 4px;
+}
+
+/* Lock warning */
+.sell-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: rgba(255, 100, 100, 0.08);
+  border: 1px solid rgba(255, 100, 100, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 14px;
+}
+
+.sell-warning-icon { font-size: 18px; }
+
+.sell-warning-text {
+  flex: 1;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+.sell-warning-title {
+  font-weight: 700;
+  color: #ff8080;
+  margin-bottom: 2px;
+  font-size: 12px;
+}
+
+/* Vendor selection rows */
+.sell-vendor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.sell-vendor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sell-vendor-row:hover { background: rgba(255, 255, 255, 0.06); }
+
+.sell-vendor-row.selected {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.45);
+}
+
+.sell-vendor-row[data-disabled="1"] { opacity: 0.4; cursor: not-allowed; }
+
+.sell-vendor-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+}
+
+.sell-vendor-meta {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 2px;
+}
+
+.sell-vendor-payout {
+  font-size: 16px;
+  font-weight: 800;
+  color: #4ade80;
+}
+
+/* Sell action buttons */
+.sell-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sell-cancel-btn,
+.sell-confirm-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  letter-spacing: 0.04em;
+  transition: background 0.15s ease;
+}
+
+.sell-cancel-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sell-confirm-btn {
+  background: rgba(74, 222, 128, 0.85);
+  color: #0a0a0a;
+}
+
+.sell-confirm-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sell-confirm-btn--warn {
+  background: linear-gradient(135deg, #ff7070, #c84040);
+  color: white;
+}
+
+/* ── Stats — rank card and favor list ────────────────────────────────────── */
+
+.stats-rank-card {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 165, 0, 0.04));
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: center;
+}
+
+.stats-rank-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 215, 0, 0.65);
+  font-weight: 700;
+}
+
+.stats-rank-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  margin: 4px 0 2px;
+}
+
+.stats-rank-points {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stats-section-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.stats-favor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-favor-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 10px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.stat-favor-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.stat-favor-level {
+  font-size: 10px;
+  color: rgba(255, 215, 0, 0.7);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.stat-favor-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stat-favor-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.85), rgba(255, 165, 0, 0.85));
+}
+
+/* ── Toast notifications ─────────────────────────────────────────────────── */
+
+#toast-container {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  align-items: center;
+}
+
+@keyframes toastSlideIn {
+  0%   { opacity: 0; transform: translateY(12px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  85%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+.toast {
+  background: rgba(20, 20, 25, 0.95);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 16px;
+  border-radius: 24px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  animation: toastSlideIn 2.6s ease forwards;
+  pointer-events: auto;
+}
+
+.toast--favor   { border-color: rgba(255, 215, 0, 0.4);  color: #ffd700; }
+.toast--rep     { border-color: rgba(120, 180, 255, 0.4); color: #b8d8ff; }
+.toast--sell    { border-color: rgba(74, 222, 128, 0.4); color: #4ade80; }
+.toast--refresh { border-color: rgba(167, 139, 250, 0.4); color: #c4b5fd; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 9.6 — Daily Chase strip
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#chase-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(40,18,60,0.55), rgba(20,10,30,0.7));
+  border: 1px solid rgba(196, 181, 253, 0.18);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .35s ease, transform .35s ease;
+}
+#chase-strip:hover { border-color: rgba(196, 181, 253, 0.4); }
+#chase-strip.hidden { display: none; }
+
+.chase-strip-img {
+  width: 44px; height: 60px; border-radius: 4px; object-fit: cover;
+  box-shadow: 0 0 14px rgba(196,181,253,0.25);
+}
+.chase-strip-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.chase-strip-label  { font-size: 10px; letter-spacing: 1.5px; color: #c4b5fd; opacity: .7; text-transform: uppercase; }
+.chase-strip-name   { font-size: 14px; color: #f2eaff; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chase-strip-boost  { font-size: 11px; color: #a7f3d0; }
+.chase-strip-timer  { font-size: 11px; color: #888; font-variant-numeric: tabular-nums; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 9.6 — Broker tile (override: stable, with mini history)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.broker-chase-tile .broker-chase-spark { margin-top: 4px; opacity: 0.85; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 9.8 — Market screen
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#market-screen { background: #0c0c0d; }
+
+.market-controls {
+  display: flex; gap: 10px; padding: 14px 16px; flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  position: sticky; top: 56px; background: #0c0c0d; z-index: 5;
+}
+.market-select, .market-search {
+  background: #1a1a1c; color: #e8e8ea; border: 1px solid #2a2a2e;
+  border-radius: 8px; padding: 8px 12px; font-size: 13px; font-family: inherit;
+  outline: none; transition: border-color .2s ease;
+}
+.market-select:focus, .market-search:focus { border-color: #5a5a60; }
+.market-search { flex: 1; min-width: 140px; }
+
+.market-list {
+  display: flex; flex-direction: column;
+  padding: 8px 12px 80px;
+}
+.market-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: background-color .15s ease;
+}
+.market-row:hover { background: rgba(255,255,255,0.025); }
+.market-row-img  { width: 44px; height: 60px; object-fit: cover; border-radius: 3px; }
+.market-row-info { min-width: 0; }
+.market-row-name { font-size: 14px; color: #eaeaec; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.market-row-meta { font-size: 11px; color: #888; margin-top: 2px; }
+.market-chase-pip { margin-left: 6px; font-size: 11px; }
+.market-row-spark { width: 64px; }
+.market-row-numbers { text-align: right; min-width: 76px; }
+.market-row-value { font-size: 14px; color: #f2f2f4; font-variant-numeric: tabular-nums; }
+.market-row-move { font-size: 11px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.market-row-move--up   { color: #4ade80; }
+.market-row-move--down { color: #f87171; }
+.market-row-move--flat { color: #777; }
+
+.market-empty { padding: 60px 20px; text-align: center; color: #666; font-size: 13px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 9.8 — Graph modal
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#market-graph-modal {
+  position: fixed; inset: 0; z-index: 1200;
+  background: rgba(0,0,0,0.78);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; opacity: 1; transition: opacity .25s ease;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+#market-graph-modal.hidden { opacity: 0; pointer-events: none; }
+
+.graph-modal-content {
+  background: #131315;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 28px 24px 24px;
+  width: 100%; max-width: 380px;
+  max-height: 90vh; overflow-y: auto;
+  position: relative;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  animation: graphPop .28s cubic-bezier(.2,.9,.4,1.1);
+}
+@keyframes graphPop {
+  from { transform: translateY(20px) scale(.96); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+.graph-close-btn {
+  position: absolute; top: 10px; right: 14px;
+  background: none; border: none; color: #888; font-size: 24px; cursor: pointer;
+  width: 32px; height: 32px; line-height: 1;
+}
+.graph-close-btn:hover { color: #eee; }
+
+.graph-card-art  { display: block; width: 130px; margin: 0 auto 14px; border-radius: 6px; }
+.graph-card-name { text-align: center; font-size: 16px; color: #f2f2f4; }
+.graph-card-meta { text-align: center; font-size: 11px; color: #888; margin-top: 2px; }
+.graph-card-value{ text-align: center; font-size: 22px; color: #f8f8fa; margin: 12px 0 4px; font-variant-numeric: tabular-nums; }
+.graph-move-up   { font-size: 13px; color: #4ade80; margin-left: 4px; }
+.graph-move-down { font-size: 13px; color: #f87171; margin-left: 4px; }
+
+.graph-chart { margin: 16px -8px 12px; }
+.graph-svg   { display: block; margin: 0 auto; }
+
+.graph-reasoning {
+  font-size: 12px; color: #aaa; text-align: center;
+  padding: 10px 12px; margin: 4px 0 16px;
+  background: rgba(255,255,255,0.025); border-radius: 8px; line-height: 1.5;
+}
+
+.graph-stats {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+}
+.graph-stat {
+  background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;
+}
+.graph-stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.7px; }
+.graph-stat-val   { font-size: 14px; color: #eaeaec; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 9.9 — Stipend strip
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#stipend-strip {
+  display: flex; align-items: center; gap: 12px;
+  margin: 10px 16px 0;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(20,40,30,0.5), rgba(10,20,15,0.6));
+  border: 1px solid rgba(74, 222, 128, 0.18);
+  border-radius: 10px;
+}
+#stipend-strip.hidden { display: none; }
+.stipend-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.stipend-label  { font-size: 10px; letter-spacing: 1.2px; color: #a7f3d0; opacity: .75; text-transform: uppercase; }
+.stipend-amount { font-size: 14px; color: #eafff0; font-variant-numeric: tabular-nums; }
+.stipend-btn {
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  color: #a7f3d0; padding: 7px 16px; border-radius: 6px;
+  font-size: 12px; cursor: pointer; font-family: inherit;
+  transition: background-color .25s ease, transform .25s ease;
+}
+.stipend-btn:hover:not(:disabled)  { background: rgba(74, 222, 128, 0.25); }
+.stipend-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.stipend-cooldown { font-size: 11px; color: #777; min-width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 9.9 — Recent hits rail
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#recent-hits-strip {
+  margin: 18px 16px 24px;
+  padding: 14px 4px 14px 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px;
+}
+#recent-hits-strip.hidden { display: none; }
+.recent-hits-header {
+  font-size: 11px; letter-spacing: 1.5px; color: #888;
+  text-transform: uppercase; margin-bottom: 8px; padding-left: 4px;
+}
+#recent-hits-track {
+  display: flex; gap: 10px; overflow-x: auto;
+  padding: 4px 14px 4px 4px;
+  scrollbar-width: none;
+}
+#recent-hits-track::-webkit-scrollbar { display: none; }
+.recent-hit {
+  flex: 0 0 auto; width: 64px; cursor: pointer;
+  transition: transform .25s ease;
+}
+.recent-hit:hover { transform: translateY(-3px); }
+.recent-hit-img { width: 64px; height: 89px; border-radius: 4px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+.recent-hit-name { font-size: 9px; color: #aaa; margin-top: 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 9 STABILIZATION — Overlay scroll + market polish
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* All full-screen overlay screens scroll independently while body stays fixed */
+.overlay-scroll-screen {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100vh;
+  max-height: 100vh;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+/* Market rows: reliable tap on mobile */
+.market-row {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* Market hint text below controls */
+.market-hint {
+  padding: 6px 20px 2px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.38);
+  letter-spacing: 0.3px;
+}
+
+/* Trend status label under price in graph modal */
+.graph-trend-status {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-top: 2px;
+}
+.graph-trend-status--rising   { color: rgba(74,222,128,0.7); }
+.graph-trend-status--surging  { color: rgba(74,222,128,0.9); }
+.graph-trend-status--cooling  { color: rgba(248,113,113,0.7); }
+.graph-trend-status--volatile { color: rgba(251,191,36,0.7); }
+.graph-trend-status--stable   { color: rgba(255,255,255,0.4); }
+
+/* "Market history developing" helper */
+.graph-early-hint {
+  font-size: 10px;
+  text-align: center;
+  color: rgba(255,255,255,0.3);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 10 — RAREBOUND polish: boot screen, settings, help, corner icons
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Boot screen ──────────────────────────────────────────────────────── */
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(40, 38, 50, 0.55) 0%, transparent 60%),
+    linear-gradient(180deg, #0b0b10 0%, #050508 100%);
+  color: #f5f5f0;
+  opacity: 1;
+  transition: opacity 0.45s ease;
+  overflow: hidden;
+}
+#boot-screen.boot-fade-out { opacity: 0; pointer-events: none; }
+
+.boot-noise {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  animation: bootNoiseDrift 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes bootNoiseDrift {
+  from { transform: translate(0,0); }
+  to   { transform: translate(-40px,-30px); }
+}
+.boot-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none;
+}
+
+.boot-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 0 32px;
+  max-width: 460px;
+  width: 100%;
+}
+.boot-title {
+  font-size: clamp(34px, 8vw, 48px);
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  color: #f6f4ec;
+  text-shadow: 0 0 28px rgba(214, 188, 117, 0.18);
+  animation: bootTitleFade 1.2s ease both;
+}
+.boot-subtitle {
+  margin-top: 14px;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 240, 0.5);
+  animation: bootTitleFade 1.6s 0.2s ease both;
+}
+@keyframes bootTitleFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.boot-bar {
+  margin: 36px auto 14px;
+  width: min(280px, 70vw);
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.boot-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(214, 188, 117, 0.55), rgba(255, 255, 255, 0.85));
+  box-shadow: 0 0 12px rgba(214, 188, 117, 0.35);
+  border-radius: 2px;
+  transition: width 0.45s ease;
+}
+.boot-stage-label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(245, 245, 240, 0.55);
+  min-height: 16px;
+}
+
+/* While the boot screen is up, freeze the main app from interaction. */
+body.boot-locked #store-screen,
+body.boot-locked #help-icon-btn,
+body.boot-locked #settings-icon-btn {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Floating corner icons (settings + help) ─────────────────────────── */
+.corner-icon-btn {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(20, 22, 30, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(245, 245, 240, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 90;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+.corner-icon-btn:hover { background: rgba(40, 42, 52, 0.9); }
+.corner-icon-btn:active { transform: scale(0.94); }
+#settings-icon-btn { right: max(10px, env(safe-area-inset-right)); }
+#help-icon-btn     { right: calc(max(10px, env(safe-area-inset-right)) + 44px); }
+
+/* ── Settings screen ─────────────────────────────────────────────────── */
+#settings-screen, #help-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  background: #0b0b10;
+}
+.settings-body, .help-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 18px calc(40px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-group {
+  margin-bottom: 22px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row-text { flex: 1; min-width: 0; }
+.settings-row-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f5f5f0;
+}
+.settings-row-desc {
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(245, 245, 240, 0.45);
+}
+.settings-row--disabled .settings-row-title { color: rgba(245, 245, 240, 0.55); }
+
+.toggle-switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  background: #f5f5f0;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: rgba(214, 188, 117, 0.7);
+}
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+.toggle-switch.is-disabled { cursor: not-allowed; opacity: 0.45; }
+
+.settings-danger-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255, 90, 90, 0.35);
+  color: #ff9c9c;
+  padding: 14px;
+  border-radius: 12px 12px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.settings-danger-btn:hover { background: rgba(255, 90, 90, 0.08); }
+.settings-danger-note {
+  padding: 10px 16px 14px;
+  font-size: 11px;
+  color: rgba(255, 156, 156, 0.55);
+  line-height: 1.5;
+}
+.settings-footer {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.25);
+  padding: 14px 0;
+  text-transform: uppercase;
+}
+
+/* ── Confirm modal ───────────────────────────────────────────────────── */
+#settings-confirm-modal {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+#settings-confirm-modal.hidden { display: none; }
+.confirm-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+.confirm-card {
+  position: relative;
+  background: #15161d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 22px;
+  max-width: 340px;
+  width: 100%;
+}
+.confirm-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.confirm-body  { font-size: 13px; color: rgba(245,245,240,0.65); line-height: 1.5; margin-bottom: 18px; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-actions button {
+  flex: 1;
+  padding: 11px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+.confirm-cancel {
+  background: rgba(255,255,255,0.08);
+  color: #f5f5f0;
+}
+.confirm-destructive {
+  background: rgba(220, 60, 60, 0.85);
+  color: white;
+}
+
+/* ── Help screen accordion ───────────────────────────────────────────── */
+.help-intro {
+  font-size: 13px;
+  color: rgba(245, 245, 240, 0.55);
+  line-height: 1.55;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+.help-accordion {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.help-accordion-head {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #f5f5f0;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.help-accordion-chevron {
+  font-size: 18px;
+  color: rgba(214, 188, 117, 0.7);
+  font-weight: 400;
+  margin-left: 12px;
+}
+.help-accordion-body {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.32s ease, opacity 0.22s ease, padding 0.32s ease;
+  padding: 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(245, 245, 240, 0.7);
+}
+.help-accordion.is-open .help-accordion-body {
+  max-height: 500px;
+  opacity: 1;
+  padding: 0 16px 16px;
+}
+.help-accordion-body strong { color: #f5f5f0; }
+.help-accordion-body em { color: rgba(214, 188, 117, 0.85); font-style: normal; }
+
+/* ── Reduced motion overrides ────────────────────────────────────────── */
+html[data-reduced-motion] *,
+html[data-reduced-motion] *::before,
+html[data-reduced-motion] *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay:    0ms !important;
+  transition-duration: 0.08s !important;
+  transition-delay:   0ms !important;
+}
+html[data-reduced-motion] .boot-noise { animation: none; }
+html[data-reduced-motion] .binder-page { transition: opacity 0.08s ease !important; transform: none !important; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   PHASE 10.1 — Utility Dock, Mystery Boxes, Dev Mode, Polish
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Utility dock (replaces floating Help+Settings) ─────────────────── */
+.utility-dock {
+  position: fixed;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  right: calc(14px + env(safe-area-inset-right, 0px));
+  z-index: 320;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  /* The wrapper NEVER intercepts pointer events — only children do explicitly */
+  pointer-events: none;
+  width: max-content;
+}
+
+/* ── Trigger pill ─────────────────────────────────────────────────────── */
+.utility-dock-trigger {
+  /* Explicit auto — this is the ONLY always-active interactive element */
+  pointer-events: auto;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(20, 22, 30, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(245, 245, 240, 0.82);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+  /* Minimum touch target already met by 44×44 */
+}
+.utility-dock-trigger:hover  { background: rgba(34, 36, 46, 0.88); border-color: rgba(214,188,117,0.35); }
+.utility-dock-trigger:active { transform: scale(0.94); }
+.utility-dock.is-open .utility-dock-trigger {
+  background: rgba(34, 36, 46, 0.92);
+  border-color: rgba(214, 188, 117, 0.55);
+  color: #d6bc75;
+}
+
+/* ── Expandable menu — NEVER intercepts when collapsed ────────────────── */
+.utility-dock-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0;
+  visibility: hidden;               /* belt-and-suspenders: layout+hit-test removed */
+  transform: translateY(-6px) scale(0.96);
+  transform-origin: top right;
+  pointer-events: none;             /* belt-and-suspenders #2 */
+  transition: opacity 0.22s ease, transform 0.22s ease, visibility 0s linear 0.22s;
+  will-change: opacity, transform;
+}
+.utility-dock.is-open .utility-dock-items {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  transition: opacity 0.22s ease, transform 0.22s ease, visibility 0s linear 0s;
+}
+.utility-dock-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 13px 9px 11px;
+  background: rgba(20, 22, 30, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  color: rgba(245, 245, 240, 0.85);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.16s ease, transform 0.16s ease, border-color 0.16s ease;
+}
+.utility-dock-item:hover  { background: rgba(40, 42, 52, 0.94); border-color: rgba(214,188,117,0.4); }
+.utility-dock-item:active { transform: scale(0.96); }
+.utility-dock-item .dock-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px;
+  font-size: 13px;
+  color: rgba(214, 188, 117, 0.85);
+}
+
+/* Hide legacy floating icons if any leftover refs */
+.corner-icon-btn { display: none !important; }
+
+/* ── DEV badge (sandbox indicator) ───────────────────────────────────── */
+.dev-badge {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 320;
+  padding: 5px 10px 4px;
+  border-radius: 12px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  background: linear-gradient(180deg, rgba(214,188,117,0.18), rgba(214,188,117,0.08));
+  border: 1px solid rgba(214, 188, 117, 0.45);
+  color: #d6bc75;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(214, 188, 117, 0.08);
+}
+.dev-badge.hidden { display: none; }
+
+/* ── Subtle gradient drift behind hub ────────────────────────────────── */
+.hub-ambient-drift {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(98, 86, 140, 0.08), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(140, 110, 70, 0.07), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(60, 90, 130, 0.06), transparent 65%);
+  filter: blur(0px);
+  animation: hubDrift 32s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+@keyframes hubDrift {
+  0%   { transform: translate3d(0%, 0%, 0) scale(1); }
+  50%  { transform: translate3d(2%, -2%, 0) scale(1.04); }
+  100% { transform: translate3d(-2%, 2%, 0) scale(1); }
+}
+html[data-reduced-motion] .hub-ambient-drift { animation: none; }
+
+/* ── Mystery box vendor tile ─────────────────────────────────────────── */
+.mystery-box-tile {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 10px 14px;
+  background: linear-gradient(180deg, rgba(35,30,55,0.55), rgba(20,18,28,0.65));
+  border: 1px solid rgba(214, 188, 117, 0.22);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  overflow: hidden;
+}
+.mystery-box-tile::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(214,188,117,0.18), transparent 65%);
+  pointer-events: none;
+}
+.mystery-box-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(214, 188, 117, 0.55);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+}
+.mystery-box-art {
+  width: 62px; height: 80px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(140deg, #2a2438, #15121e);
+  border: 1px solid rgba(214,188,117,0.35);
+  font-size: 28px;
+  color: rgba(214, 188, 117, 0.85);
+  position: relative;
+  z-index: 1;
+}
+.mystery-box-name {
+  font-size: 12px; font-weight: 600;
+  text-align: center;
+  color: #f5f5f0;
+  position: relative; z-index: 1;
+}
+.mystery-box-meta {
+  font-size: 10px;
+  color: rgba(245,245,240,0.55);
+  margin-top: 2px;
+  position: relative; z-index: 1;
+}
+.mystery-box-price {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #d6bc75;
+  position: relative; z-index: 1;
+}
+.mystery-box-cta {
+  margin-top: 8px;
+  padding: 6px 14px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 14px;
+  background: rgba(214,188,117,0.18);
+  border: 1px solid rgba(214,188,117,0.5);
+  color: #d6bc75;
+  cursor: pointer;
+  position: relative; z-index: 1;
+}
+.mystery-box-cta:hover { background: rgba(214,188,117,0.28); }
+
+/* ── Mystery box overlay reveal ──────────────────────────────────────── */
+.mystery-overlay {
+  position: fixed; inset: 0; z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.mystery-overlay.hidden { display: none; }
+.mystery-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(8px);
+}
+.mystery-card {
+  position: relative;
+  background: linear-gradient(160deg, #1a1822, #0f0e15);
+  border: 1px solid rgba(214,188,117,0.28);
+  border-radius: 18px;
+  padding: 24px 22px 22px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.mystery-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(214,188,117,0.7);
+  margin-bottom: 6px;
+}
+.mystery-headline {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #f5f5f0;
+}
+.mystery-tiles {
+  display: flex; gap: 12px; justify-content: center;
+  margin-bottom: 20px;
+  perspective: 800px;
+}
+.mystery-tile {
+  width: 80px; height: 110px;
+}
+.mystery-tile-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.45, 0.15, 0.25, 1);
+}
+.mystery-tile.is-flipped .mystery-tile-inner { transform: rotateY(180deg); }
+.mystery-tile-back, .mystery-tile-front {
+  position: absolute; inset: 0;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.mystery-tile-back {
+  background: linear-gradient(140deg, #2a2438, #15121e);
+  border: 1px solid rgba(214,188,117,0.4);
+  color: rgba(214,188,117,0.6);
+  font-size: 32px;
+  font-weight: 700;
+}
+.mystery-tile-front {
+  transform: rotateY(180deg);
+  background: rgba(20,22,30,0.9);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 6px;
+}
+.mystery-tile-front img { width: 60px; height: 75px; object-fit: contain; }
+.mystery-tile-label {
+  font-size: 8px;
+  color: rgba(245,245,240,0.6);
+  margin-top: 4px;
+  text-align: center;
+  line-height: 1.1;
+}
+.mystery-open-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(214,188,117,0.92), rgba(196,170,100,0.85));
+  border: none;
+  color: #1a1612;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+.mystery-open-btn:disabled {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.4);
+  cursor: default;
+}
+.mystery-open-btn:not(:disabled):hover { filter: brightness(1.07); }
+.mystery-open-btn:not(:disabled):active { transform: scale(0.98); }
+
+/* ── Settings → Developer Access ─────────────────────────────────────── */
+.settings-dev-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  border: 1px dashed rgba(214,188,117,0.25);
+  color: rgba(214,188,117,0.75);
+  padding: 10px 14px;
+  margin: 12px 0 0;
+  border-radius: 10px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+.settings-dev-link:hover {
+  background: rgba(214,188,117,0.06);
+  border-color: rgba(214,188,117,0.5);
+}
+.dev-link-lock { font-size: 14px; }
+
+.dev-tools {
+  border: 1px solid rgba(214,188,117,0.25);
+  background: linear-gradient(180deg, rgba(40,32,18,0.18), rgba(20,18,12,0.18));
+  padding: 14px;
+  border-radius: 12px;
+  margin-top: 14px;
+}
+.dev-tools-title {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #d6bc75;
+  margin-bottom: 4px;
+}
+.dev-tools-sub {
+  font-size: 11px;
+  color: rgba(245,245,240,0.5);
+  margin-bottom: 12px;
+}
+.dev-tool-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.dev-tool-btn {
+  flex: 1 1 auto;
+  min-width: 100px;
+  padding: 9px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(214,188,117,0.25);
+  color: rgba(245,245,240,0.85);
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.dev-tool-btn:hover { background: rgba(214,188,117,0.1); border-color: rgba(214,188,117,0.5); }
+.dev-tool-btn--warn {
+  border-color: rgba(220, 80, 80, 0.4);
+  color: rgba(255, 180, 180, 0.95);
+}
+.dev-tool-btn--warn:hover { background: rgba(220, 80, 80, 0.1); }
+
+.dev-tool-toggle-row {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 12px 0;
+  margin: 8px 0 12px;
+}
+
+.dev-tool-lock {
+  margin-top: 12px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(245,245,240,0.55);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.dev-tool-lock:hover { background: rgba(255,255,255,0.04); color: #f5f5f0; }
+
+/* Dev access modal */
+#dev-access-modal, #dev-confirm-modal {
+  position: fixed; inset: 0; z-index: 1200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+#dev-access-modal.hidden, #dev-confirm-modal.hidden { display: none; }
+.dev-access-card {
+  border-color: rgba(214,188,117,0.45);
+}
+.dev-access-card.shake { animation: devShake 0.4s ease; }
+@keyframes devShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.dev-access-sub {
+  margin-bottom: 14px !important;
+  color: rgba(214,188,117,0.6) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.dev-access-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: #f5f5f0;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.dev-access-input:focus { outline: none; border-color: rgba(214,188,117,0.6); }
+.dev-access-error {
+  font-size: 11px;
+  color: #f87171;
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+.dev-access-error.hidden { display: none; }
+
+/* ── Recent hits polish ──────────────────────────────────────────────── */
+.recent-hit {
+  position: relative;
+}
+.recent-hit-img { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+.recent-hit:hover .recent-hit-img {
+  transform: scale(1.04);
+}
+.recent-hit-rarity {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(214,188,117,0.7);
+  margin-top: 1px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recent-hit--ultra .recent-hit-img {
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(214, 188, 117, 0.55),
+    0 0 18px rgba(214, 188, 117, 0.32);
+}
+.recent-hit--ultra .recent-hit-rarity { color: #e8cf85; }
+.recent-hit--secret .recent-hit-img {
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(174, 138, 220, 0.55),
+    0 0 22px rgba(174, 138, 220, 0.38);
+}
+.recent-hit--secret .recent-hit-rarity { color: #d4b3ff; }
+html[data-reduced-motion] .recent-hit-img { transition: none; }
+
+/* Snap scroll on the rail */
+#recent-hits-track {
+  scroll-snap-type: x mandatory;
+}
+#recent-hits-track .recent-hit {
+  scroll-snap-align: start;
+}
+
+/* ── Market graph tooltip ────────────────────────────────────────────── */
+.graph-svg { touch-action: none; cursor: crosshair; }
+.graph-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(15, 16, 22, 0.94);
+  border: 1px solid rgba(214,188,117,0.45);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #f5f5f0;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+  transform: translate(-50%, -120%);
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.graph-tooltip.is-visible { opacity: 1; }
+.graph-tooltip-val { color: #d6bc75; font-weight: 600; }
+.graph-tooltip-time {
+  display: block;
+  font-size: 9px;
+  color: rgba(245,245,240,0.55);
+  letter-spacing: 0.08em;
+}
+.graph-cursor-line {
+  stroke: rgba(214, 188, 117, 0.4);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.graph-cursor-dot {
+  fill: #d6bc75;
+  stroke: #1a1612;
+  stroke-width: 1.5;
+}
+.graph-chart { position: relative; }
+
+/* Body lock during boot keeps utility dock locked too */
+body.boot-locked .utility-dock { pointer-events: none; opacity: 0.4; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   PHASE 10.1.1 — Stabilization + Polish
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Ambient audio settings hint ─────────────────────────────────────── */
+.settings-audio-hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  color: rgba(245, 245, 240, 0.38);
+  letter-spacing: 0.04em;
+}
+
+/* ── Mystery box tiles — themed per vendor ───────────────────────────── */
+
+/* Remove old placeholder emblem rule */
+.mystery-box-art {
+  font-size: 0 !important;  /* hide placeholder ⌬ text */
+}
+
+/* Shared shimmer sweep animation */
+@keyframes boxShimmer {
+  0%   { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(220%)  skewX(-20deg); }
+}
+
+/* Night Market box — neon magenta energy */
+.mystery-box-tile--nightMarket {
+  background: linear-gradient(160deg, rgba(42, 18, 52, 0.75), rgba(18, 10, 28, 0.80));
+  border-color: rgba(196, 80, 220, 0.38);
+}
+.mystery-box-tile--nightMarket::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(196, 80, 220, 0.22), transparent 65%);
+}
+.mystery-box-tile--nightMarket .mystery-box-art {
+  background: linear-gradient(140deg, #250d3a, #0f0718);
+  border-color: rgba(196, 80, 220, 0.55);
+}
+.mystery-box-tile--nightMarket .mystery-box-art::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(196, 80, 220, 0.15) 50%,
+    transparent 70%
+  );
+  animation: boxShimmer 4.5s ease-in-out infinite;
+}
+.mystery-box-tile--nightMarket .mystery-box-emblem {
+  color: rgba(196, 80, 220, 0.9);
+}
+.mystery-box-tile--nightMarket .mystery-box-price { color: #da82f5; }
+.mystery-box-tile--nightMarket .mystery-box-cta {
+  background: rgba(196, 80, 220, 0.15);
+  border-color: rgba(196, 80, 220, 0.55);
+  color: #da82f5;
+}
+.mystery-box-tile--nightMarket .mystery-box-cta:hover {
+  background: rgba(196, 80, 220, 0.26);
+}
+
+/* Retro Vault crate — aged brass / archive gold */
+.mystery-box-tile--retroVault {
+  background: linear-gradient(160deg, rgba(48, 38, 12, 0.75), rgba(18, 14, 6, 0.80));
+  border-color: rgba(180, 145, 60, 0.42);
+}
+.mystery-box-tile--retroVault::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(180, 145, 60, 0.20), transparent 65%);
+}
+.mystery-box-tile--retroVault .mystery-box-art {
+  background: linear-gradient(140deg, #2e2206, #120e04);
+  border-color: rgba(180, 145, 60, 0.60);
+}
+.mystery-box-tile--retroVault .mystery-box-art::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(220, 185, 100, 0.14) 50%,
+    transparent 70%
+  );
+  animation: boxShimmer 5.5s ease-in-out infinite 0.8s;
+}
+.mystery-box-tile--retroVault .mystery-box-emblem {
+  color: rgba(200, 165, 80, 0.95);
+}
+.mystery-box-tile--retroVault .mystery-box-price { color: #c8a550; }
+.mystery-box-tile--retroVault .mystery-box-cta {
+  background: rgba(180, 145, 60, 0.14);
+  border-color: rgba(180, 145, 60, 0.55);
+  color: #c8a550;
+}
+.mystery-box-tile--retroVault .mystery-box-cta:hover {
+  background: rgba(180, 145, 60, 0.26);
+}
+
+/* Broker cache — obsidian black + premium gold */
+.mystery-box-tile--broker {
+  background: linear-gradient(160deg, rgba(14, 14, 18, 0.88), rgba(6, 6, 10, 0.92));
+  border-color: rgba(214, 188, 117, 0.50);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.6), inset 0 1px 0 rgba(214,188,117,0.12);
+}
+.mystery-box-tile--broker::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(214, 188, 117, 0.16), transparent 65%);
+}
+.mystery-box-tile--broker .mystery-box-art {
+  background: linear-gradient(140deg, #1a1810, #08070d);
+  border-color: rgba(214, 188, 117, 0.65);
+}
+.mystery-box-tile--broker .mystery-box-art::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(214, 188, 117, 0.16) 50%,
+    transparent 70%
+  );
+  animation: boxShimmer 6s ease-in-out infinite 1.4s;
+}
+.mystery-box-tile--broker .mystery-box-emblem {
+  color: #d6bc75;
+}
+.mystery-box-tile--broker .mystery-box-price { color: #d6bc75; }
+.mystery-box-tile--broker .mystery-box-cta {
+  background: rgba(214, 188, 117, 0.14);
+  border-color: rgba(214, 188, 117, 0.60);
+  color: #d6bc75;
+}
+.mystery-box-tile--broker .mystery-box-cta:hover {
+  background: rgba(214, 188, 117, 0.24);
+}
+
+/* Box art container needs overflow:hidden for shimmer + position:relative for ::after */
+.mystery-box-art {
+  overflow: hidden;
+  position: relative;
+}
+
+/* Emblem SVG icon inside the art box */
+.mystery-box-emblem {
+  position: relative;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.92;
+}
+
+/* Foil border glow on hover */
+.mystery-box-tile:hover {
+  box-shadow: 0 10px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* Reduced motion — disable shimmer sweep */
+html[data-reduced-motion] .mystery-box-art::after { animation: none; }
+html[data-reduced-motion] .hub-ambient-drift       { animation: none; }
+
+/* ── Boot locked dock ────────────────────────────────────────────────── */
+body.boot-locked .utility-dock { pointer-events: none !important; opacity: 0.4; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   PHASE 10.1.2 — Critical recovery
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Force the dock wrapper to occupy ONLY the trigger's footprint. The
+   items panel becomes absolutely positioned so it never expands the
+   wrapper's bounding box. This guarantees no layout / hit-testing
+   surface beyond the visible 44×44 trigger. */
+.utility-dock {
+  width: 44px !important;
+  height: 44px !important;
+  overflow: visible;
+}
+.utility-dock-items {
+  position: absolute;
+  top: 52px;     /* below the trigger (44 + 8 gap) */
+  right: 0;
+}
+
+/* Vendor error fallback card — minimal, calm, never alarming */
+.vendor-card.vendor-error {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   PHASE 10.1.4 — Interaction fix + Mystery Box premiumization
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Section 1: Nav interaction fix ─────────────────────────────────── */
+
+/* IMPORTANT — #store-screen MUST NOT have a z-index.
+   The .screen overlay elements (collection-screen, stats-screen, market-screen)
+   use z-index:100 with position:fixed to appear above the hub. If #store-screen
+   were given a higher z-index (e.g. 110) it would cover every opened screen,
+   making navigation appear to do nothing even though showScreen() executes
+   correctly. The actual tap-blocking fix lives in initScreens() (JS) which
+   adds display:none to settings-screen and help-screen at startup. */
+
+/* touch-action:manipulation prevents iOS double-tap-zoom delay (300ms)
+   and guarantees the click event fires on the first tap. Required even
+   when the viewport has width=device-width because some WebKit builds
+   still apply the heuristic to pill-shaped / small buttons. */
+#view-collection-btn,
+#market-btn,
+#stats-btn {
+  touch-action: manipulation;
+}
+
+/* ── Section 2: Mystery Box premiumization — ::before textures ───────── */
+
+/* Night Market — diagonal hazard stripes layered over the art background.
+   Creates the "classified crate" feel. ::after already handles shimmer sweep. */
+.mystery-box-tile--nightMarket .mystery-box-art::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 6px;
+  background: repeating-linear-gradient(
+    -48deg,
+    transparent           0px,
+    transparent           9px,
+    rgba(196,80,220,0.11) 9px,
+    rgba(196,80,220,0.11) 11px
+  );
+  pointer-events: none;
+}
+
+/* Night Market — stronger border glow */
+.mystery-box-tile--nightMarket .mystery-box-art {
+  box-shadow:
+    0 0 12px rgba(180,60,220,0.30),
+    inset 0 0 10px rgba(180,60,220,0.12),
+    inset 0 1px 0  rgba(220,140,255,0.20);
+}
+
+/* Retro Vault — horizontal metallic banding (archive case panel lines) */
+.mystery-box-tile--retroVault .mystery-box-art::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 6px;
+  background:
+    linear-gradient(180deg,
+      rgba(180,145,60,0.14) 0px,
+      rgba(180,145,60,0.14) 2.5px,
+      transparent           2.5px,
+      transparent           46%,
+      rgba(180,145,60,0.10) 46%,
+      rgba(180,145,60,0.10) 48.5px,
+      transparent           48.5px,
+      transparent           68%,
+      rgba(180,145,60,0.08) 68%,
+      rgba(180,145,60,0.08) 70.5px,
+      transparent           70.5px
+    );
+  pointer-events: none;
+}
+
+/* Retro Vault — brass glow + inner warmth */
+.mystery-box-tile--retroVault .mystery-box-art {
+  box-shadow:
+    0 0 12px rgba(180,145,60,0.22),
+    inset 0 0 10px rgba(180,145,60,0.10),
+    inset 0 1px 0  rgba(240,200,110,0.22);
+}
+
+/* Broker — subtle radial gold center with corner accent lines */
+.mystery-box-tile--broker .mystery-box-art::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 6px;
+  background:
+    radial-gradient(ellipse 65% 55% at 50% 50%, rgba(214,188,117,0.10), transparent 70%),
+    linear-gradient(180deg,
+      rgba(214,188,117,0.09) 0px,
+      rgba(214,188,117,0.09) 2px,
+      transparent 2px,
+      transparent calc(100% - 2px),
+      rgba(214,188,117,0.09) calc(100% - 2px)
+    ),
+    linear-gradient(90deg,
+      rgba(214,188,117,0.09) 0px,
+      rgba(214,188,117,0.09) 2px,
+      transparent 2px,
+      transparent calc(100% - 2px),
+      rgba(214,188,117,0.09) calc(100% - 2px)
+    );
+  pointer-events: none;
+}
+
+/* Broker — premium obsidian glow, stronger than default */
+.mystery-box-tile--broker .mystery-box-art {
+  box-shadow:
+    0 0 18px rgba(214,188,117,0.22),
+    inset 0 0 14px rgba(214,188,117,0.08),
+    inset 0 1px 0  rgba(255,240,180,0.30);
+  border-width: 1.5px;
+}
+
+/* Make emblem SVGs slightly larger and fully visible */
+.mystery-box-emblem svg {
+  width: 34px;
+  height: 34px;
+}
+
+/* Reduced motion — suppress new ::before patterns' parent shimmer */
+html[data-reduced-motion] .mystery-box-tile--nightMarket .mystery-box-art::before,
+html[data-reduced-motion] .mystery-box-tile--retroVault  .mystery-box-art::before,
+html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::before {
+  animation: none;
+}
+
+/* ── Phase 10.3 — System Diagnostics ──────────────────────────────────────── */
+
+/* Diagnostics overlay — bottom-right glass panel */
+.diag-overlay {
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  z-index: 99990;
+  background: rgba(8, 8, 14, 0.80);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(180, 150, 80, 0.18);
+  border-radius: 10px;
+  padding: 8px 12px;
+  pointer-events: none;
+  min-width: 150px;
+}
+.diag-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: "SF Mono", "Fira Code", "Fira Mono", monospace;
+  font-size: 9.5px;
+  line-height: 1.75;
+  letter-spacing: 0.04em;
+}
+.diag-key {
+  color: rgba(180, 150, 80, 0.65);
+  text-transform: uppercase;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+}
+.diag-val {
+  color: rgba(220, 210, 185, 0.9);
+  text-align: right;
+}
+
+/* Diagnostics collapsible section inside dev-tools */
+.diag-section {
+  margin-top: 14px;
+  border: 1px solid rgba(180, 150, 80, 0.15);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.diag-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.025);
+  border: none;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: rgba(214, 188, 117, 0.6);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: background 0.15s ease;
+}
+.diag-section-header:hover {
+  background: rgba(214, 188, 117, 0.05);
+}
+.diag-section-title {
+  font-weight: 500;
+}
+.diag-section-chevron {
+  font-size: 10px;
+  opacity: 0.7;
+  transition: transform 0.18s ease;
+}
+
+/* Body: collapsed by default */
+.diag-section-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease;
+}
+.diag-section-body.diag-body-open {
+  max-height: 900px;
+}
+.diag-body-open > * {
+  /* fade in when opened */
+}
+
+/* Master toggle row inside diag */
+.diag-master-row {
+  margin: 12px 12px 0;
+  border-top: none !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+  padding: 0 0 12px !important;
+}
+
+/* Sub-options container */
+.diag-sub-options {
+  padding: 10px 12px 12px;
+  transition: opacity 0.2s ease;
+}
+.diag-sub-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Group title within sub-options */
+.diag-sub-group-title {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(180, 150, 80, 0.5);
+  margin: 12px 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Reload-required badge next to group titles */
+.diag-reload-badge {
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.25);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 1px 5px;
+  text-transform: none;
+  font-weight: 400;
+}
+
+/* Individual sub-option row */
+.diag-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.diag-sub-row:last-child { border-bottom: none; }
+.diag-sub-label {
+  font-size: 11px;
+  color: rgba(245, 245, 240, 0.75);
+  letter-spacing: 0.02em;
+}
+
+/* Small toggle variant */
+.toggle-switch--sm {
+  transform: scale(0.78);
+  transform-origin: right center;
+}
+
+/* Reload notice row */
+.diag-reload-row {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.diag-reload-row.diag-reload-visible {
+  display: flex;
+}
+.diag-reload-notice {
+  font-size: 10px;
+  color: rgba(245, 245, 240, 0.45);
+  letter-spacing: 0.03em;
+}
+.diag-reload-btn {
+  flex-shrink: 0;
+  min-width: auto !important;
+  padding: 7px 12px !important;
+  font-size: 10.5px !important;
+}

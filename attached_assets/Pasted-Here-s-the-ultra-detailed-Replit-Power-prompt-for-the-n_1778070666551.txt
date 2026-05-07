@@ -1,0 +1,716 @@
+Here’s the ultra-detailed Replit Power prompt for the next major polish/update phase. This is designed specifically to:
+
+* minimize architecture mistakes
+* preserve your existing systems
+* avoid touching stable economy logic unnecessarily
+* focus on premium UX, onboarding, atmosphere, and identity polish
+
+⸻
+
+RAREBOUND — PHASE 9.12 → 10.0
+
+PREMIUM EXPERIENCE + ATMOSPHERE UPDATE
+
+IMPORTANT:
+This is a MAJOR polish + immersion + onboarding update.
+
+DO NOT:
+
+* rewrite stable economy systems
+* redesign Vendor Hub layout
+* alter pack opening logic
+* alter binder storage logic
+* modify market calculations
+* touch existing rarity/value balancing
+* remove any existing systems
+
+This update is about:
+
+* premium startup experience
+* app identity
+* atmosphere
+* onboarding clarity
+* tactile immersion
+* accessibility
+* emotional UX refinement
+
+Preserve:
+
+* current premium dark collector aesthetic
+* current typography language
+* current restrained animations
+* current vendor personalities
+* current economy structure
+
+The app should now feel like:
+a real premium digital collector platform.
+
+⸻
+
+SECTION 1 — OFFICIAL APP IDENTITY
+
+The application is now officially named:
+
+RAREBOUND
+
+Use this branding consistently.
+
+Replace:
+“Modular Simulation Engine Lite”
+and any placeholder naming.
+
+New identity:
+
+RAREBOUND
+Digital Trading Card Collection
+
+Tone:
+premium
+minimal
+collector-focused
+modern
+
+NOT:
+arcade
+flashy
+cartoonish
+
+⸻
+
+SECTION 2 — PREMIUM STARTUP / BOOT SCREEN
+(HIGH PRIORITY)
+
+Current issue:
+App loads directly into Vendor Hub while systems preload silently.
+
+This feels unfinished and confusing.
+
+Goal:
+Create a proper premium startup experience.
+
+⸻
+
+SECTION 3 — CREATE BOOT SCREEN
+
+Create:
+#boot-screen
+
+Full-screen overlay.
+
+Appears immediately on app launch BEFORE:
+
+* Vendor Hub
+* economy hydration
+* pack preload
+* market restoration
+* collection restoration
+
+⸻
+
+SECTION 4 — BOOT SCREEN VISUAL STYLE
+
+Visual direction:
+
+Background:
+
+* near-black gradient
+* subtle animated noise/grain
+* faint ambient glow
+* soft moving vignette
+
+Centered vertically:
+
+RAREBOUND
+(subtitle underneath)
+
+Example:
+
+RAREBOUND
+Digital Trading Card Collection
+
+Typography:
+
+* elegant
+* minimal
+* slightly spaced lettering
+* white/off-white
+* subdued subtitle opacity
+
+⸻
+
+SECTION 5 — LOADING BAR
+
+Under title:
+premium thin loading bar.
+
+NOT:
+arcade/mobile-game style.
+
+Use:
+
+* thin white/soft gold line
+* smooth animated fill
+* subtle glow
+
+Progress should reflect REAL preload stages.
+
+⸻
+
+SECTION 6 — REAL PRELOAD STAGES
+
+Loading text rotates through REAL operations:
+
+Examples:
+
+* Restoring collection…
+* Syncing vendor inventory…
+* Loading market trends…
+* Preparing pack archives…
+* Building binder pages…
+* Finalizing economy…
+
+These should correspond to actual async operations where possible.
+
+⸻
+
+SECTION 7 — STARTUP FLOW
+
+Sequence:
+
+boot screen appears instantly
+
+systems preload
+
+loading bar progresses
+
+once fully ready:
+
+* smooth fade out
+* Vendor Hub fades in underneath
+
+NO:
+flashing
+blank screens
+sudden jumps
+
+⸻
+
+SECTION 8 — APP INITIALIZATION SAFETY
+
+Do NOT mount the main Vendor Hub interactively until preload finishes.
+
+Prevent:
+users interacting with partially loaded systems.
+
+This replaces:
+the old top-left “Preloading packs…” text.
+
+Remove that old preload text entirely.
+
+⸻
+
+SECTION 9 — APP AUDIO SETTINGS SYSTEM
+(HIGH PRIORITY)
+
+Create:
+Settings screen/button.
+
+Minimal.
+Premium.
+Not cluttered.
+
+Accessible from:
+top-right small settings icon.
+
+⸻
+
+SECTION 10 — SETTINGS SCREEN CONTENT
+
+Settings screen contains:
+
+Ambient Vendor Audio
+(toggle)
+
+Haptic Feedback
+(toggle)
+
+Reduced Motion
+(toggle)
+
+Reset Local Save
+(confirm modal)
+
+Version/build text
+small footer
+
+⸻
+
+SECTION 11 — AMBIENT AUDIO SYSTEM
+
+Ambient audio is OPTIONAL.
+
+Default:
+OFF.
+
+When enabled:
+vendor-specific ambient loops softly play while browsing.
+
+VERY subtle.
+
+Target:
+atmosphere enhancement,
+NOT music.
+
+⸻
+
+SECTION 12 — VENDOR AUDIO PERSONALITY
+
+PokéMart:
+
+* soft electronic ambience
+* terminal hum
+* clean subtle clicks
+
+Retro Vault:
+
+* warm archive ambience
+* soft vinyl crackle
+* low nostalgic synth
+
+Night Market:
+
+* distant rain
+* neon buzz
+* quiet city ambience
+
+Broker:
+
+* cinematic low drone
+* subtle metallic/glass textures
+* mysterious tension
+
+⸻
+
+SECTION 13 — AUDIO IMPLEMENTATION RULES
+
+IMPORTANT:
+
+* preload audio lazily
+* compressed lightweight loops
+* avoid giant files
+* audio fades between vendors
+* no abrupt cuts
+* volume extremely low
+
+DO NOT autoplay aggressively on iOS.
+
+Only activate after:
+first user interaction.
+
+⸻
+
+SECTION 14 — HAPTIC FEEDBACK SYSTEM
+
+Add subtle mobile haptic feedback.
+
+Use navigator.vibrate fallback where possible.
+
+Different strengths:
+
+Soft:
+
+* button taps
+* wishlist adds
+
+Medium:
+
+* binder page turns
+* selling confirmations
+
+Heavy:
+
+* rare pulls
+* chase discoveries
+* vendor rank-ups
+
+⸻
+
+SECTION 15 — HAPTIC DESIGN RULES
+
+Haptics must feel:
+premium
+restrained
+intentional
+
+NOT:
+constant buzzing.
+
+Use sparingly.
+
+⸻
+
+SECTION 16 — REDUCED MOTION SUPPORT
+
+Settings toggle:
+Reduced Motion.
+
+When enabled:
+
+* disable parallax
+* reduce animations
+* shorten transitions
+* reduce graph animations
+* disable ambient particles later
+
+Accessibility-focused.
+
+⸻
+
+SECTION 17 — HELP / GUIDE SYSTEM
+(HIGH PRIORITY)
+
+Create a full:
+HELP / GUIDE screen.
+
+This is VERY important for onboarding.
+
+Users currently have no explanation for:
+
+* vendors
+* favor
+* reputation
+* market
+* wishlist
+* chase cards
+* selling
+* trends
+
+⸻
+
+SECTION 18 — HELP SCREEN STRUCTURE
+
+Create:
+Help Center
+
+Minimal premium UI.
+
+Use:
+stacked expandable sections.
+
+Accordion style.
+
+⸻
+
+SECTION 19 — HELP TOPICS
+
+Include sections:
+
+Getting Started
+
+Opening Packs
+
+Vendor Hub Explained
+
+Vendor Favor System
+
+Collector Reputation
+
+Selling Cards
+
+Locked Collection Cards
+
+Wishlist System
+
+Market Trends
+
+Daily Chase Cards
+
+The Broker
+
+Collection Statistics
+
+Market Graphs
+
+Mystery Boxes
+(placeholder “coming soon” allowed)
+
+⸻
+
+SECTION 20 — HELP CONTENT STYLE
+
+Tone:
+clean
+clear
+premium
+friendly
+
+NOT:
+overly technical.
+
+Explain systems naturally.
+
+⸻
+
+SECTION 21 — REPUTATION EXPANSION
+
+Expand reputation gain sources.
+
+Gain reputation from:
+
+* discovering new cards
+* completing binder pages
+* completing sets
+* wishlist completions
+* rare pulls
+* vendor favor milestones
+* market participation
+
+DO NOT:
+allow reputation loss.
+
+Negative progression feels bad psychologically.
+
+⸻
+
+SECTION 22 — COLLECTOR RANK EXPANSION
+
+Expand ranks beyond current system.
+
+Example structure:
+
+Rookie Collector
+Collector
+Advanced Collector
+Elite Collector
+Master Collector
+Archive Curator
+Legendary Collector
+
+Each rank:
+small prestige feel.
+
+⸻
+
+SECTION 23 — REPUTATION BENEFITS
+
+Higher reputation can grant:
+
+* slightly improved stipend
+* vendor trust
+* exclusive Broker previews
+* cosmetic prestige only
+
+DO NOT:
+create pay-to-win feeling.
+
+⸻
+
+SECTION 24 — VENDOR MEMBERSHIP SYSTEM
+
+NOT subscriptions.
+
+This is earned trust.
+
+Rename internally as:
+Trusted Collector Status
+
+⸻
+
+SECTION 25 — TRUSTED COLLECTOR SYSTEM
+
+Each vendor tracks:
+trust level.
+
+Earned via:
+
+* purchases
+* selling
+* favor milestones
+* repeat interaction
+
+⸻
+
+SECTION 26 — TRUSTED COLLECTOR REWARDS
+
+Examples:
+
+PokéMart:
+
+* lower prices
+* early refresh preview
+
+Retro Vault:
+
+* retro stock access
+
+Night Market:
+
+* higher discount chance
+
+Broker:
+
+* early chase previews
+* hidden inventory
+
+⸻
+
+SECTION 27 — MYSTERY BOX SYSTEM
+
+Add lightweight mystery box framework.
+
+DO NOT overcomplicate yet.
+
+Examples:
+
+* Collector Cache
+* Retro Crate
+* Midnight Bundle
+
+Contains:
+random packs with weighted odds.
+
+⸻
+
+SECTION 28 — MYSTERY BOX UX
+
+Boxes should feel:
+tempting
+risky
+special
+
+Use:
+small description text.
+
+⸻
+
+SECTION 29 — RECENTLY PULLED RAIL IMPROVEMENT
+
+Enhance recent pulls rail.
+
+Each entry should show:
+
+* card image
+* rarity glow
+* pack source
+* market value
+
+Tapping:
+opens card detail modal.
+
+⸻
+
+SECTION 30 — MARKET TRENDS EXPANSION
+
+Current trend system is good.
+
+Expand trend reasoning depth.
+
+Examples:
+
+* Fire-type demand rising
+* Illustration rare speculation
+* Vintage collector surge
+* Scarlet & Violet pull boom
+
+⸻
+
+SECTION 31 — TREND IMPACT FEEDBACK
+
+When trends affect values:
+users should FEEL it.
+
+Subtle indicators:
+
+* rising arrows
+* cooling indicators
+* “hot” tags
+
+Restrained.
+Premium.
+
+⸻
+
+SECTION 32 — CHASE CARD PRESENTATION
+
+Improve:
+Today’s Chase Card panel.
+
+Possible additions:
+
+* subtle glow pulse
+* rarity shimmer
+* countdown polish
+
+DO NOT become flashy.
+
+⸻
+
+SECTION 33 — FIRST IMPRESSION POLISH
+
+The app must now feel:
+intentional immediately upon load.
+
+No:
+developer/debug feelings.
+
+Everything should communicate:
+premium digital collector platform.
+
+⸻
+
+SECTION 34 — PERFORMANCE SAFETY
+
+IMPORTANT:
+
+Avoid:
+
+* giant audio files
+* heavy particle systems
+* excessive DOM layering
+* expensive canvas effects
+
+Maintain:
+smooth mobile Safari performance.
+
+Especially:
+iPhone browsers.
+
+⸻
+
+SECTION 35 — STORAGE SAFETY
+
+Preserve all existing saves.
+
+Do NOT:
+wipe localStorage structures.
+
+If adding new settings:
+merge safely with defaults.
+
+⸻
+
+SECTION 36 — FINAL EXPECTED RESULT
+
+After this update:
+
+RAREBOUND should feel like:
+
+* a real product
+* a premium collector platform
+* emotionally immersive
+* polished from startup onward
+* understandable to new users
+* satisfying to interact with
+* atmospheric without being overwhelming
+
+The app should now have:
+
+* identity
+* onboarding
+* immersion
+* tactile feedback
+* premium UX flow
+* long-term collector atmosphere
+
+WITHOUT:
+losing the clean restrained aesthetic already established.

@@ -1,0 +1,305 @@
+PHASE 10.1.3 — ROOT CAUSE DIAGNOSTIC + FINAL STABILIZATION
+PROJECT: RAREBOUND
+MODEL: REPLIT POWER
+
+IMPORTANT:
+The previous patch masked failures instead of fully resolving them.
+
+DO NOT add new features.
+DO NOT redesign UI.
+DO NOT add fallback placeholders unless absolutely necessary.
+
+This patch exists to:
+1. expose the REAL runtime failures
+2. permanently restore interaction
+3. permanently restore all vendors
+4. permanently restore mystery boxes
+5. verify ambient audio activation
+
+────────────────────────────────────
+SECTION 1 — CURRENT VERIFIED BROKEN STATE
+────────────────────────────────────
+
+From live testing:
+
+WORKING:
+- PokéMart renders
+- Retro Vault renders
+- scrolling works
+
+BROKEN:
+- My Collection button dead
+- Market button dead
+- Stats button dead
+- Night Market replaced with fallback
+- Broker replaced with fallback
+- mystery boxes missing
+- ambient vendor audio still inaudible
+
+This means:
+- render isolation works
+- BUT actual render errors still exist
+- AND a top-layer interaction issue still exists
+
+────────────────────────────────────
+SECTION 2 — REMOVE SILENT FAILURE MASKING
+────────────────────────────────────
+
+Current vendor fallback behavior is hiding the real issue.
+
+TEMPORARILY:
+remove the “temporarily unavailable” silent suppression approach.
+
+Instead:
+- preserve try/catch
+- BUT log FULL stack traces
+- vendor id
+- offering payload
+- failing property
+- exact failing line
+
+Use:
+console.groupCollapsed(...)
+console.error(...)
+console.table(...)
+
+I need the ACTUAL failure source.
+
+────────────────────────────────────
+SECTION 3 — IDENTIFY WHY NIGHT MARKET/BROKER FAIL
+────────────────────────────────────
+
+Inspect ALL code paths unique to:
+- Night Market
+- Broker
+
+Compare against:
+- PokéMart
+- Retro Vault
+
+Likely causes:
+- undefined mystery box asset
+- invalid offering structure
+- missing pack image
+- stale cache entry
+- malformed chase card
+- missing inventory rotation data
+- undefined market modifier
+- corrupted localStorage payload
+
+DO NOT GUESS.
+
+TRACE THE EXACT THROW.
+
+────────────────────────────────────
+SECTION 4 — MYSTERY BOX RECOVERY
+────────────────────────────────────
+
+Mystery boxes disappeared AFTER vendor stabilization.
+
+That strongly suggests:
+their render path is throwing inside:
+renderVendorCard()
+
+Inspect:
+- mystery box definitions
+- emblem lookup
+- image renderer
+- offering mapper
+- vendor inventory generation
+- randomizer logic
+- stale save compatibility
+
+Ensure:
+Night Market and Broker can render even if:
+- a mystery box fails
+- a single offering fails
+
+DO NOT let one malformed item destroy the entire vendor card.
+
+Isolate failures PER ITEM, not per vendor.
+
+────────────────────────────────────
+SECTION 5 — TOP NAV DEADLOCK
+────────────────────────────────────
+
+This is still unresolved.
+
+Buttons visually exist but taps fail.
+
+That means:
+SOMETHING is still intercepting interaction.
+
+DO NOT assume utility dock anymore.
+
+You MUST inspect live DOM stacking.
+
+────────────────────────────────────
+5A — REQUIRED INVESTIGATION
+────────────────────────────────────
+
+Inspect:
+- computed z-index
+- fixed layers
+- absolute wrappers
+- invisible overlays
+- transformed parents
+- overflow clipping contexts
+- pseudo-elements
+- utility dock
+- boot overlay cleanup
+- fullscreen overlays
+- modal backdrops
+- scroll lock containers
+
+Specifically verify:
+what element receives the tap
+when pressing:
+- My Collection
+- Market
+- Stats
+
+Use:
+document.elementFromPoint()
+
+during runtime if necessary.
+
+────────────────────────────────────
+5B — BOOT SCREEN CLEANUP AUDIT
+────────────────────────────────────
+
+Strong possibility:
+boot overlay remains mounted invisibly.
+
+Inspect:
+- boot root removal
+- opacity-only hiding
+- visibility hidden remnants
+- pointer-events state
+- fixed inset layers
+
+Ensure:
+boot overlay is FULLY removed from interaction tree after fade-out.
+
+Best approach:
+removeChild()
+or display:none after animation completes.
+
+────────────────────────────────────
+SECTION 6 — AUDIO DIAGNOSTIC
+────────────────────────────────────
+
+Audio still inaudible.
+
+Now that unlock logic was fixed:
+verify whether ambience layers are even starting.
+
+────────────────────────────────────
+6A — VERIFY ACTIVE VENDOR DETECTION
+────────────────────────────────────
+
+Log:
+- current active vendor
+- observer entries
+- visibility ratios
+
+Confirm:
+scrolling from PokéMart → Retro Vault
+actually changes active vendor.
+
+────────────────────────────────────
+6B — VERIFY AUDIO GRAPH
+────────────────────────────────────
+
+Inspect:
+- master gain
+- vendor gains
+- oscillator creation
+- connection graph
+- muted gains
+- suspended context
+
+Temporarily log:
+ctx.state
+masterGain.gain.value
+
+────────────────────────────────────
+6C — TEMPORARY DEBUG BOOST
+────────────────────────────────────
+
+Temporarily increase ambience volume slightly for debugging ONLY.
+
+Current ambience may simply be too quiet.
+
+DO NOT make it loud.
+Just enough to confirm functionality.
+
+────────────────────────────────────
+SECTION 7 — DO NOT BREAK EXISTING SYSTEMS
+────────────────────────────────────
+
+DO NOT TOUCH:
+- economy balancing
+- reputation
+- market history
+- graph rendering
+- pack opening flow
+- save schema
+- mystery box reward logic
+- binder logic
+
+This is stabilization only.
+
+────────────────────────────────────
+SECTION 8 — REQUIRED FINAL STATE
+────────────────────────────────────
+
+After patch:
+ALL must work simultaneously:
+
+TOP BAR:
+- My Collection opens
+- Market opens
+- Stats opens
+
+VENDORS:
+- PokéMart visible
+- Retro Vault visible
+- Night Market visible
+- Broker visible
+
+MYSTERY BOXES:
+- render correctly
+- no crashes
+- stylized visuals preserved
+
+AUDIO:
+- ambience audible after first interaction
+- vendor ambience changes while scrolling
+
+GENERAL:
+- no runtime errors
+- no silent render failures
+- no invisible blockers
+- no dead interaction zones
+
+────────────────────────────────────
+SECTION 9 — REQUIRED FINAL REPORT
+────────────────────────────────────
+
+Final response MUST include:
+
+1. Exact root cause preventing nav interaction
+2. Exact root cause breaking Night Market
+3. Exact root cause breaking Broker
+4. Exact root cause hiding mystery boxes
+5. Exact reason audio still failed
+6. Exact files modified
+7. Confirmation all vendors render
+8. Confirmation mystery boxes restored
+9. Confirmation top bar works
+10. Confirmation runtime clean
+11. Confirmation typecheck passes
+
+DO NOT provide generic summaries.
+TRACE THE ACTUAL FAILURES.

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>RAREBOUND — Digital Trading Card Collection</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+
+    <!-- ═══ BOOT SCREEN (Phase 10) ════════════════════════════════════════ -->
+    <div id="boot-screen">
+      <div class="boot-noise"></div>
+      <div class="boot-vignette"></div>
+      <div class="boot-content">
+        <div class="boot-title">RAREBOUND</div>
+        <div class="boot-subtitle">Digital Trading Card Collection</div>
+        <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+        <div class="boot-stage-label">Restoring collection…</div>
+      </div>
+    </div>
+
+    <!-- ═══ PACK LOADING INDICATOR ════════════════════════════════════════ -->
+    <div id="pack-loading-indicator" class="hidden">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+      <p>Loading cards...</p>
+    </div>
+
+    <!-- ═══ FULLSCREEN PACK OVERLAY (untouched) ═══════════════════════════ -->
+    <div id="pack-overlay" class="overlay-hidden" aria-modal="true" role="dialog">
+      <button id="overlay-skip-btn" class="overlay-skip-btn">Skip Pack</button>
+      <div id="overlay-counter" class="overlay-counter"></div>
+      <div id="overlay-card-stage" class="overlay-card-stage"></div>
+      <div id="overlay-status" class="overlay-status"></div>
+      <div id="overlay-hint" class="overlay-hint"></div>
+    </div>
+
+    <!-- ═══ COLLECTION SCREEN ═════════════════════════════════════════════ -->
+    <div id="collection-screen" class="screen overlay-scroll-screen hidden">
+      <div class="screen-header">
+        <button class="screen-back-btn" id="collection-back-btn">← Back</button>
+        <h2>My Collection</h2>
+        <button class="screen-action-btn" id="wishlist-btn">☆ Wishlist</button>
+      </div>
+      <div id="set-list"></div>
+    </div>
+
+    <!-- ═══ BINDER SCREEN ═════════════════════════════════════════════════ -->
+    <div id="binder-screen" class="screen overlay-scroll-screen hidden">
+      <div class="screen-header">
+        <button class="screen-back-btn" id="binder-back-btn">← Back</button>
+        <h2 id="binder-set-name"></h2>
+        <div id="binder-progress" class="binder-progress-label"></div>
+      </div>
+      <div id="binder-pages"></div>
+      <div class="binder-nav">
+        <button id="binder-prev" class="binder-nav-btn">&#9664;</button>
+        <span id="binder-page-label"></span>
+        <button id="binder-next" class="binder-nav-btn">&#9654;</button>
+      </div>
+    </div>
+
+    <!-- ═══ STATS SCREEN ══════════════════════════════════════════════════ -->
+    <div id="stats-screen" class="screen overlay-scroll-screen hidden">
+      <div class="screen-header">
+        <button class="screen-back-btn" id="stats-back-btn">← Back</button>
+        <h2>Statistics</h2>
+        <div></div>
+      </div>
+      <div id="stats-content"></div>
+    </div>
+
+    <!-- ═══ MARKET SCREEN (Phase 9.8) ═════════════════════════════════════ -->
+    <div id="market-screen" class="screen overlay-scroll-screen hidden"></div>
+
+    <!-- ═══ MARKET GRAPH MODAL (Phase 9.8) ════════════════════════════════ -->
+    <div id="market-graph-modal" class="hidden"></div>
+
+    <!-- ═══ WISHLIST SCREEN ═══════════════════════════════════════════════ -->
+    <div id="wishlist-screen" class="screen hidden">
+      <div class="screen-header">
+        <button class="screen-back-btn" id="wishlist-back-btn">← Back</button>
+        <h2>Wishlist</h2>
+        <div></div>
+      </div>
+      <div id="wishlist-content"></div>
+    </div>
+
+    <!-- ═══ SETTINGS SCREEN (Phase 10) ════════════════════════════════════ -->
+    <div id="settings-screen" class="screen overlay-scroll-screen hidden"></div>
+
+    <!-- ═══ HELP SCREEN (Phase 10) ════════════════════════════════════════ -->
+    <div id="help-screen" class="screen overlay-scroll-screen hidden"></div>
+
+    <!-- ═══ STORE / VENDOR HUB ════════════════════════════════════════════ -->
+    <div id="store-screen">
+
+      <div id="top-bar">
+        <button id="view-collection-btn">My Collection</button>
+        <button id="market-btn" class="stats-btn">Market</button>
+        <button id="stats-btn" class="stats-btn">Stats</button>
+        <div id="balance-display">$0.00</div>
+      </div>
+
+      <!-- Daily stipend (Phase 9.9) -->
+      <div id="stipend-strip" class="hidden">
+        <div class="stipend-text">
+          <span class="stipend-label">Daily Collector Stipend</span>
+          <span id="stipend-amount" class="stipend-amount">$10</span>
+        </div>
+        <button id="stipend-btn" class="stipend-btn">Claim</button>
+        <span id="stipend-cooldown" class="stipend-cooldown"></span>
+      </div>
+
+      <!-- Trend ticker + refresh timer -->
+      <div id="market-strip">
+        <div id="market-trend">
+          <span class="market-trend-icon">📈</span>
+          <span id="market-trend-label">—</span>
+        </div>
+        <div id="market-refresh">Refreshes in <span id="market-refresh-label">—</span></div>
+      </div>
+
+      <!-- Collector rank line -->
+      <div id="rank-strip">
+        <span id="rank-name">Rookie Collector</span>
+        <div id="rank-bar"><div id="rank-bar-fill"></div></div>
+      </div>
+
+      <!-- Daily chase ticker (Phase 9.6) -->
+      <div id="chase-strip" class="hidden"></div>
+
+      <div id="store-title">VENDOR HUB</div>
+
+      <div id="vendor-list"></div>
+
+      <!-- Recent notable pulls (Phase 9.9) -->
+      <div id="recent-hits-strip" class="hidden">
+        <div class="recent-hits-header">Recent Hits</div>
+        <div id="recent-hits-track"></div>
+      </div>
+
+    </div>
+
+    <!-- ═══ UTILITY DOCK (Phase 10.1) ═════════════════════════════════════ -->
+    <div id="utility-dock" class="utility-dock">
+      <button id="utility-dock-trigger" class="utility-dock-trigger"
+              aria-label="Utilities" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <circle cx="5"  cy="12" r="2.5" fill="currentColor"/>
+          <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+          <circle cx="19" cy="12" r="2.5" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="utility-dock-items">
+        <button id="utility-dock-help" class="utility-dock-item" aria-label="Help">
+          <span class="dock-icon">?</span><span class="dock-label">Help</span>
+        </button>
+        <button id="utility-dock-settings" class="utility-dock-item" aria-label="Settings">
+          <span class="dock-icon">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9.4 4a7.6 7.6 0 0 0-.1-1.3l2.1-1.6-2-3.5-2.5 1a7.5 7.5 0 0 0-2.2-1.3l-.4-2.6h-4l-.4 2.6c-.8.3-1.5.7-2.2 1.3l-2.5-1-2 3.5 2.1 1.6c-.1.4-.1.8-.1 1.3s0 .9.1 1.3L1.2 15.4l2 3.5 2.5-1c.7.6 1.4 1 2.2 1.3l.4 2.6h4l.4-2.6c.8-.3 1.5-.7 2.2-1.3l2.5 1 2-3.5-2.1-1.6c.1-.4.1-.9.1-1.3z"/>
+            </svg>
+          </span>
+          <span class="dock-label">Settings</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ DEV BADGE (shown only when Infinite Balance is on) ════════════ -->
+    <div id="dev-badge" class="dev-badge hidden">DEV</div>
+
+    <!-- ═══ MYSTERY BOX OVERLAY (Phase 10.1) ══════════════════════════════ -->
+    <div id="mystery-box-overlay" class="mystery-overlay hidden"></div>
+
+    <!-- ═══ CARD DETAIL MODAL ═════════════════════════════════════════════ -->
+    <div id="card-detail-modal" class="hidden"></div>
+
+    <!-- ═══ SELL MODAL ════════════════════════════════════════════════════ -->
+    <div id="sell-modal" class="hidden"></div>
+
+    <!-- ═══ FAVOR / TOAST CONTAINER ═══════════════════════════════════════ -->
+    <div id="toast-container"></div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

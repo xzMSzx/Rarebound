@@ -1,0 +1,171 @@
+PROJECT PATCH — PHASE 4.5.2  
+AUTOMATED DIAGNOSIS + SELF-REPAIR FOR SET LOADING
+
+Goal:
+
+Evolving Skies (set id: swsh7) still fails to load even though the API request returns cards.
+
+Because this project is being tested on mobile (no DevTools access), the system must diagnose and repair the loading pipeline automatically.
+
+This patch adds automatic validation and recovery steps inside the loader.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+RNG engine  
+pack opening logic  
+rarity probability tables  
+pity system  
+UI animation code  
+
+Only modify:
+
+data/setLoader.js  
+data/cardPoolManager.js  
+
+---
+
+SECTION 1 — VERIFY API RESPONSE
+
+File:
+
+data/setLoader.js
+
+After:
+
+const data = await response.json()
+
+Add validation:
+
+if (!data || !Array.isArray(data.data)) {
+throw new Error("API response malformed")
+}
+
+if (data.data.length === 0) {
+throw new Error("API returned empty card list")
+}
+
+---
+
+SECTION 2 — REMOVE OVERLY STRICT IMAGE FILTER
+
+Replace:
+
+const cards = data.data.filter(card => card.images && card.images.small)
+
+with:
+
+const cards = data.data.filter(card => card.images)
+
+Reason:
+
+Some cards use images.large but not images.small.
+
+This filter prevents valid cards from being removed.
+
+---
+
+SECTION 3 — ADD IMAGE FALLBACK
+
+Normalize images before returning cards:
+
+cards.forEach(card => {
+
+if (!card.images.small && card.images.large) {
+card.images.small = card.images.large
+}
+
+})
+
+This ensures every card has an image used by the renderer.
+
+---
+
+SECTION 4 — ADD RARITY NORMALIZATION
+
+Many Pokémon TCG sets use different rarity strings.
+
+Add normalization before rarity mapping.
+
+Example:
+
+function normalizeRarity(rarity) {
+
+if (!rarity) return "Common"
+
+const r = rarity.toLowerCase()
+
+if (r.includes("common")) return "Common"
+if (r.includes("uncommon")) return "Uncommon"
+if (r.includes("rare holo")) return "Holo Rare"
+if (r.includes("rare")) return "Rare"
+if (r.includes("ultra")) return "Ultra Rare"
+if (r.includes("secret")) return "Hyper Rare"
+
+return rarity
+
+}
+
+Apply:
+
+cards.forEach(card => {
+card.rarity = normalizeRarity(card.rarity)
+})
+
+---
+
+SECTION 5 — ENSURE POOLS ARE NOT EMPTY
+
+File:
+
+data/cardPoolManager.js
+
+After building pools add:
+
+const totalCards =
+pool.common.length +
+pool.uncommon.length +
+pool.rare.length
+
+if (totalCards === 0) {
+
+console.error("Pool mapping failed. Applying fallback rarity classification.")
+
+cards.forEach(card => {
+
+if (!card.rarity) card.rarity = "Common"
+
+})
+
+}
+
+---
+
+SECTION 6 — SAFE SET ACTIVATION
+
+Only allow a set to activate if cards exist.
+
+Add:
+
+if (!cards || cards.length === 0) {
+throw new Error("Set loaded but contains no usable cards")
+}
+
+---
+
+SECTION 7 — EXPECTED RESULT
+
+After this patch:
+
+• Evolving Skies loads normally  
+• Cards with only large images are preserved  
+• Rarity strings from older sets map correctly  
+• Card pools always contain valid cards  
+• The pack simulator can safely open packs  
+
+This patch removes silent failures in the loader and allows large legacy sets to work reliably.
+
+END PATCH

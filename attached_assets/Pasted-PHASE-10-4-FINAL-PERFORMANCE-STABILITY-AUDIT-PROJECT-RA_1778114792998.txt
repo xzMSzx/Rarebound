@@ -1,0 +1,268 @@
+PHASE 10.4 — FINAL PERFORMANCE + STABILITY AUDIT
+PROJECT: RAREBOUND
+MODEL: REPLIT POWER
+
+IMPORTANT:
+This is the FINAL PRE-RELEASE AUDIT for RAREBOUND v1.0.
+
+This is NOT a feature update.
+
+DO NOT:
+add gameplay
+add UI systems
+add new mechanics
+expand economy
+rewrite architecture
+
+This is STRICTLY:
+performance
+stress testing
+stability verification
+production hardening
+
+Goal:
+verify the app remains stable under prolonged real usage conditions.
+
+────────────────────────────────────
+SECTION 1 — CORE AUDIT OBJECTIVE
+────────────────────────────────────
+
+We are now testing:
+LONG-SESSION STABILITY.
+
+The app must survive:
+
+* repeated overlays
+* repeated navigation
+* repeated pack openings
+* repeated audio transitions
+* repeated graph rendering
+* repeated vendor refreshes
+
+WITHOUT:
+
+* memory leaks
+* listener duplication
+* runaway observers
+* FPS degradation
+* overlay deadlocks
+* stale DOM accumulation
+* audio stacking
+* scroll lock corruption
+
+────────────────────────────────────
+SECTION 2 — REQUIRED STRESS TESTS
+────────────────────────────────────
+
+Perform EXTENDED repeated-cycle testing.
+
+────────────────────────────────────
+2A — NAVIGATION STRESS TEST
+────────────────────────────────────
+
+Repeatedly cycle:
+
+Vendor Hub
+→ Collection
+→ Binder
+→ Card Detail
+→ Back
+→ Market
+→ Graph
+→ Back
+→ Stats
+→ Settings
+→ Help
+→ Utility Dock
+→ repeat
+
+Minimum:
+50+ cycles.
+
+Verify:
+
+* no interaction degradation
+* no dead zones
+* no frozen overlays
+* no listener duplication
+* no FPS drop
+
+────────────────────────────────────
+2B — PACK OPENING STRESS TEST
+────────────────────────────────────
+
+Open:
+minimum 50 packs consecutively.
+
+Verify:
+
+* pack opening remains smooth
+* no animation degradation
+* no audio duplication
+* no reveal desync
+* no overlay stacking
+* no lingering DOM nodes
+* no memory spikes
+
+────────────────────────────────────
+2C — MARKET STRESS TEST
+────────────────────────────────────
+
+Repeatedly:
+
+* open graph modal
+* switch cards rapidly
+* scroll market page heavily
+* sort/filter repeatedly
+
+Verify:
+
+* no graph duplication
+* no SVG accumulation
+* no history corruption
+* no localStorage runaway writes
+
+────────────────────────────────────
+2D — AUDIO STRESS TEST
+────────────────────────────────────
+
+Repeatedly scroll between vendors.
+
+Verify:
+
+* ambience crossfades correctly
+* previous ambience fully fades out
+* no gain stacking
+* no audio artifacts
+* no runaway AudioNodes
+* no orphan oscillators
+
+────────────────────────────────────
+2E — OVERLAY LIFECYCLE AUDIT
+────────────────────────────────────
+
+Audit ALL overlays/modals/screens.
+
+Verify:
+
+* overlays unmount correctly
+* hidden overlays do not intercept interaction
+* no stale pointer listeners
+* no duplicate close handlers
+* no lingering body locks
+
+────────────────────────────────────
+SECTION 3 — PERFORMANCE AUDIT
+────────────────────────────────────
+
+Inspect:
+
+* requestAnimationFrame loops
+* intervals/timeouts
+* observers
+* AudioNodes
+* event listeners
+* hidden DOM buildup
+* repeated SVG mounts
+* repeated modal creation
+
+Goal:
+ensure everything cleans up correctly.
+
+────────────────────────────────────
+SECTION 4 — MOBILE PERFORMANCE
+────────────────────────────────────
+
+Audit specifically on:
+mobile Safari/iOS.
+
+Verify:
+
+* stable scrolling
+* stable touch interaction
+* no Safari memory crashes
+* no gesture degradation
+* no overlay lag
+* no touch latency buildup
+
+────────────────────────────────────
+SECTION 5 — STORAGE RESILIENCE
+────────────────────────────────────
+
+Verify:
+
+* corrupted localStorage entries fail gracefully
+* missing keys rebuild safely
+* diagnostics mode persists correctly
+* economy data remains bounded
+* market history capped correctly
+* no unbounded storage growth
+
+────────────────────────────────────
+SECTION 6 — FPS / RENDER SANITY
+────────────────────────────────────
+
+Verify:
+
+* no major FPS drops
+* no runaway paints
+* no excessive layout thrashing
+* no animation storms
+* no observer spam
+
+Reduced Motion mode must also remain stable.
+
+────────────────────────────────────
+SECTION 7 — DO NOT OVER-OPTIMIZE
+────────────────────────────────────
+
+IMPORTANT:
+Do NOT rewrite systems chasing microscopic gains.
+
+Only fix:
+REAL stability issues
+REAL leaks
+REAL duplication
+REAL degradation
+
+If systems are stable:
+LEAVE THEM ALONE.
+
+────────────────────────────────────
+SECTION 8 — FINAL RELEASE READINESS
+────────────────────────────────────
+
+After audit:
+verify:
+
+* clean runtime
+* stable interactions
+* stable overlays
+* stable audio
+* stable economy
+* stable save system
+* stable mobile experience
+
+This is the final “ship confidence” pass.
+
+────────────────────────────────────
+SECTION 9 — REQUIRED FINAL REPORT
+────────────────────────────────────
+
+Must include:
+
+1. Exact stress tests performed
+2. Any leaks/duplication found
+3. Any performance degradation found
+4. Any fixes applied
+5. Audio stability results
+6. Overlay lifecycle results
+7. Mobile stability results
+8. Storage stability results
+9. Runtime cleanliness
+10. Final release-readiness verdict
+
+If stable:
+explicitly declare:
+
+RAREBOUND v1.0 — RELEASE READY

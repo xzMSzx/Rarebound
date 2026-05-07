@@ -1,0 +1,288 @@
+### PHASE 7.2 → 7.5 — PREMIUM BINDER SYSTEM (DO NOT BREAK EXISTING SYSTEM)
+
+⚠️ RULES:
+
+* DO NOT modify pack opening logic
+* DO NOT modify audio / reveal system
+* ONLY enhance binder + collection UI
+* All current features must remain working
+
+---
+
+# =========================
+
+# SECTION 1 — PAGE FLIP SYSTEM (7.2)
+
+# =========================
+
+GOAL: Binder feels like a real book
+
+UPDATE binder container:
+
+```css
+.binder-container {
+  perspective: 1200px;
+  position: relative;
+  height: 100%;
+}
+
+.binder-page {
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.binder-page.flip-left {
+  transform: rotateY(-180deg);
+}
+
+.binder-page.flip-right {
+  transform: rotateY(180deg);
+}
+```
+
+---
+
+ADD navigation buttons:
+
+```js
+let currentPage = 0;
+
+function nextPage() {
+  currentPage++;
+  renderBinderPage();
+}
+
+function prevPage() {
+  currentPage--;
+  renderBinderPage();
+}
+```
+
+---
+
+# =========================
+
+# SECTION 2 — CARD DETAIL MODAL (7.3)
+
+# =========================
+
+CREATE:
+
+```html
+<div id="card-detail-modal" class="hidden"></div>
+```
+
+---
+
+STYLE:
+
+```css
+#card-detail-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-detail-content {
+  max-width: 320px;
+  text-align: center;
+}
+
+.card-detail-content img {
+  width: 100%;
+  border-radius: 12px;
+}
+
+.card-meta {
+  margin-top: 12px;
+  color: white;
+}
+```
+
+---
+
+JS:
+
+```js
+function openCardDetail(card, ownedEntry) {
+  const modal = document.getElementById("card-detail-modal");
+
+  modal.innerHTML = `
+    <div class="card-detail-content">
+      <img src="${card.images.large}">
+      <div class="card-meta">
+        <h3>${card.name}</h3>
+        <p>${card.rarity || "Unknown"}</p>
+        <p>Owned: ${ownedEntry.count}</p>
+      </div>
+    </div>
+  `;
+
+  modal.classList.remove("hidden");
+
+  modal.onclick = () => modal.classList.add("hidden");
+}
+```
+
+---
+
+# =========================
+
+# SECTION 3 — RARITY VISUAL SYSTEM (7.4)
+
+# =========================
+
+ADD glow effects:
+
+```css
+.rarity-common { box-shadow: none; }
+
+.rarity-rare {
+  box-shadow: 0 0 10px rgba(255,255,255,0.4);
+}
+
+.rarity-doubleRare {
+  box-shadow: 0 0 14px rgba(255,215,0,0.6);
+}
+
+.rarity-ultraRare {
+  box-shadow: 0 0 18px rgba(0,200,255,0.7);
+}
+
+.rarity-hyperRare {
+  box-shadow: 0 0 22px rgba(255,0,200,0.9);
+}
+```
+
+---
+
+APPLY in slot render:
+
+```js
+if (ownedEntry) {
+  slot.classList.add("rarity-" + (card.rarityType || "common"));
+}
+```
+
+---
+
+# =========================
+
+# SECTION 4 — MISSING SLOT PSYCHOLOGY (7.4)
+
+# =========================
+
+```css
+.binder-slot.empty {
+  border: 1px dashed rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.02);
+}
+
+.binder-slot.empty:hover {
+  background: rgba(255,255,255,0.05);
+}
+```
+
+---
+
+# =========================
+
+# SECTION 5 — COMPLETION SYSTEM (7.5)
+
+# =========================
+
+ADD progress calculation:
+
+```js
+function getSetProgress(setId) {
+  const collection = getCollection();
+  const owned = collection[setId] ? Object.keys(collection[setId]).length : 0;
+  const total = getSetTotal(setId);
+
+  return Math.floor((owned / total) * 100);
+}
+```
+
+---
+
+DISPLAY:
+
+```js
+const percent = getSetProgress(setId);
+
+progressBar.style.width = percent + "%";
+progressText.textContent = percent + "% complete";
+```
+
+---
+
+# =========================
+
+# SECTION 6 — COMPLETION HIGHLIGHT
+
+# =========================
+
+```css
+.set-complete {
+  border: 2px solid gold;
+  box-shadow: 0 0 20px rgba(255,215,0,0.6);
+}
+```
+
+---
+
+APPLY:
+
+```js
+if (percent === 100) {
+  setCard.classList.add("set-complete");
+}
+```
+
+---
+
+# =========================
+
+# SECTION 7 — FINAL UX POLISH
+
+# =========================
+
+ADD:
+
+* smooth fade between screens
+* slight scale on card hover/tap
+* inertia scroll for binder pages
+
+```css
+.binder-slot {
+  transition: transform 0.15s ease;
+}
+
+.binder-slot:hover {
+  transform: scale(1.05);
+}
+```
+
+---
+
+# =========================
+
+# FINAL CHECKLIST
+
+# =========================
+
+✔ Binder pages flip
+✔ Card detail opens
+✔ Rarity glow works
+✔ Missing slots visible
+✔ Progress % works
+✔ No lag introduced
+✔ No pack system broken
+
+---
+
+# END OF PHASE 7.2–7.5

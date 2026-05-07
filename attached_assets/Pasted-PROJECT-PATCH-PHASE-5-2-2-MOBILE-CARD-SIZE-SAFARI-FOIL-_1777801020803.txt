@@ -1,0 +1,167 @@
+PROJECT PATCH — PHASE 5.2.2
+MOBILE CARD SIZE + SAFARI FOIL FIX
+
+Goal:
+
+Improve pack opening experience on mobile devices.
+
+Fix two issues:
+
+1. Reverse holo animation not playing on iOS Safari.
+2. Card size too small on phones.
+
+No simulation logic should change.
+
+---
+
+CRITICAL RULES
+
+Do NOT modify:
+
+RNG engine
+packSimulation.js
+pity system
+rarity logic
+API loader
+
+Only modify:
+
+style.css
+
+---
+
+SECTION 1 — FIX SAFARI ANIMATION
+
+Locate the classes:
+
+.reverse-holo-overlay
+
+and
+
+.reverse-holo-sweep
+
+Add:
+
+transform: translateZ(0);
+will-change: transform, opacity;
+backface-visibility: hidden;
+
+Final example:
+
+.reverse-holo-overlay {
+
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+
+pointer-events: none;
+mix-blend-mode: overlay;
+opacity: 0.35;
+
+transform: translateZ(0);
+will-change: transform, opacity;
+backface-visibility: hidden;
+
+}
+
+This forces hardware acceleration and restores animation on iOS Safari.
+
+---
+
+SECTION 2 — INCREASE CARD SIZE
+
+Locate the card container used during pack reveal.
+
+Example selectors may include:
+
+.overlay-card-wrapper
+.overlay-card-back-face
+.overlay-card-front-face
+
+Update the card sizing to:
+
+.overlay-card-wrapper {
+
+width: min(90vw, 420px);
+height: min(70vh, 600px);
+
+}
+
+This allows the card to scale appropriately on phones.
+
+---
+
+SECTION 3 — ENSURE CARD IMAGE FILLS SPACE
+
+Locate the card image styling.
+
+Add:
+
+.card-image {
+
+width: 100%;
+height: 100%;
+object-fit: contain;
+
+}
+
+This prevents stretching while allowing larger rendering.
+
+---
+
+SECTION 4 — MOBILE OPTIMIZATION
+
+Add mobile specific adjustment:
+
+@media (max-width: 600px) {
+
+.overlay-card-wrapper {
+
+width: 92vw;
+height: 72vh;
+
+}
+
+}
+
+This ensures the card dominates the screen on phones.
+
+---
+
+SECTION 5 — KEEP DESKTOP BALANCED
+
+Add desktop cap:
+
+@media (min-width: 900px) {
+
+.overlay-card-wrapper {
+
+max-height: 620px;
+
+}
+
+}
+
+This prevents giant cards on large monitors.
+
+---
+
+SECTION 6 — TEST
+
+On iPhone Safari:
+
+Reverse holo should now:
+
+• shimmer
+• show diagonal foil pattern
+• display sweep animation
+
+Card should also appear much larger and easier to read.
+
+Expected result:
+
+The card occupies most of the screen during reveal, similar to modern card games.
+
+END PATCH

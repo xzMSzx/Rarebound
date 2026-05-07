@@ -1,0 +1,157 @@
+### PHASE 6.5.3 — HARD REVERT + SAFE CARD BACK REPLACEMENT
+
+⚠️ CRITICAL:
+
+* DO NOT TOUCH layout
+* DO NOT TOUCH scaling
+* DO NOT TOUCH transforms
+* ONLY change image source
+
+---
+
+# =========================
+
+# SECTION 1 — REVERT BROKEN CSS
+
+# =========================
+
+## REMOVE these lines COMPLETELY (they broke your layout):
+
+```css
+aspect-ratio: 2.5 / 3.5;
+```
+
+From ANY of:
+
+* .overlay-card-stage
+* .overlay-card-wrapper
+* .overlay-card-back-face
+
+---
+
+## REVERT THIS (VERY IMPORTANT)
+
+Find:
+
+```css
+.card-back img {
+  object-fit: cover;
+}
+```
+
+CHANGE BACK TO:
+
+```css
+.card-back img {
+  object-fit: contain;
+}
+```
+
+---
+
+## REMOVE any forced width/height overrides you added
+
+If you see anything like:
+
+```css
+width: 100%;
+height: 100%;
+```
+
+on card containers → REMOVE if it wasn’t there originally
+
+---
+
+# =========================
+
+# SECTION 2 — KEEP ORIGINAL CARD SCALING SYSTEM
+
+# =========================
+
+⚠️ DO NOTHING here
+
+Your original system:
+
+* card sizing
+* tilt system
+* stacking
+* reveal scaling
+
+👉 WAS CORRECT
+
+We do NOT touch it
+
+---
+
+# =========================
+
+# SECTION 3 — SAFE IMAGE REPLACEMENT ONLY
+
+# =========================
+
+## ADD CONSTANT
+
+```js
+const CARD_BACK_URL = "https://images.pokemontcg.io/cardback.png";
+```
+
+---
+
+## REPLACE ALL CARD BACK SOURCES
+
+ONLY change this:
+
+```js
+img.src = "old-image-url";
+```
+
+TO:
+
+```js
+img.src = CARD_BACK_URL;
+```
+
+---
+
+⚠️ DO NOT TOUCH:
+
+* container size
+* wrapper size
+* transforms
+* animation values
+
+---
+
+# =========================
+
+# SECTION 4 — OPTIONAL (SAFE MICRO FIX)
+
+# =========================
+
+If the back image looks slightly smaller:
+
+```css
+.card-back img {
+  transform: scale(1.02); /* tiny upscale only */
+}
+```
+
+⚠️ MAX 1.03 — do NOT go higher
+
+---
+
+# =========================
+
+# FINAL RESULT
+
+# =========================
+
+✔ Original layout restored
+✔ Card size back to normal
+✔ Stacking fixed
+✔ Clean Pokémon card back applied
+✔ No distortion
+
+---
+
+# END PATCH

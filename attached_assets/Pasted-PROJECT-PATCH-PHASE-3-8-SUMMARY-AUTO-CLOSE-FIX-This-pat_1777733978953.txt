@@ -1,0 +1,116 @@
+PROJECT PATCH — PHASE 3.8 SUMMARY AUTO-CLOSE FIX
+
+This patch fixes a bug where the skip summary briefly appears and then immediately disappears when Skip Pack is pressed during a reveal animation.
+
+The cause is that the pack completion logic still runs after the summary renders.
+
+The overlay must never auto-close while in summary mode.
+
+---
+
+CRITICAL RULE
+
+Do NOT modify:
+
+engine logic
+RNG system
+pity system
+pack slot probabilities
+Monte Carlo simulation
+
+Only modify overlay control flow.
+
+---
+
+PROBLEM
+
+When Skip Pack is pressed during a reveal animation:
+
+1. overlayState becomes "summary"
+2. showSkipSummary renders the card row
+3. an existing finish/close path still executes
+4. the overlay closes immediately
+
+This causes the summary to appear for only a split second.
+
+---
+
+GOAL
+
+Ensure that once the overlay enters summary mode, no code path can close the overlay automatically.
+
+The overlay must only close when the user taps.
+
+---
+
+CHANGE 1 — GUARD OVERLAY CLOSE
+
+Locate the function responsible for closing the overlay.
+
+Example names may include:
+
+closeOverlay
+finishPack
+endPack
+hideOverlay
+
+Add a guard at the top of that function:
+
+if (overlayState === "summary") return
+
+This prevents any automatic close triggered by reveal logic.
+
+---
+
+CHANGE 2 — BLOCK FINISH LOGIC DURING SUMMARY
+
+Inside any logic that runs when all cards are revealed:
+
+Example:
+
+if (cardIndex >= cards.length)
+
+Add a guard:
+
+if (overlayState === "summary") return
+
+This prevents the reveal flow from finishing the pack after Skip has already taken control.
+
+---
+
+CHANGE 3 — USER TAP CLOSE ONLY
+
+Ensure that the overlay only closes in response to the user tapping the screen during summary mode.
+
+Example flow:
+
+skip pressed
+↓
+overlayState = "summary"
+↓
+showSkipSummary(packResults)
+↓
+waitForTap()
+↓
+closeOverlay()
+
+---
+
+CHANGE 4 — REMOVE ANY AUTO-TIMER
+
+Ensure no setTimeout or animation callback automatically closes the overlay while summary is visible.
+
+---
+
+EXPECTED RESULT
+
+When Skip Pack is pressed during any reveal stage:
+
+• the skip summary appears
+• the summary remains visible
+• the overlay does NOT close automatically
+• tapping the screen closes the summary
+
+The summary should remain stable regardless of when Skip is pressed.
+
+EN
