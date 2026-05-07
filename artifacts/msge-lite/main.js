@@ -16,6 +16,8 @@
  * audio, or pack opening flow.
  */
 
+import { inject } from '@vercel/analytics';
+
 import { createPackSimulation }    from './simulations/packSimulation.js';
 import { openPackOverlay }         from './ui/fullscreenOverlay.js';
 import { initMobileLayoutManager } from './ui/mobileLayoutManager.js';
@@ -73,6 +75,9 @@ import { DEBUG_FLAGS, isDebugMode, isDebugFromUrl, logActiveFlags, mountDebugTap
 import { isDiagFlag, initDiagnosticsFromStorage } from './data/diagnosticsManager.js';
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
+
+// Initialize Vercel Web Analytics
+inject();
 
 // Phase 10.2: diagnostics only in debug mode (?debug=1, window.__RAREBOUND_DEBUG__,
 // or any isolation flag). Normal production users see a clean console.
@@ -341,7 +346,7 @@ const STATS_KEY = 'tcg_stats';
 const getPacksOpened       = () => { try { return JSON.parse(localStorage.getItem(STATS_KEY))?.packsOpened || 0; } catch { return 0; } };
 const incrementPacksOpened = () => localStorage.setItem(STATS_KEY, JSON.stringify({ packsOpened: getPacksOpened() + 1 }));
 
-// ─── Rarity tables ────────────────────────────────────────────────────────────
+// ─── Rarity tables ────────────────────────────────────��───────────────────────
 
 const RARITY_ORDER  = ['common','uncommon','rare','holoRare','doubleRare','illustrationRare','ultraRare','specialIllustrationRare','hyperRare'];
 const RARITY_LABELS = {
@@ -933,7 +938,7 @@ function updateBalanceUI() {
   if (el) el.textContent = '$' + getBalance().toFixed(2);
 }
 
-// ─── Phase 10.1.7 — iOS touch-bypass utility ─────────────────────────────────
+// ─── Phase 10.1.7 — iOS touch-bypass utility ─────��───────────────────────────
 //
 // On iOS Safari, click events sometimes fail to fire even when :active fires.
 // The browser's gesture recogniser can classify a touch as a potential scroll
