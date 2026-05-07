@@ -17,6 +17,7 @@
  */
 
 import { inject } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 import { createPackSimulation }    from './simulations/packSimulation.js';
 import { openPackOverlay }         from './ui/fullscreenOverlay.js';
@@ -78,6 +79,9 @@ import { isDiagFlag, initDiagnosticsFromStorage } from './data/diagnosticsManage
 
 // Initialize Vercel Web Analytics
 inject();
+
+// Initialize Vercel Speed Insights
+injectSpeedInsights();
 
 // Phase 10.2: diagnostics only in debug mode (?debug=1, window.__RAREBOUND_DEBUG__,
 // or any isolation flag). Normal production users see a clean console.
