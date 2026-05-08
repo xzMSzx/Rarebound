@@ -1,2 +1,2 @@
 # Rarebound
-A digital Pokemn trading card collection game built in Vite.
+A digital Pokemon trading card collection game built in Vite.
