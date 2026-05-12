@@ -2676,7 +2676,8 @@ function renderBinderPage() {
 function buildEvolutionChain(apiCard, setId) {
   const setCards = getCachedSetCards(setId) || [];
   const pokémon  = setCards.filter(c => c.supertype === 'Pokémon');
-  const byName   = (n) => pokémon.find(c => c.name === n);
+  const pokémonMap = new Map(pokémon.map(c => [c.name, c]));
+  const byName   = (n) => pokémonMap.get(n);
   const chain    = [];
   const visited  = new Set();
 

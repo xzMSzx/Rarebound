@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "coverage": "vitest run --coverage"
+    "test": "node --test"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

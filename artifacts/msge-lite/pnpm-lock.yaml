@@ -198,6 +198,7 @@ importers:
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@20.19.41)(jsdom@29.1.1)(lightningcss@1.32.0)
+        version: 2.1.9(@types/node@20.19.41)(lightningcss@1.32.0)
 
 packages:
 
@@ -2476,6 +2477,9 @@ packages:
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
+
+  siginfo@2.0.0:
+    resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
 
   sonner@2.0.7:
     resolution: {integrity: sha512-W6ZN4p58k8aDKA4XPcx2hpIQXBRAgyiWVkYhT7CvK6D3iAu7xjvVyhQHg2/iaKJZ1XVJ4r7XuwGL+WGEK37i9w==}
@@ -4903,6 +4907,8 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
+  siginfo@2.0.0: {}
+
   sonner@2.0.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
@@ -5129,6 +5135,7 @@ snapshots:
       lightningcss: 1.32.0
 
   vitest@2.1.9(@types/node@20.19.41)(jsdom@29.1.1)(lightningcss@1.32.0):
+  vitest@2.1.9(@types/node@20.19.41)(lightningcss@1.32.0):
     dependencies:
       '@vitest/expect': 2.1.9
       '@vitest/mocker': 2.1.9(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
