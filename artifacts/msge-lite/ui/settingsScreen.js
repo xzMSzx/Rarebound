@@ -190,7 +190,7 @@ function devToolsHTML() {
 
       ${diagSectionHTML()}
 
-      <button class="dev-tool-lock" data-act="lockDev">Lock Developer Access</button>
+      <button class="dev-tool-btn dev-tool-lock" data-act="lockDev">Lock Developer Access</button>
     </section>
   `;
 }

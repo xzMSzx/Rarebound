@@ -35,9 +35,11 @@ export function tryUnlockDev(passphrase) {
 
 export function lockDev() {
   // Locking dev also forces infinite balance off so we can't leave
-  // a hidden sandbox flag enabled.
+  // a hidden sandbox flag enabled. Phase 10.5: use removeItem for a
+  // clean wipe — previously wrote {unlocked:false} which left stale
+  // unlockedAt timestamps in storage.
   setInfiniteBalance(false);
-  saveJSON(ACCESS_KEY, { unlocked: false });
+  localStorage.removeItem(ACCESS_KEY);
 }
 
 export function isInfiniteBalance() {

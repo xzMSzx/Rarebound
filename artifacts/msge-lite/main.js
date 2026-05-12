@@ -16,9 +16,6 @@
  * audio, or pack opening flow.
  */
 
-import { inject } from '@vercel/analytics';
-import { injectSpeedInsights } from '@vercel/speed-insights';
-
 import { createPackSimulation }    from './simulations/packSimulation.js';
 import { openPackOverlay }         from './ui/fullscreenOverlay.js';
 import { initMobileLayoutManager } from './ui/mobileLayoutManager.js';
@@ -38,6 +35,8 @@ import {
 } from './data/collectionManager.js';
 import { getMarketValue, getAllMarketValues, enrichMarketMeta } from './data/marketValue.js';
 import { isWishlisted, toggleWishlist, getWishlist } from './data/wishlistManager.js';
+import { isFavorited, toggleFavorite, getFavoriteCount } from './data/favoritesManager.js';
+import { openFavoritesScreen, closeFavoritesScreen, refreshFavoritesScreen } from './ui/favoritesScreen.js';
 import {
   initEconomy, getCurrentTrend, getRefreshLabel, runRefresh, timeUntilRefreshMs,
   tryGenerateDailyChase,
@@ -46,7 +45,7 @@ import {
   VENDORS, getVendorStock, getFavor, addFavor, getFavorLevel, getFavorProgress,
   isVendorOpen, getBrokerNextOpenLabel, getEffectivePackPrice,
 } from './data/vendorManager.js';
-import { getReputation, addReputation, getRank } from './data/reputationManager.js';
+import { getReputation, addReputation, getRank, getAllRanks } from './data/reputationManager.js';
 import { calculateSellPayout, isSellGated, sellCard }    from './data/sellingManager.js';
 import { lockBodyScroll, unlockBodyScroll, getLockDepth } from './ui/scrollManager.js';
 import {
@@ -74,14 +73,52 @@ import {
 import { wasFreshLaunch } from './state/playerState.js';
 import { DEBUG_FLAGS, isDebugMode, isDebugFromUrl, logActiveFlags, mountDebugTapButton } from './data/debugFlags.js';
 import { isDiagFlag, initDiagnosticsFromStorage } from './data/diagnosticsManager.js';
+import {
+  getRequestsForVendor, getRefreshLabel as getRequestRefreshLabel,
+  getRequestProgress, completeRequest, anyVendorRequestsStale,
+} from './data/requestManager.js';
+import { autoClaimReadyMilestones, getCategoryStatus } from './data/milestoneManager.js';
+import {
+  getPacksOpened, incrementPacksOpened,
+  incrementDuplicatesSold,
+  incrementRequestsCompleted,
+  addLifetimeRevenue,
+  incrementBrokerPurchases,
+} from './data/statsManager.js';
+import { isInDistress, checkDistressTransition } from './data/distressManager.js';
+import {
+  isInRecovery, getRecoveryFocusVendor, getRecoveryFocusName,
+  getRecoveryBannerMessage, canClaimRelief, getReliefCountdownLabel,
+  getReliefAmount, claimReliefStipend, tickRecovery,
+} from './data/recoveryManager.js';
+import {
+  getEmergencyRequestForVendor, completeEmergencyRequest, getRotationLabel as getEmergencyRotationLabel,
+} from './data/emergencyRequestManager.js';
+import { logActivity, getActivityFeed }          from './data/activityFeed.js';
+import {
+  ensureQualityForCard, ensureQualityForCopy, getOrCreateQuality, isEligibleRarity,
+} from './data/cardQualityManager.js';
+import {
+  tickSubmissions, getSlabByUid, getAgsStats, lockedCopiesFor,
+  getSlabsForCard, getHighestSlabForCard,
+} from './data/agsSubmissionManager.js';
+import { gradedDeltaForSlab } from './data/agsMarketIntegration.js';
+import { openArchiveServicesScreen, closeArchiveServicesScreen, setAgsActiveTab } from './ui/archiveServicesScreen.js';
+import { openSlabViewer } from './ui/slabViewer.js';
+import { showAgsRevealOverlay } from './ui/agsRevealOverlay.js';
+import { getSettings } from './data/settingsManager.js';
+import { getPrestigeTier, addPrestigeBonus }     from './data/prestigeManager.js';
+import {
+  recordArchiveEvent, hasArchiveKey, getArchiveEntries,
+} from './data/archiveHistoryManager.js';
+import {
+  tickVendorEvents, getVendorEvent, getVendorEventEffect, getVendorEventTimeLeft,
+} from './data/vendorEventsManager.js';
+import {
+  recordValueSnapshot, getValueSummary,
+} from './data/collectionValueHistory.js';
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
-
-// Initialize Vercel Web Analytics
-inject();
-
-// Initialize Vercel Speed Insights
-injectSpeedInsights();
 
 // Phase 10.2: diagnostics only in debug mode (?debug=1, window.__RAREBOUND_DEBUG__,
 // or any isolation flag). Normal production users see a clean console.
@@ -127,15 +164,37 @@ const engine = createPackSimulation();
 loadPlayerState();
 initEconomy();
 
-// ─── Card augmentation (unchanged) ────────────────────────────────────────────
+// ─── Card augmentation + vendor identity bias (v1.2.1) ────────────────────────
 
-function augmentCards(engineCards, setId) {
+// Per-vendor rarity upgrade/downgrade probabilities for the 'rare' slot.
+// Only Retro Vault and Night Market have meaningful biases; PokéMart is neutral.
+// Map: vendorId → { sourceRarity → { targetRarity: probability, … } }
+const VENDOR_RARITY_BIAS = {
+  retroVault:  { rare: { holoRare: 0.35, rare: 0.65 } },
+  nightMarket: { rare: { holoRare: 0.20, uncommon: 0.10, rare: 0.70 } },
+};
+
+function applyVendorRarityBias(rarity, vendorId) {
+  const bias = VENDOR_RARITY_BIAS[vendorId]?.[rarity];
+  if (!bias) return rarity;
+  let cum = 0;
+  const roll = Math.random();
+  for (const [tier, prob] of Object.entries(bias)) {
+    cum += prob;
+    if (roll < cum) return tier;
+  }
+  return rarity;
+}
+
+function augmentCards(engineCards, setId, vendor) {
   if (!isSetLoaded()) return engineCards;
   return engineCards.map((card) => {
-    const poolCard = getRandomCard(card.rarity);
+    const biasedRarity = vendor ? applyVendorRarityBias(card.rarity, vendor.id) : card.rarity;
+    const poolCard = getRandomCard(biasedRarity) || getRandomCard(card.rarity);
     if (!poolCard) return card;
     return { ...card, id: poolCard.id || null, setId, name: poolCard.name,
-             imageUrl: poolCard.imageUrl, rarityType: poolCard.rarity };
+             imageUrl: poolCard.imageUrl, rarityType: poolCard.rarity,
+             isReverseHolo: card.isReverseHolo };
   });
 }
 
@@ -333,7 +392,8 @@ function hideScreen(screen) {
   // pointer-events:none filtering applies, making the nav buttons appear dead.
   ['collection-screen','binder-screen','card-detail-modal','stats-screen',
    'wishlist-screen','sell-modal','market-screen','market-graph-modal',
-   'settings-screen','help-screen'].forEach(id => {
+   'settings-screen','help-screen',
+   'progression-screen','duplicate-vault-screen','collector-archive-screen'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.style.display = 'none'; el.classList.add('hidden'); }
   });
@@ -344,13 +404,10 @@ function hideScreen(screen) {
 const showPackLoadingIndicator = () => document.getElementById('pack-loading-indicator')?.classList.remove('hidden');
 const hidePackLoadingIndicator = () => document.getElementById('pack-loading-indicator')?.classList.add('hidden');
 
-// ─── Stats persistence ────────────────────────────────────────────────────────
+// ─── Stats persistence ── v1.2.0: delegated to data/statsManager.js ──────────
+// getPacksOpened / incrementPacksOpened now imported from statsManager above.
 
-const STATS_KEY = 'tcg_stats';
-const getPacksOpened       = () => { try { return JSON.parse(localStorage.getItem(STATS_KEY))?.packsOpened || 0; } catch { return 0; } };
-const incrementPacksOpened = () => localStorage.setItem(STATS_KEY, JSON.stringify({ packsOpened: getPacksOpened() + 1 }));
-
-// ─── Rarity tables ────────────────────────────────────��───────────────────────
+// ─── Rarity tables ────────────────────────────────────────────────────────────
 
 const RARITY_ORDER  = ['common','uncommon','rare','holoRare','doubleRare','illustrationRare','ultraRare','specialIllustrationRare','hyperRare'];
 const RARITY_LABELS = {
@@ -385,6 +442,13 @@ let _binderSetId         = null;
 let _binderPage          = 0;
 let _pendingHighlightId  = null;
 const _binderPageMemory  = {};
+// v1.2.2d — scroll position saved before hiding collection-screen so it can be
+// restored after re-render when returning from binder (including Broker paths).
+let _collectionScrollTop = 0;
+// v1.2.2e — tracks whether the binder was opened while collection-screen was
+// already visible (lock depth already ≥1). closeBinderScreen uses this to
+// decide whether to shed binder's extra lock or repurpose it as collection's.
+let _binderCameFromCollection = false;
 
 // ─── Mystery box emblems (must be declared before renderVendorHub() runs) ─────
 //
@@ -410,11 +474,186 @@ const BOX_EMBLEMS = {
 
 // ─── Vendor Hub ───────────────────────────────────────────────────────────────
 
-// Hoisted above the first renderVendorHub() call. `let` is in the temporal
-// dead zone until its declaration line executes, so leaving this next to the
-// function body (where it used to live) crashes the top-level call below with
-// "Cannot access '_vendorObserver' before initialization". Function declarations
-// hoist; `let` does not — keep this above any call site that touches it.
+// ALL `const` and `let` bindings that are read inside renderVendorHub() or
+// updateRankStrip() MUST live here — above the top-level renderVendorHub()
+// call at module scope. Function declarations hoist fully; `const`/`let` do
+// NOT. Accessing them before their declaration line throws a TDZ ReferenceError
+// that silently kills module init on iOS WebKit (no visible error, all buttons
+// dead). See BOX_EMBLEMS above for the documented precedent.
+
+// v1.3.0 — glyph icons for the activity feed event types.
+// v1.4.0 — extended with prestige/archive/event types.
+// Required by renderVendorHub(); must stay above the call site.
+const ACTIVITY_ICONS = {
+  pack_opened:           '⬡',
+  stipend_claimed:       '◆',
+  request_fulfilled:     '✓',
+  broker_purchase:       '★',
+  milestone:             '✦',
+  market_refresh:        '↻',
+  broker_arrived:        '◐',
+  prestige_pull:         '✧',
+  wishlist_hit:          '♥',
+  vendor_event:          '◌',
+  archive_event:         '⌖',
+  reverse_holo_complete: '◉',
+  recovery_survived:     '⤴',
+  prestige_tier_up:      '⬢',
+  ags_submitted:         '⌬',
+  ags_complete:          '◈',
+  ags_pristine:          '✦',
+  ags_black_label:       '◆',
+  archive_record:        '⌖',
+  favorited:             '♥',
+  unfavorited:           '♡',
+};
+
+// v1.5.0 — expose per-copy quality lookup to UI helpers (avoids circular import).
+window.__rb_getOrCreateQuality = getOrCreateQuality;
+
+// v1.5.0 — AGS reveal queue + screen hooks. ALL of these MUST stay in the
+// hoisting zone above the top-level renderVendorHub() call (~line 619) — the
+// AGS button wiring resolves AGS_SCREEN_HOOKS at module init, and any future
+// reference from renderVendorHub or updateRankStrip would otherwise TDZ-throw
+// on iOS WebKit.
+const _agsRevealQueue = [];
+let _agsRevealActive = false;
+let _agsRevealSafetyTimer = null;
+const AGS_SCREEN_HOOKS = {
+  getBalance,
+  spendBalance,
+  onBalanceChanged: updateBalanceUI,
+  logActivity,
+  showToast,
+  haptic,
+};
+function openAgsScreen() {
+  lockBodyScroll();
+  openArchiveServicesScreen(AGS_SCREEN_HOOKS);
+}
+function enqueueAgsReveals(slabs, reducedMotion) {
+  for (const slab of slabs) {
+    _agsRevealQueue.push({ slab, reducedMotion });
+
+    // Activity feed + prestige + archive hooks per slab.
+    try {
+      const apiName = (() => {
+        const cached = getCachedSetCards(slab.setId) || [];
+        return cached.find(c => c.id === slab.cardId)?.name || slab.cardId;
+      })();
+      const tierId = slab.grade?.tier?.id;
+      logActivity('ags_complete',
+        `AGS · ${apiName} certified ${slab.grade?.label || ''}`);
+
+      if (tierId === 'BLACK_LABEL') {
+        addPrestigeBonus(200);
+        logActivity('ags_black_label',
+          `AGS BLACK LABEL · ${apiName} preserved.`);
+        recordArchiveEvent('ags_black_label',
+          `AGS BLACK LABEL certified — ${apiName}`,
+          { key: 'first_black_label' });
+      } else if (tierId === 'AGS_10') {
+        addPrestigeBonus(60);
+        logActivity('ags_pristine',
+          `AGS · Archive Pristine — ${apiName}`);
+        recordArchiveEvent('ags_pristine',
+          `First AGS 10 certified — ${apiName}`,
+          { key: 'first_ags_10' });
+      } else if (tierId === 'AGS_9_5') {
+        addPrestigeBonus(25);
+        recordArchiveEvent('ags_pristine',
+          `First AGS 9.5 certified — ${apiName}`,
+          { key: 'first_ags_9_5' });
+      }
+    } catch (err) { console.error('[v1.5.0] ags hook failed:', err); }
+  }
+  _drainAgsRevealQueue();
+}
+function _drainAgsRevealQueue() {
+  if (_agsRevealActive || _agsRevealQueue.length === 0) return;
+  const { slab, reducedMotion } = _agsRevealQueue.shift();
+  const cached  = getCachedSetCards(slab.setId) || [];
+  const apiCard = cached.find(c => c.id === slab.cardId) || { name: slab.cardId };
+  _agsRevealActive = true;
+
+  // Safety failsafe — if the overlay never fires onClose (user navigates
+  // away, exception inside the overlay, etc.), force-reset after 60s so
+  // future completions still surface. Cleared on a clean onClose.
+  const finish = () => {
+    if (_agsRevealSafetyTimer) {
+      clearTimeout(_agsRevealSafetyTimer);
+      _agsRevealSafetyTimer = null;
+    }
+    if (!_agsRevealActive) return;
+    _agsRevealActive = false;
+    _drainAgsRevealQueue();
+  };
+  _agsRevealSafetyTimer = setTimeout(() => {
+    console.warn('[v1.5.0] ags reveal safety timeout — force-draining queue.');
+    finish();
+  }, 60_000);
+
+  try {
+    haptic('heavy');
+    showAgsRevealOverlay(slab, apiCard, { reducedMotion, onClose: finish });
+  } catch (err) {
+    console.error('[v1.5.0] ags reveal overlay failed:', err);
+    finish();
+  }
+}
+
+// v1.4.0 — Prestige pull atmospheric text rotation. Picked deterministically
+// per pull (timestamp seed) so the same hit doesn't get the same line twice
+// in rapid succession but doesn't repeat-spam either.
+const PRESTIGE_PULL_LINES = [
+  'Archive-worthy acquisition.',
+  'Market demand expected to rise.',
+  'The Broker would pay heavily for this.',
+  'Preservation recommended.',
+  'An extraordinary pull.',
+  'Collector interest detected.',
+  'A pull worth remembering.',
+  'Quality consistent with archive standards.',
+];
+
+// v1.4.0 — vendor display names for archive/event entries (avoids importing twice).
+const VENDOR_DISPLAY = {
+  pokemart:    'PokéMart',
+  retroVault:  'Retro Vault',
+  nightMarket: 'Night Market',
+  broker:      'The Broker',
+};
+
+// v1.4.0 — temporary milestone-granted vendor discounts.
+//   { [vendorId]: { pct: 0.05, expiresAt: Date.now()+ms } }
+// Read by getEffectiveVendorPrice() at pricing time. Pure-additive layer
+// over getEffectivePackPrice — does not mutate the underlying vendor stock.
+const _tempVendorDiscounts = {};
+function applyTempVendorDiscount(vendorId, pct, durationMs) {
+  if (!vendorId || !pct || !durationMs) return;
+  _tempVendorDiscounts[vendorId] = {
+    pct: Math.max(0, Math.min(0.5, pct)),
+    expiresAt: Date.now() + durationMs,
+  };
+}
+function getTempVendorDiscount(vendorId) {
+  const d = _tempVendorDiscounts[vendorId];
+  if (!d) return 0;
+  if (Date.now() >= d.expiresAt) { delete _tempVendorDiscounts[vendorId]; return 0; }
+  return d.pct;
+}
+
+// v1.4.0 — prestige rarity set. These trigger the Prestige Pull treatment.
+const PRESTIGE_PULL_TIERS = new Set([
+  'illustrationRare', 'specialIllustrationRare', 'hyperRare',
+]);
+
+// v1.3.0 — Prestige tiers for updateRankStrip(). Must stay above the call site.
+const PRESTIGE_RANKS = new Set([
+  'Master Collector', 'Archive Curator', 'Legendary Collector',
+]);
+
+// _vendorObserver: same rule — keep above the call site.
 let _vendorObserver = null;
 
 renderVendorHub();
@@ -427,16 +666,63 @@ renderRecentHits();
 
 // Live tick — refresh strip every 30s; check for cycle rollover, advance chase timer
 setInterval(() => {
+  // v1.3.0a — recovery tick first: handles 45-min focus rotation while in
+  // recovery AND post-recovery cleanup of leftover emergency/state storage.
+  // Returns true when a hub re-render is needed.
+  const wasInRecovery = isInRecovery();
+  const recoveryNeedsRender = tickRecovery();
+  // v1.4.0 — log recovery survival to archive history (deduped by date+approx).
+  if (wasInRecovery && !isInRecovery()) {
+    try {
+      const dayKey = new Date().toISOString().slice(0, 10);
+      recordArchiveEvent('recovery_survived',
+        'Weathered Recovery Mode — collection intact.',
+        { key: `recovery_survived:${dayKey}` });
+      logActivity('recovery_survived', 'Recovery Mode cleared');
+    } catch {}
+  }
+
+  // v1.4.0 — vendor world events: subtle, infrequent rotation. Returns true
+  // when an event slot started/ended so the hub re-renders to surface the
+  // banner change.
+  const vendorEventsChanged = tickVendorEvents();
+
+  // v1.5.0 — AGS submission queue. Promotes any active submission whose
+  // returnAt has elapsed into the registry, then triggers the cinematic
+  // reveal overlay (queued sequentially if multiple complete on one tick).
+  try {
+    const completed = tickSubmissions();
+    if (completed.length > 0) {
+      const reduced = !!getSettings().reducedMotion;
+      enqueueAgsReveals(completed, reduced);
+      // Notify any open AGS screen so it re-renders.
+      document.dispatchEvent(new CustomEvent('ags-tick'));
+    } else {
+      // Even with no completions, re-render the AGS screen so timers tick.
+      document.dispatchEvent(new CustomEvent('ags-tick'));
+    }
+  } catch (err) { console.error('[v1.5.0] ags tick failed:', err); }
+
   if (timeUntilRefreshMs() === 0) {
     runRefresh();
     renderVendorHub();
     renderChaseStrip();
     showToast(`Market refreshed: ${getCurrentTrend().label}`, 'refresh');
+  } else if (recoveryNeedsRender || vendorEventsChanged || anyVendorRequestsStale()) {
+    // Phase 10.4 — vendor request rotations have their own cadence
+    // (2-8h) independent of the market refresh cycle. Re-render the
+    // hub so newly-rotated requests appear without manual reload.
+    // v1.3.0a — also re-renders on recovery focus rotation / cleanup.
+    // v1.4.0 — also re-renders on vendor world event start/end.
+    renderVendorHub();
   }
   updateMarketStrip();
   renderStipendStrip();
   renderChaseStrip();
 }, 30 * 1000);
+
+// v1.4.0 — initial event tick on boot so the first render reflects active state.
+try { tickVendorEvents(); } catch (err) { console.error('[v1.4.0] vendor events tick failed:', err); }
 
 function updateMarketStrip() {
   const trend = getCurrentTrend();
@@ -448,10 +734,441 @@ function updateMarketStrip() {
 
 function updateRankStrip() {
   const rank   = getRank();
+  const strip  = document.getElementById('rank-strip');
   const nameEl = document.getElementById('rank-name');
   const fill   = document.getElementById('rank-bar-fill');
   if (nameEl) nameEl.textContent = `${rank.name} · ${rank.current} pts`;
   if (fill)   fill.style.width   = rank.progressPct + '%';
+  // v1.3.0 — Prestige tier accents (gold) for Master+/Curator/Legendary
+  if (strip) {
+    if (PRESTIGE_RANKS.has(rank.name)) strip.classList.add('is-prestige');
+    else                               strip.classList.remove('is-prestige');
+  }
+}
+
+// Phase 10.5 — make rank strip clickable to open Collector Progression
+(function wireRankStrip() {
+  const strip = document.getElementById('rank-strip');
+  if (!strip) return;
+  strip.classList.add('is-clickable');
+  strip.setAttribute('role', 'button');
+  strip.setAttribute('aria-label', 'View Collector Progression');
+  strip.addEventListener('click', () => openCollectorArchive());
+  iosTap(strip, () => openCollectorArchive());
+})();
+
+// ─── Collector Progression screen (Phase 10.5) ───────────────────────────────
+
+const RANK_PERKS = {
+  'Rookie Collector': [
+    'Starter Collector Grant ($120)',
+    'Daily stipend unlocked',
+    'Open Requests from PokéMart and Night Market',
+    'Recovery Mode safety net activates below $8',
+  ],
+  'Collector': [
+    'Holo-tier requests appear at all vendors',
+    'Retro Vault Archive Requests unlock',
+    'Slightly larger Night Market discounts',
+    'Retro Vault accepts Recovery Mode emergencies',
+  ],
+  'Advanced Collector': [
+    'Double Rare requests unlock',
+    'Broker Collector Bounties become available',
+    'Set-acquisition requests appear at Retro Vault',
+    'Higher daily stipend ($28 base)',
+  ],
+  'Elite Collector': [
+    'Illustration Rare requests appear',
+    'Higher demand multipliers on Night Market',
+    'Mystery Box rotations preview earlier',
+    'Stipend climbs to $40 base',
+  ],
+  'Master Collector': [
+    'Ultra Rare requests appear',
+    'Broker Prestige Acquisitions begin',
+    'Premium contract bonuses (+15-30%)',
+    'Broker Prestige Liquidations during Recovery Mode',
+  ],
+  'Archive Curator': [
+    'Special Illustration Rare contracts',
+    'Museum Acquisition prestige flavor',
+    'Top-tier Broker payouts',
+    'Stipend reaches $58-62 daily',
+  ],
+  'Legendary Collector': [
+    'Hyper Rare prestige acquisitions',
+    'Maximum contract bonuses (+25-40%)',
+    'Full vendor ecosystem access',
+    'Maximum stipend tier ($60-65 daily)',
+  ],
+};
+
+function openCollectorProgression() {
+  const el = document.getElementById('progression-screen');
+  if (!el) return;
+  renderCollectorProgression();
+  lockBodyScroll();
+  showScreen(el);
+}
+function closeCollectorProgression() {
+  hideScreen(document.getElementById('progression-screen'));
+  unlockBodyScroll();
+}
+
+// ─── v1.2.0 — Collector Archive (milestones + rank timeline) ─────────────────
+
+function openCollectorArchive() {
+  const el = document.getElementById('collector-archive-screen');
+  if (!el) return;
+  renderCollectorArchive(el);
+  lockBodyScroll();
+  showScreen(el);
+}
+
+function closeCollectorArchive() {
+  hideScreen(document.getElementById('collector-archive-screen'));
+  unlockBodyScroll();
+}
+
+function renderCollectorArchive(el) {
+  const cur    = getRank();
+  const ranks  = getAllRanks();
+  const cats   = getCategoryStatus();
+  const points = cur.current;
+
+  // Rank timeline rows (reused from renderCollectorProgression)
+  const rankRows = ranks.map((r, i) => {
+    const next      = ranks[i + 1];
+    const isCurrent = r.name === cur.name;
+    const isReached = points >= r.min;
+    const isLocked  = !isReached;
+    const perks     = RANK_PERKS[r.name] || [];
+    const reqLine   = i === 0 ? 'Starting rank' : `${r.min} reputation`;
+    const span      = next ? `${r.min}–${next.min - 1}` : `${r.min}+`;
+    return `
+      <li class="prog-row ${isCurrent ? 'is-current' : ''} ${isLocked ? 'is-locked' : 'is-reached'}">
+        <div class="prog-marker"><span class="prog-dot"></span></div>
+        <div class="prog-card">
+          <div class="prog-card-head">
+            <span class="prog-rank-name">${r.name}</span>
+            ${isCurrent ? '<span class="prog-current-tag">CURRENT</span>' : ''}
+            ${isLocked && !isCurrent ? '<span class="prog-locked-tag">LOCKED</span>' : ''}
+          </div>
+          <div class="prog-rank-req">${reqLine} · band ${span}</div>
+          ${r.description ? `<div class="prog-rank-desc-line">${r.description}</div>` : ''}
+          <ul class="prog-perks">${perks.map(p => `<li>${p}</li>`).join('')}</ul>
+        </div>
+      </li>`;
+  }).join('');
+
+  // Milestone category sections
+  const catSections = cats.map(cat => {
+    const milestoneCards = cat.milestones.map(m => {
+      if (!m.revealed) {
+        return `<div class="archive-milestone archive-milestone--hidden"><span class="archive-milestone-lock">◈</span><span>Complete previous milestones to reveal</span></div>`;
+      }
+      const displayCurrent = m.displayFn ? m.displayFn(m.current) : m.current;
+      const displayTarget  = m.displayFn ? m.displayFn(m.target)  : m.target;
+      const pct = m.progressPct.toFixed(0);
+      const rewardParts = [];
+      if (m.rewardCash) rewardParts.push(`+$${m.rewardCash}`);
+      if (m.rewardRep)  rewardParts.push(`+${m.rewardRep} rep`);
+      if (m.rewardNote) rewardParts.push(m.rewardNote);
+      const rewardStr = rewardParts.join(' · ') || 'Achievement';
+      return `
+        <div class="archive-milestone ${m.claimed ? 'archive-milestone--claimed' : m.claimable ? 'archive-milestone--claimable' : ''}">
+          <div class="archive-milestone-head">
+            <span class="archive-milestone-title">${m.title}</span>
+            ${m.claimed ? '<span class="archive-milestone-badge">✓</span>' : ''}
+          </div>
+          <div class="archive-milestone-desc">${m.desc}</div>
+          <div class="archive-milestone-progress">
+            <div class="archive-milestone-bar"><div class="archive-milestone-fill" style="width:${pct}%"></div></div>
+            <span class="archive-milestone-nums">${displayCurrent} / ${displayTarget}</span>
+          </div>
+          <div class="archive-milestone-reward">${rewardStr}</div>
+        </div>`;
+    }).join('');
+    const completedPct = cat.totalCount > 0 ? Math.round(cat.completedCount / cat.totalCount * 100) : 0;
+    return `
+      <div class="archive-category" data-cat="${cat.id}">
+        <button class="archive-cat-head">
+          <span class="archive-cat-icon">${cat.icon}</span>
+          <span class="archive-cat-label">${cat.label}</span>
+          <span class="archive-cat-count">${cat.completedCount} / ${cat.totalCount}</span>
+          <span class="archive-cat-pct">${completedPct}%</span>
+          <span class="archive-cat-chevron">+</span>
+        </button>
+        <div class="archive-cat-body">${milestoneCards}</div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="screen-header">
+      <button class="screen-back-btn" id="archive-back-btn">← Back</button>
+      <h2>Collector Archive</h2>
+      <div></div>
+    </div>
+    <div class="archive-body">
+      <div class="archive-rank-card">
+        <div class="archive-rank-name">${cur.name}</div>
+        ${cur.description ? `<div class="archive-rank-desc">${cur.description}</div>` : ''}
+        <div class="archive-rank-bar"><div class="archive-rank-fill" style="width:${cur.progressPct.toFixed(1)}%"></div></div>
+        <div class="archive-rank-pts">${cur.current.toLocaleString()} reputation${cur.nextMin ? ` · ${cur.nextMin.toLocaleString()} to next rank` : ' · maximum rank reached'}</div>
+      </div>
+      <div class="archive-section-title">Milestones</div>
+      ${catSections}
+      <div class="archive-section-title">Rank Progression</div>
+      <ol class="progression-timeline">${rankRows}</ol>
+    </div>
+  `;
+
+  const back = el.querySelector('#archive-back-btn');
+  back.onclick = closeCollectorArchive;
+  iosTap(back, closeCollectorArchive);
+
+  el.querySelectorAll('.archive-cat-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const cat  = head.closest('.archive-category');
+      const open = cat.classList.toggle('is-open');
+      head.querySelector('.archive-cat-chevron').textContent = open ? '−' : '+';
+      haptic('soft');
+    });
+  });
+}
+
+function renderCollectorProgression() {
+  const el = document.getElementById('progression-screen');
+  if (!el) return;
+  const cur   = getRank();
+  const ranks = getAllRanks();
+  const points = cur.current;
+
+  const rows = ranks.map((r, i) => {
+    const next = ranks[i + 1];
+    const isCurrent  = r.name === cur.name;
+    const isReached  = points >= r.min;
+    const isLocked   = !isReached;
+    const perks      = RANK_PERKS[r.name] || [];
+    const reqLine    = i === 0 ? 'Starting rank' : `${r.min} reputation`;
+    const span       = next ? `${r.min}–${next.min - 1}` : `${r.min}+`;
+    return `
+      <li class="prog-row ${isCurrent ? 'is-current' : ''} ${isLocked ? 'is-locked' : 'is-reached'}">
+        <div class="prog-marker"><span class="prog-dot"></span></div>
+        <div class="prog-card">
+          <div class="prog-card-head">
+            <span class="prog-rank-name">${r.name}</span>
+            ${isCurrent ? '<span class="prog-current-tag">CURRENT</span>' : ''}
+            ${isLocked && !isCurrent ? '<span class="prog-locked-tag">LOCKED</span>' : ''}
+          </div>
+          <div class="prog-rank-req">${reqLine} · band ${span}</div>
+          <ul class="prog-perks">
+            ${perks.map(p => `<li>${p}</li>`).join('')}
+          </ul>
+        </div>
+      </li>
+    `;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="screen-header">
+      <button class="screen-back-btn" id="progression-back-btn">← Back</button>
+      <h2>Collector Progression</h2>
+      <div></div>
+    </div>
+    <div class="progression-body">
+      <div class="progression-summary">
+        <div class="progression-summary-rank">${cur.name}</div>
+        <div class="progression-summary-points">${cur.current} reputation${cur.nextMin ? ` · next at ${cur.nextMin}` : ' · max rank'}</div>
+        <div class="progression-summary-bar"><div class="progression-summary-fill" style="width:${cur.progressPct}%"></div></div>
+      </div>
+      <ol class="progression-timeline">${rows}</ol>
+    </div>
+  `;
+  const back = el.querySelector('#progression-back-btn');
+  back.onclick = closeCollectorProgression;
+  iosTap(back, closeCollectorProgression);
+}
+
+// ─── Duplicate Vault screen (Phase 10.5) ─────────────────────────────────────
+
+// v1.3.0 — Vault virtualization observer is held at module scope so it can be
+// disconnected on close / re-render, preventing lingering observers if the
+// player exits the screen mid-scroll.
+let _vaultObserver = null;
+
+function openDuplicateVault() {
+  const el = document.getElementById('duplicate-vault-screen');
+  if (!el) return;
+  renderDuplicateVault();
+  lockBodyScroll();
+  showScreen(el);
+}
+function closeDuplicateVault() {
+  if (_vaultObserver) { _vaultObserver.disconnect(); _vaultObserver = null; }
+  hideScreen(document.getElementById('duplicate-vault-screen'));
+  unlockBodyScroll();
+}
+
+function renderDuplicateVault() {
+  const el = document.getElementById('duplicate-vault-screen');
+  if (!el) return;
+  const collection = getCollection();
+  const allValues  = getAllMarketValues();
+
+  // Gather all duplicates (count > 1). Skip wishlisted entries — those are
+  // chase cards the player explicitly wants to keep visible elsewhere.
+  const items = [];
+  for (const [setId, cards] of Object.entries(collection)) {
+    const cached = getCachedSetCards(setId) || [];
+    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    const setName = PACK_STORE[setId]?.name || setId;
+    for (const [cardId, entry] of Object.entries(cards)) {
+      if (entry.count <= 1) continue;
+      const dups   = entry.count - 1;
+      const apiCard = byId[cardId];
+      const tier   = apiCard ? mapPokemonRarity(apiCard.rarity) : 'common';
+      const value  = allValues[cardId] ?? getMarketValue(cardId, tier);
+      items.push({
+        setId, cardId, entry, dups, value, tier,
+        name:  apiCard?.name || cardId,
+        image: apiCard?.images?.small || apiCard?.images?.large || '',
+        setName,
+        rarityLabel: RARITY_LABELS[tier] || tier,
+        totalDupValue: dups * value,
+      });
+    }
+  }
+  // Sort by total duplicate value descending — most-valuable backlog first.
+  items.sort((a, b) => b.totalDupValue - a.totalDupValue);
+
+  const totalDupes      = items.reduce((s, x) => s + x.dups, 0);
+  const totalDupesValue = items.reduce((s, x) => s + x.totalDupValue, 0);
+
+  // v1.3.0 — windowed virtualization. Render an initial PAGE of rows; an
+  // IntersectionObserver on the trailing sentinel appends the next PAGE
+  // when the user scrolls near the bottom. Keeps DOM small for players
+  // with hundreds of duplicates.
+  const PAGE = 30;
+
+  const renderRow = (x) => `
+        <div class="vault-row" data-set="${x.setId}" data-card="${x.cardId}">
+          <div class="vault-thumb">
+            ${x.image ? `<img src="${x.image}" alt="${x.name}" loading="lazy" />` : '<div class="vault-thumb-placeholder">?</div>'}
+            <span class="vault-qty">×${x.dups}</span>
+          </div>
+          <div class="vault-info">
+            <div class="vault-name">${x.name}</div>
+            <div class="vault-meta">
+              <span class="vault-rarity">${x.rarityLabel}</span>
+              <span class="vault-set">${x.setName}</span>
+            </div>
+            <div class="vault-value">est. $${x.value.toFixed(2)} ea · $${x.totalDupValue.toFixed(2)} total</div>
+          </div>
+          <div class="vault-actions">
+            <button class="vault-btn vault-btn--locate" data-act="locate">Open in Binder</button>
+          </div>
+        </div>`;
+
+  const initialItems = items.slice(0, PAGE);
+  const remaining    = Math.max(0, items.length - PAGE);
+
+  const list = items.length === 0
+    ? `<div class="vault-empty">
+         <div class="vault-empty-icon">◆</div>
+         <div class="vault-empty-text">No duplicates yet.</div>
+         <div class="vault-empty-sub">Open packs to build a duplicate backlog.</div>
+       </div>`
+    : initialItems.map(renderRow).join('') +
+      (remaining > 0
+        ? `<div class="vault-sentinel" data-rendered="${PAGE}">Loading more…</div>`
+        : '');
+
+  el.innerHTML = `
+    <div class="screen-header">
+      <button class="screen-back-btn" id="vault-back-btn">← Back</button>
+      <h2>Duplicate Vault</h2>
+      <div></div>
+    </div>
+    <div class="vault-body">
+      <div class="vault-summary">
+        <div class="vault-summary-row">
+          <span class="vault-summary-label">Total duplicates</span>
+          <span class="vault-summary-value">${totalDupes}</span>
+        </div>
+        <div class="vault-summary-row">
+          <span class="vault-summary-label">Estimated backlog value</span>
+          <span class="vault-summary-value">$${totalDupesValue.toFixed(2)}</span>
+        </div>
+        <div class="vault-summary-hint">
+          Sole copies and locked last-copies are never shown here. Use vendor
+          requests for premium payouts, or open in binder to sell directly.
+        </div>
+      </div>
+      <div class="vault-list">${list}</div>
+    </div>
+  `;
+
+  const back = el.querySelector('#vault-back-btn');
+  back.onclick = closeDuplicateVault;
+  iosTap(back, closeDuplicateVault);
+
+  // Wire row actions for the *currently rendered* set; re-invoked after each
+  // batch is appended so newly added rows pick up the locate handler.
+  const wireRows = (root) => {
+    root.querySelectorAll('.vault-row:not([data-wired])').forEach(row => {
+      row.setAttribute('data-wired', '1');
+      const setId  = row.dataset.set;
+      const cardId = row.dataset.card;
+      const locate = row.querySelector('[data-act="locate"]');
+      if (locate) {
+        const handler = () => {
+          closeDuplicateVault();
+          closeStatsScreen();
+          openBinderScreen(setId, cardId);
+        };
+        locate.addEventListener('click', handler);
+        iosTap(locate, handler);
+      }
+    });
+  };
+  const listEl = el.querySelector('.vault-list');
+  wireRows(listEl);
+
+  // Sentinel-driven pagination: when sentinel is visible, append the next PAGE
+  // and re-wire any new rows. When everything is rendered, remove the sentinel.
+  // Disconnect any prior observer (re-render or stale open).
+  if (_vaultObserver) { _vaultObserver.disconnect(); _vaultObserver = null; }
+
+  if (remaining > 0 && 'IntersectionObserver' in window) {
+    _vaultObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const sentinel = entry.target;
+        const rendered = parseInt(sentinel.dataset.rendered || '0', 10);
+        const nextEnd  = Math.min(items.length, rendered + PAGE);
+        const batch    = items.slice(rendered, nextEnd);
+        if (batch.length === 0) {
+          if (_vaultObserver) { _vaultObserver.disconnect(); _vaultObserver = null; }
+          sentinel.remove();
+          return;
+        }
+        const frag = document.createElement('div');
+        frag.innerHTML = batch.map(renderRow).join('');
+        // Insert each child before sentinel
+        while (frag.firstChild) listEl.insertBefore(frag.firstChild, sentinel);
+        sentinel.dataset.rendered = String(nextEnd);
+        wireRows(listEl);
+        if (nextEnd >= items.length) {
+          if (_vaultObserver) { _vaultObserver.disconnect(); _vaultObserver = null; }
+          sentinel.remove();
+        }
+      }
+    }, { root: null, rootMargin: '300px', threshold: 0.01 });
+    const sentinel = listEl.querySelector('.vault-sentinel');
+    if (sentinel) _vaultObserver.observe(sentinel);
+  }
 }
 
 // ─── Chase strip (Phase 9.6) ──────────────────────────────────────────────────
@@ -508,6 +1225,7 @@ function renderStipendStrip() {
       if (got > 0) {
         updateBalanceUI();
         showToast(`Stipend claimed: +$${got}`, 'sell');
+        logActivity('stipend_claimed', `Daily stipend +$${got}`);
         renderStipendStrip();
       }
     };
@@ -557,9 +1275,52 @@ function renderVendorHub() {
   const container = document.getElementById('vendor-list');
   container.innerHTML = '';
 
-  // Render each vendor in isolation so a failure on one (e.g. corrupt
-  // localStorage state, missing cached card data) cannot prevent the
-  // rest of the hub from appearing.
+  // v1.3.0a — Recovery Mode banner (was: v1.2.0 distress banner)
+  // Dynamic per-vendor flavor + Vendor Relief Stipend failsafe.
+  if (isInRecovery()) {
+    checkDistressTransition();
+    const focusName    = getRecoveryFocusName();
+    const message      = getRecoveryBannerMessage()
+                       || 'Balance below $8 — sell duplicates or fulfill a vendor request to recover.';
+    const reliefReady  = canClaimRelief();
+    const reliefLabel  = reliefReady
+      ? `Claim $${getReliefAmount()} Relief`
+      : `Relief in ${getReliefCountdownLabel()}`;
+
+    const banner = document.createElement('div');
+    banner.className = 'distress-banner distress-banner--enhanced';
+    banner.innerHTML = `
+      <div class="distress-banner-icon">
+        ◈<span class="distress-warning-dot" aria-hidden="true"></span>
+      </div>
+      <div class="distress-banner-body">
+        <div class="distress-banner-title">Recovery Mode${focusName ? ` · ${focusName}` : ''}</div>
+        <div class="distress-banner-sub">${message}</div>
+      </div>
+      <button class="distress-relief-btn ${reliefReady ? 'is-ready' : ''}" ${reliefReady ? '' : 'disabled'}>
+        ${reliefLabel}
+      </button>
+    `;
+    const reliefBtn = banner.querySelector('.distress-relief-btn');
+    if (reliefBtn && reliefReady) {
+      const doClaim = () => {
+        const amt = claimReliefStipend();
+        if (amt > 0) {
+          haptic('soft');
+          sfx.purchase();
+          showToast(`Vendor Relief claimed · +$${amt}`, 'sell');
+          logActivity('stipend_claimed', `Vendor Relief +$${amt}`);
+          updateBalanceUI();
+          checkDistressTransition();
+          renderVendorHub();
+        }
+      };
+      reliefBtn.onclick = doClaim;
+      iosTap(reliefBtn, doClaim);
+    }
+    container.appendChild(banner);
+  }
+
   Object.values(VENDORS).forEach(vendor => {
     try {
       container.appendChild(renderVendorCard(vendor));
@@ -599,7 +1360,26 @@ function renderVendorHub() {
     }, { threshold: [0.5, 0.75] });
     container.querySelectorAll('.vendor-card').forEach(el => _vendorObserver.observe(el));
   }
+
+  // v1.2.1 — World Activity feed anchored below vendor cards
+  // v1.3.0 — per-event glyph icon for visual scanning
+  const feedEvents = getActivityFeed(5);
+  if (feedEvents.length > 0) {
+    const feedEl = document.createElement('div');
+    feedEl.className = 'activity-feed';
+    feedEl.innerHTML =
+      `<div class="activity-feed-head">Recent Activity</div>` +
+      feedEvents.map(ev =>
+        `<div class="activity-event activity-event--${ev.type}">` +
+        `<span class="activity-event-icon" aria-hidden="true">${ACTIVITY_ICONS[ev.type] || '·'}</span>` +
+        `<span class="activity-event-label">${ev.label}</span>` +
+        `<span class="activity-event-time">${formatRelativeTime(ev.ts)}</span>` +
+        `</div>`
+      ).join('');
+    container.appendChild(feedEl);
+  }
 }
+
 
 function renderVendorCard(vendor) {
   const open      = isVendorOpen(vendor.id);
@@ -686,6 +1466,43 @@ function renderVendorCard(vendor) {
 
   section.appendChild(body);
 
+  // v1.4.0 — Vendor World Event banner (subtle, single line, between body and requests).
+  try {
+    const ev = getVendorEvent(vendor.id);
+    if (ev) {
+      const banner = document.createElement('div');
+      banner.className = `vendor-event-banner vendor-event-${vendor.id}`;
+      const msLeft = getVendorEventTimeLeft(vendor.id);
+      const hrs    = Math.max(0, Math.floor(msLeft / 3600000));
+      const mins   = Math.max(0, Math.floor((msLeft % 3600000) / 60000));
+      const left   = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+      banner.innerHTML = `
+        <span class="vendor-event-glyph">◌</span>
+        <div class="vendor-event-text">
+          <div class="vendor-event-title">${ev.title}</div>
+          <div class="vendor-event-flavor">${ev.flavor}</div>
+        </div>
+        <span class="vendor-event-timer">${left}</span>
+      `;
+      section.appendChild(banner);
+    }
+  } catch (evErr) {
+    console.error('[vendorCard] event banner failed for', vendor.id, evErr);
+  }
+
+  // Phase 10.4 — Collector Requests panel (above favor footer)
+  // v1.3.0a — also surfaces an Emergency Request when this vendor holds the recovery focus.
+  try {
+    const knownSetIds  = (stock.packs || []).map(p => p.setId);
+    const reqs         = getRequestsForVendor(vendor.id, knownSetIds, getRank().name);
+    const emergencyReq = getEmergencyRequestForVendor(vendor.id);
+    if (reqs.length > 0 || emergencyReq) {
+      section.appendChild(renderRequestsPanel(vendor, reqs, emergencyReq));
+    }
+  } catch (reqErr) {
+    console.error('[vendorCard] requests panel failed for', vendor.id, reqErr);
+  }
+
   // Footer — favor bar
   const footer = document.createElement('div');
   footer.className = 'vendor-footer';
@@ -707,7 +1524,13 @@ function renderVendorCard(vendor) {
 function renderVendorPackTile(item, vendor) {
   const pack    = PACK_STORE[item.setId];
   if (!pack) return document.createElement('div');
-  const finalPrice = getEffectivePackPrice(vendor.id, item.price);
+  // v1.4.0 — apply temp milestone discount + active vendor world event discount
+  // on top of the existing vendor base price (additive, capped at 50%).
+  let basePrice = getEffectivePackPrice(vendor.id, item.price);
+  const tempPct  = getTempVendorDiscount(vendor.id);
+  const eventPct = (getVendorEventEffect(vendor.id).packDiscountPct) || 0;
+  const totalPct = Math.min(0.5, tempPct + eventPct);
+  const finalPrice = basePrice * (1 - totalPct);
   const tile = document.createElement('div');
   tile.className = 'vendor-pack-tile';
   const artUrl = `${import.meta.env.BASE_URL}${pack.art}`;
@@ -726,27 +1549,54 @@ function renderVendorPackTile(item, vendor) {
 }
 
 function renderBrokerChaseTile(pick, vendor) {
+  // v1.2.2c — Root-cause rebuild.
+  // The tile is split into TWO COMPLETELY SEPARATE SIBLING elements:
+  //   .broker-chase-preview  → navigation only (art + name + rarity + price)
+  //   button                 → purchase only
+  //
+  // Previously the button was nested INSIDE the tile's clickable region, causing
+  // iOS Safari tap ambiguity. iosTap also calls handler() with zero args, so any
+  // handler that checked (e) => { if (e.target...) } was crashing silently on
+  // every mobile touch. The new structure needs no guards, no stopPropagation.
+
   const tile = document.createElement('div');
   tile.className = 'broker-chase-tile';
 
-  // Look up the live apiCard for click-through detail
   const cached  = getCachedSetCards(pick.setId) || [];
   const apiCard = cached.find(c => c.id === pick.cardId);
 
-  tile.innerHTML = `
-    <img src="${pick.imageUrl}" class="broker-chase-img" alt="${pick.name}" />
-    <div class="broker-chase-name">${pick.name}</div>
-    <div class="broker-chase-tier">${RARITY_LABELS[pick.tier] || pick.tier}</div>
-    <div class="broker-chase-price">$${pick.price.toLocaleString()}</div>
-    <button class="vendor-buy-btn vendor-buy-btn--lux">Acquire</button>
-  `;
+  // ── Preview region: art + metadata, navigation handler only ────────────────
+  const preview = document.createElement('div');
+  preview.className = 'broker-chase-preview';
+  preview.innerHTML =
+    `<img src="${pick.imageUrl}" class="broker-chase-img" alt="${pick.name}" />` +
+    `<div class="broker-chase-name">${pick.name}</div>` +
+    `<div class="broker-chase-tier">${RARITY_LABELS[pick.tier] || pick.tier}</div>` +
+    `<div class="broker-chase-price">$${pick.price.toLocaleString()}</div>`;
 
-  const btn = tile.querySelector('button');
-  btn.onclick = (e) => {
-    e.stopPropagation();
-    buyChaseCard(apiCard || { id: pick.cardId, name: pick.name, images: { small: pick.imageUrl } },
-                 pick.setId, pick.price, vendor, btn);
+  const doInspect = () => {
+    if (!apiCard) return;
+    openBinderScreen(pick.setId, pick.cardId);
   };
+  preview.onclick = doInspect;
+  iosTap(preview, doInspect);
+
+  // ── Acquire button: purchase handler only, sibling NOT child of preview ─────
+  const btn = document.createElement('button');
+  btn.className = 'vendor-buy-btn vendor-buy-btn--lux broker-acquire-btn';
+  btn.textContent = 'Acquire';
+
+  const doPurchase = () => {
+    buyChaseCard(
+      apiCard || { id: pick.cardId, name: pick.name, images: { small: pick.imageUrl } },
+      pick.setId, pick.price, vendor, btn
+    );
+  };
+  btn.onclick = doPurchase;
+  iosTap(btn, doPurchase);
+
+  tile.appendChild(preview);
+  tile.appendChild(btn);
   return tile;
 }
 
@@ -845,6 +1695,11 @@ async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
   }
   updateBalanceUI();
 
+  // v1.2.2e — lock background scroll for the full pack-opening sequence.
+  // Prevents Safari rubber-band / scroll-bleed behind the overlay.
+  // Balanced by unlockBodyScroll() after openPackOverlay resolves.
+  lockBodyScroll();
+
   const animationDone = openPackInteraction(setId);
   let dataReady = false;
   const loadDone = (async () => {
@@ -855,13 +1710,62 @@ async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
   if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
 
   engine.stepSimulation();
-  const newCards = augmentCards(engine.state.cards.slice(-10), setId);
+  const newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
   await openPackOverlay(newCards, engine.state.packsOpened);
+
+  // v1.2.2e — release the pack-opening scroll lock now that the overlay is gone.
+  unlockBodyScroll();
 
   const newDiscoveries = newCards.filter(c => !getOwnedEntry(setId, c.id)).length;
   newCards.forEach(addCard);
-  newCards.forEach(addCardToCollection);
+
+  // v1.5.0 — combined collection-add + per-copy quality generation. Each
+  // physical copy carries its own hidden quality fingerprint, so we must
+  // capture the copy number AT THE MOMENT OF ADD (not after all adds, which
+  // would lose the per-copy ordering for cards pulled multiple times).
+  newCards.forEach(c => {
+    addCardToCollection(c);
+    const tier = c.rarityType || c.rarity;
+    if (!isEligibleRarity(tier)) return;
+    try {
+      const copyN = getOwnedEntry(setId, c.id)?.count || 1;
+      ensureQualityForCopy(setId, c.id, copyN, tier, { sourceVendor: vendor });
+    } catch (err) { console.error('[quality] per-copy generation failed', err); }
+  });
   incrementPacksOpened();
+
+  // v1.4.0 — Prestige pull detection + atmospheric treatment + archive log.
+  // Eligibility: illustration/special/hyper OR wishlist hit OR daily-chase pull.
+  const prestigeHits = newCards.filter(c => {
+    const tier = c.rarityType || c.rarity;
+    return PRESTIGE_PULL_TIERS.has(tier) || isWishlisted(c.id) || isChaseCard(c.id);
+  });
+  const wishlistHits = newCards.filter(c => isWishlisted(c.id));
+
+  if (prestigeHits.length > 0) {
+    const top = prestigeHits[0];
+    showPrestigePullOverlay(top);
+    addPrestigeBonus(8 * prestigeHits.length, 'prestige_pull');
+    logActivity('prestige_pull', `${vendor.name} · pulled ${top.name}`);
+    haptic('heavy');
+  }
+  if (wishlistHits.length > 0) {
+    const wh = wishlistHits[0];
+    addPrestigeBonus(12 * wishlistHits.length, 'wishlist_hit');
+    logActivity('wishlist_hit', `Wishlist hit · ${wh.name}`);
+    showToast(`Wishlist hit · ${wh.name}`, 'rep');
+    recordArchiveEvent('wishlist_hit',
+      `Wishlist hit · pulled ${wh.name}`,
+      { meta: { setId, cardId: wh.id } });
+  }
+
+  // First-of-a-kind archive entries (deduped by key)
+  newCards.forEach(c => {
+    const tier = c.rarityType || c.rarity;
+    if (tier === 'illustrationRare')      maybeFirstArchive('first_illustration_rare', `First Illustration Rare · ${c.name}`);
+    if (tier === 'specialIllustrationRare')maybeFirstArchive('first_special_illustration', `First Special Illustration Rare · ${c.name}`);
+    if (tier === 'hyperRare')             maybeFirstArchive('first_hyper_rare', `First Hyper Rare · ${c.name}`);
+  });
 
   const hadRarePull = newCards.some(c =>
     RARITY_ORDER.indexOf(c.rarityType || c.rarity) >= 3);
@@ -879,6 +1783,12 @@ async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
     }
   });
   renderRecentHits();
+
+  // v1.2.1 — log pack activity for the World Activity feed
+  if (!skipSpend) {
+    const hit = newCards.find(c => RARITY_ORDER.indexOf(c.rarityType || c.rarity) >= 2);
+    logActivity('pack_opened', hit ? `${vendor.name} · pulled ${hit.name}` : `${vendor.name} · pack opened`);
+  }
 
   // Vendor favor — based on the favor basis the caller provided
   const favorEarned = Math.max(1, Math.floor((favorBasis || 0) / 5));
@@ -899,12 +1809,288 @@ async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
     if (!isSandboxMode()) showToast(`Set complete! Reputation +250`, 'rep');
     haptic('heavy');
     sfx.rareShimmer();
+    // v1.4.0 — archive a set completion milestone once per set
+    const setName = PACK_STORE[setId]?.name || setId;
+    recordArchiveEvent('set_completed',
+      `Set completed · ${setName}`,
+      { key: `set_complete:${setId}`, meta: { setId } });
   }
+
+  // Phase 10.4 — milestone sweep after collection grew
+  sweepMilestones();
+
+  // v1.4.0 — value history snapshot (one per day, lifetime peak tracked).
+  try { recordCollectionValueSnapshot(); }
+  catch (err) { console.error('[value-history] snapshot failed', err); }
 
   if (!skipSpend) {
     renderVendorHub();
     updateRankStrip();
   }
+}
+
+// ─── Phase 10.4 — Collector Requests UI + completion ─────────────────────────
+
+function renderRequestsPanel(vendor, requests, emergencyReq = null) {
+  const panel = document.createElement('div');
+  panel.className = 'vendor-requests';
+  const refreshLabel = getRequestRefreshLabel(vendor.id);
+
+  panel.innerHTML = `
+    <div class="vendor-requests-head">
+      <span class="vendor-requests-title">Collector Requests</span>
+      <span class="vendor-requests-rotate">${refreshLabel}</span>
+    </div>
+    <div class="vendor-requests-list"></div>
+  `;
+  const list = panel.querySelector('.vendor-requests-list');
+
+  // v1.3.0a — Emergency Request renders first, visually distinct.
+  if (emergencyReq) {
+    const prog       = getRequestProgress(emergencyReq);
+    const fulfilled  = prog.completed;
+    const required   = emergencyReq.quantity ?? prog.total ?? 1;
+    const canDo      = fulfilled >= required;
+    const tag        = emergencyReq.volatileTag;
+    const card = document.createElement('div');
+    card.className = `vendor-request vendor-request--emergency ${canDo ? 'is-ready' : ''} ${emergencyReq.isPrestige ? 'is-prestige' : ''}`;
+    card.innerHTML = `
+      <div class="vendor-request-row">
+        <span class="vendor-request-flavor">${emergencyReq.flavorLabel}</span>
+        <span class="vendor-request-tag tag-emergency">Emergency</span>
+        ${tag ? `<span class="vendor-request-tag tag-volatile">${tag}</span>` : ''}
+        ${emergencyReq.isPrestige ? '<span class="vendor-request-tag tag-prestige">Prestige</span>' : ''}
+      </div>
+      <div class="vendor-request-title">${emergencyReq.title}</div>
+      ${emergencyReq.note ? `<div class="vendor-request-note">${emergencyReq.note}</div>` : ''}
+      <div class="vendor-request-meta">
+        <span class="vendor-request-reward">$${emergencyReq.reward}</span>
+        <span class="vendor-request-favor">+${emergencyReq.favorReward} favor</span>
+        <span class="vendor-request-rotate">${getEmergencyRotationLabel(vendor.id)}</span>
+      </div>
+      <div class="vendor-request-foot">
+        <span class="vendor-request-progress">${fulfilled} / ${required} ready</span>
+        <button class="vendor-request-btn" ${canDo ? '' : 'disabled'}>
+          ${canDo ? 'Fulfill' : 'Need duplicates'}
+        </button>
+      </div>
+    `;
+    const btn = card.querySelector('.vendor-request-btn');
+    if (btn && canDo) {
+      const doFill = () => fulfillRequest(emergencyReq.id, vendor, btn);
+      btn.onclick = doFill;
+      iosTap(btn, doFill);
+    }
+    list.appendChild(card);
+  }
+
+  requests.forEach(req => {
+    const prog       = getRequestProgress(req);
+    const fulfilled  = prog.completed;
+    const required   = req.quantity ?? prog.total ?? 1;
+    const canDo      = fulfilled >= required;
+    const demandPct  = Math.round(req.demandModifier * 100);
+    const demandSign = demandPct > 0 ? '+' : '';
+    const isHot      = req.demandModifier >= 0.30;
+    const isCold     = req.demandModifier <= -0.05;
+
+    const card = document.createElement('div');
+    card.className = `vendor-request ${canDo ? 'is-ready' : ''} ${isHot ? 'is-hot' : ''} ${isCold ? 'is-cold' : ''}`;
+    card.innerHTML = `
+      <div class="vendor-request-row">
+        <span class="vendor-request-flavor">${req.flavorLabel}</span>
+        ${isHot ? '<span class="vendor-request-tag tag-hot">High Demand</span>' : ''}
+        ${isCold ? '<span class="vendor-request-tag tag-cold">Soft Demand</span>' : ''}
+      </div>
+      <div class="vendor-request-title">${req.title}</div>
+      <div class="vendor-request-meta">
+        <span class="vendor-request-reward">$${req.reward}</span>
+        <span class="vendor-request-favor">+${req.favorReward} favor</span>
+        <span class="vendor-request-demand">${demandSign}${demandPct}% demand</span>
+      </div>
+      <div class="vendor-request-foot">
+        <span class="vendor-request-progress">${fulfilled} / ${required} ready</span>
+        <button class="vendor-request-btn" ${canDo ? '' : 'disabled'}>
+          ${canDo ? 'Fulfill' : 'Need duplicates'}
+        </button>
+      </div>
+    `;
+    const btn = card.querySelector('.vendor-request-btn');
+    if (btn && canDo) {
+      btn.onclick = () => fulfillRequest(req.id, vendor, btn);
+    }
+    list.appendChild(card);
+  });
+
+  return panel;
+}
+
+function fulfillRequest(requestId, vendor, btn) {
+  // Re-validate atomically — collection may have changed since render
+  if (btn) { btn.disabled = true; btn.textContent = 'Working…'; }
+
+  // v1.3.0a — emergency request ids are prefixed with 'emerg_'; route to the
+  // emergency-request completion path so we hit the right storage namespace.
+  const isEmergency = typeof requestId === 'string' && requestId.startsWith('emerg_');
+  const result = isEmergency
+    ? completeEmergencyRequest(requestId)
+    : completeRequest(requestId);
+  if (!result.ok) {
+    if (btn) {
+      btn.textContent = result.reason === 'insufficient' ? 'Not enough' : 'Unavailable';
+      setTimeout(() => renderVendorHub(), 1200);
+    }
+    return;
+  }
+
+  addBalance(result.reward);
+  addFavor(vendor.id, result.favorReward);
+  haptic('medium');
+  sfx.purchase();
+  // v1.2.0 — stat tracking + distress
+  incrementRequestsCompleted();
+  addLifetimeRevenue(result.reward);
+  checkDistressTransition();
+  updateBalanceUI();
+  showToast(`Request fulfilled · +$${result.reward} · ${vendor.name} Favor +${result.favorReward}`, 'sell');
+  logActivity('request_fulfilled', `${vendor.name} · request +$${result.reward}`);
+
+  sweepMilestones();
+
+  renderVendorHub();
+  updateRankStrip();
+}
+
+// ─── Phase 10.4 — Milestone sweep + celebratory toast ────────────────────────
+
+function sweepMilestones() {
+  try {
+    const claimed = autoClaimReadyMilestones();
+    if (claimed.length === 0) return;
+    let totalCash = 0;
+    let totalRep  = 0;
+    for (const m of claimed) {
+      totalCash += m.rewardCash || 0;
+      totalRep  += m.rewardRep  || 0;
+    }
+    if (totalCash > 0) { addBalance(totalCash); checkDistressTransition(); }
+    if (totalRep  > 0) addReputation(totalRep);
+
+    // v1.4.0 — diversified rewards: process favor / prestige / discount / archive
+    for (const m of claimed) {
+      if (m.rewardFavor && m.rewardFavor.vendorId && m.rewardFavor.amount) {
+        try { addFavor(m.rewardFavor.vendorId, m.rewardFavor.amount); } catch {}
+      }
+      if (m.rewardPrestige) {
+        try { addPrestigeBonus(m.rewardPrestige, `milestone:${m.id}`); } catch {}
+      }
+      if (m.rewardDiscount && m.rewardDiscount.vendorId && m.rewardDiscount.pct) {
+        const dur = m.rewardDiscount.durationMs || 6 * 60 * 60 * 1000;
+        try { applyTempVendorDiscount(m.rewardDiscount.vendorId, m.rewardDiscount.pct, dur); } catch {}
+      }
+      if (m.rewardArchive) {
+        try {
+          recordArchiveEvent('milestone_major', m.rewardArchive,
+            { key: `milestone:${m.id}` });
+        } catch {}
+      }
+    }
+
+    updateBalanceUI();
+    claimed.forEach((m, i) => {
+      setTimeout(() => {
+        const parts = [];
+        if (m.rewardCash) parts.push(`+$${m.rewardCash}`);
+        if (m.rewardRep)  parts.push(`+${m.rewardRep} rep`);
+        if (m.rewardFavor && m.rewardFavor.amount) {
+          const vname = VENDOR_DISPLAY[m.rewardFavor.vendorId] || m.rewardFavor.vendorId;
+          parts.push(`+${m.rewardFavor.amount} ${vname} favor`);
+        }
+        if (m.rewardPrestige) parts.push(`+${m.rewardPrestige} prestige`);
+        if (m.rewardDiscount) {
+          const vname = VENDOR_DISPLAY[m.rewardDiscount.vendorId] || m.rewardDiscount.vendorId;
+          parts.push(`${vname} -${Math.round(m.rewardDiscount.pct * 100)}% (temp)`);
+        }
+        if (m.rewardNote) parts.push(m.rewardNote);
+        const suffix = parts.length ? ` · ${parts.join(' · ')}` : '';
+        showToast(`Milestone: ${m.title}${suffix}`, 'rep');
+        haptic('medium');
+        logActivity('milestone', `Milestone · ${m.title}`);
+      }, 300 + i * 700);
+    });
+  } catch (err) {
+    console.error('[milestones] sweep failed', err);
+  }
+}
+
+// ─── v1.4.0 — Prestige Pull overlay + archive helpers ────────────────────────
+
+/**
+ * Subtle, restrained "prestige pull" overlay shown briefly after a major hit.
+ * Lives over the existing pack overlay window with a soft darkening + a
+ * single line of atmospheric collector text. Auto-dismisses after ~2s.
+ *
+ * Reduced-motion users get a fade-only variant.
+ */
+function showPrestigePullOverlay(card) {
+  try {
+    const wrap = document.createElement('div');
+    wrap.className = 'prestige-pull-overlay';
+    const line = PRESTIGE_PULL_LINES[Date.now() % PRESTIGE_PULL_LINES.length];
+    wrap.innerHTML = `
+      <div class="prestige-pull-frame">
+        <div class="prestige-pull-eyebrow">Notable Acquisition</div>
+        <div class="prestige-pull-card-name">${card?.name || 'Card'}</div>
+        <div class="prestige-pull-line">${line}</div>
+      </div>
+    `;
+    document.body.appendChild(wrap);
+    requestAnimationFrame(() => wrap.classList.add('is-visible'));
+    setTimeout(() => {
+      wrap.classList.remove('is-visible');
+      setTimeout(() => wrap.remove(), 320);
+    }, 2000);
+  } catch (err) {
+    console.error('[prestige-pull] overlay failed', err);
+  }
+}
+
+/** Record an archive entry only if the dedup key hasn't been logged. */
+function maybeFirstArchive(key, label) {
+  try {
+    if (hasArchiveKey(key)) return;
+    recordArchiveEvent('prestige_pull', label, { key });
+  } catch (err) {
+    console.error('[archive] first-of-a-kind failed', err);
+  }
+}
+
+/**
+ * Compute the player's current collection value and persist a daily
+ * snapshot. Called from runPackOpening, buyChaseCard, and post-sell.
+ * Lifetime-peak transitions are recorded as archive events.
+ */
+function recordCollectionValueSnapshot() {
+  const collection = getCollection();
+  const allValues  = getAllMarketValues();
+  let totalValue = 0;
+  for (const [setId, cards] of Object.entries(collection)) {
+    const cached = getCachedSetCards(setId) || [];
+    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    for (const cardId of Object.keys(cards)) {
+      const apiCard = byId[cardId];
+      const tier    = apiCard ? mapPokemonRarity(apiCard.rarity) : 'common';
+      const val     = allValues[cardId] ?? getMarketValue(cardId, tier);
+      totalValue   += val;
+    }
+  }
+  const summary = recordValueSnapshot(totalValue);
+  // Lifetime peak — archive once per peak (key includes rounded value to dedupe)
+  if (summary.today === summary.peak && summary.today > 0) {
+    const key = `value_peak:${Math.floor(summary.peak / 50) * 50}`;
+    try { recordArchiveEvent('value_peak', `New collection-value peak · $${summary.peak.toFixed(2)}`, { key }); } catch {}
+  }
+  return summary;
 }
 
 async function buyChaseCard(apiCard, setId, price, vendor, btn) {
@@ -913,11 +2099,13 @@ async function buyChaseCard(apiCard, setId, price, vendor, btn) {
     setTimeout(() => { btn.textContent = 'Acquire'; }, 2000);
     return;
   }
+  // v1.2.0 — track broker purchase + distress transition after spending
+  incrementBrokerPurchases();
+  checkDistressTransition();
   updateBalanceUI();
   btn.disabled = true;
   btn.textContent = 'Acquired ✓';
 
-  // Add directly to collection
   addCardToCollection({ setId, id: apiCard.id });
   removeBrokerPick(apiCard.id);
   addFavor(vendor.id, Math.floor(price / 50));
@@ -932,6 +2120,22 @@ async function buyChaseCard(apiCard, setId, price, vendor, btn) {
   });
 
   showToast(`Acquired ${apiCard.name}`, 'rep');
+  logActivity('broker_purchase', `Broker · acquired ${apiCard.name}`);
+
+  // v1.4.0 — broker chase acquisition is a prestige moment.
+  // Archive once per card; grant a small prestige bonus; snapshot value.
+  try {
+    if (apiCard?.id) {
+      recordArchiveEvent('broker_acquisition',
+        `Broker acquisition · ${apiCard.name || 'chase card'} · $${Number(price).toFixed(0)}`,
+        { key: `broker_buy:${setId}:${apiCard.id}` });
+      addPrestigeBonus(15, 'broker_acquisition');
+      recordCollectionValueSnapshot();
+    }
+  } catch (err) {
+    console.error('[broker] v1.4.0 archive/prestige hook failed', err);
+  }
+
   updateRankStrip();
   renderRecentHits();
   setTimeout(() => renderVendorHub(), 600);
@@ -942,7 +2146,16 @@ function updateBalanceUI() {
   if (el) el.textContent = '$' + getBalance().toFixed(2);
 }
 
-// ─── Phase 10.1.7 — iOS touch-bypass utility ─────��───────────────────────────
+// v1.2.1 — human-readable relative timestamp for the activity feed
+function formatRelativeTime(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60_000)     return 'just now';
+  if (diff < 3_600_000)  return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
+// ─── Phase 10.1.7 — iOS touch-bypass utility ─────────────────────────────────
 //
 // On iOS Safari, click events sometimes fail to fire even when :active fires.
 // The browser's gesture recogniser can classify a touch as a potential scroll
@@ -998,8 +2211,30 @@ document.getElementById('view-collection-btn').onclick = openCollectionScreen;
 iosTap(document.getElementById('view-collection-btn'), openCollectionScreen);
 document.getElementById('collection-back-btn').onclick  = closeCollectionScreen;
 iosTap(document.getElementById('collection-back-btn'), closeCollectionScreen);
-document.getElementById('wishlist-btn').onclick         = openWishlistScreen;
-iosTap(document.getElementById('wishlist-btn'), openWishlistScreen);
+// v1.6.0 — Wishlist + Favorites buttons removed from header. Both are now
+// reachable through the .collection-filters pill row (wired in
+// renderCollectionScreen below). Guards left in place so legacy DOM with the
+// old buttons still wires up cleanly.
+const _wlLegacyBtn = document.getElementById('wishlist-btn');
+if (_wlLegacyBtn) {
+  _wlLegacyBtn.onclick = openWishlistScreen;
+  iosTap(_wlLegacyBtn, openWishlistScreen);
+}
+const _openFavoritesScreen = () => openFavoritesScreen({
+  openCardDetail: (setId, cardId) => {
+    const cached = getCachedSetCards(setId) || [];
+    const apiCard = cached.find(c => c.id === cardId);
+    if (!apiCard) return;
+    const ownedEntry = getCollection()[setId]?.[cardId] ?? null;
+    openCardDetail(apiCard, ownedEntry, setId);
+  },
+});
+const _favLegacyBtn = document.getElementById('favorites-btn');
+if (_favLegacyBtn) {
+  _favLegacyBtn.onclick = _openFavoritesScreen;
+  iosTap(_favLegacyBtn, _openFavoritesScreen);
+}
+document.addEventListener('favorites-screen-closed', () => unlockBodyScroll());
 
 // Phase 10.3: TouchTrace gated by touchTrace sub-flag.
 if (isDebugMode() && isDiagFlag('touchTrace')) {
@@ -1041,6 +2276,12 @@ function renderCollectionScreen() {
   const collection = getCollection();
   const container  = document.getElementById('set-list');
   container.innerHTML = '';
+
+  // v1.6.0 — Filter pills (All · Favorites · Wishlist · Archived) below title.
+  renderCollectionFilters();
+
+  // v1.5.1 — AGS entry panel above the binder list.
+  renderCollectionAgsEntry();
 
   const setIds = Object.keys(collection);
   if (setIds.length === 0) {
@@ -1087,6 +2328,127 @@ function renderCollectionScreen() {
     if (cached && ownedCount >= cached.length && cached.length > 0) card.classList.add('set-complete');
     card.onclick = () => openBinderScreen(setId);
     container.appendChild(card);
+  });
+}
+
+// v1.5.1 — Compute lightweight AGS summary for entry panels (Collection + Stats).
+// Eligible = owned copies of Double Rare+ rarity that aren't currently locked
+// inside an active AGS submission. Tolerates any missing pieces.
+function computeAgsEntrySummary() {
+  let eligible = 0, archived = 0, highest = '—';
+  try {
+    const stats = getAgsStats();
+    archived = stats.archived ?? 0;
+    if (stats.highestSlab?.grade?.tier?.label) {
+      highest = stats.highestSlab.grade.tier.label;
+    } else if (stats.highestSlab?.grade?.label) {
+      highest = stats.highestSlab.grade.label;
+    }
+  } catch {}
+  try {
+    const collection = getCollection();
+    for (const [setId, cards] of Object.entries(collection)) {
+      const cached = getCachedSetCards(setId) || [];
+      const byId = Object.fromEntries(cached.map(c => [c.id, c]));
+      for (const [cardId, entry] of Object.entries(cards)) {
+        const apiCard = byId[cardId];
+        if (!apiCard) continue;
+        const tier = mapPokemonRarity(apiCard.rarity);
+        if (!isEligibleRarity(tier)) continue;
+        const locked = Number(lockedCopiesFor(setId, cardId)) || 0;
+        eligible += Math.max(0, (entry.count || 0) - locked);
+      }
+    }
+  } catch {}
+  return { eligible, archived, highest };
+}
+
+// v1.6.0 — Collection filter pills.
+//   All       — re-renders set list (default)
+//   Favorites — opens dedicated Favorites showcase screen
+//   Wishlist  — opens existing wishlist screen
+//   Archived  — opens AGS screen on Registry tab
+// Pills aren't a stateful "filter" of the set list — they're navigation pivots
+// that stay highlighted to ALL while the user is on the Collection screen.
+function renderCollectionFilters() {
+  const host = document.getElementById('collection-filters');
+  if (!host) return;
+  host.innerHTML = `
+    <button class="rb-pill collection-filter-pill is-active" data-filter="all"       type="button">All</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="favorites" type="button">★ Favorites</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="wishlist"  type="button">☆ Wishlist</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="archived"  type="button">⬢ Archived</button>
+  `;
+  host.querySelectorAll('.collection-filter-pill').forEach(pill => {
+    const f = pill.getAttribute('data-filter');
+    const handler = () => {
+      haptic('soft');
+      if (f === 'favorites')      { _openFavoritesScreen(); return; }
+      if (f === 'wishlist')       { openWishlistScreen();   return; }
+      if (f === 'archived')       { setAgsActiveTab('registry'); openAgsScreen(); return; }
+      // 'all' is a no-op pivot — user is already on the Collection screen
+    };
+    pill.addEventListener('click', handler);
+    iosTap(pill, handler);
+  });
+}
+
+// v1.5.1 — Collection page AGS entry panel.
+// Premium charcoal-and-gold panel placed above the set list. Tapping the
+// panel or its CTA opens the Archive Services screen.
+function renderCollectionAgsEntry() {
+  const host = document.getElementById('collection-ags-entry');
+  if (!host) return;
+
+  const summary = computeAgsEntrySummary();
+  const { eligible, archived, highest } = summary;
+
+  host.innerHTML = `
+    <div class="ags-entry-panel" id="ags-entry-panel" role="button" tabindex="0"
+         aria-label="Open Archive Grading Services">
+      <div class="ags-entry-panel__sweep" aria-hidden="true"></div>
+      <div class="ags-entry-panel__top">
+        <div class="ags-entry-panel__brand">
+          <div class="ags-entry-panel__mark">AGS</div>
+          <div class="ags-entry-panel__brand-text">
+            <div class="ags-entry-panel__title">Archive Grading Services</div>
+            <div class="ags-entry-panel__tagline">Preservation · Authentication · Prestige</div>
+          </div>
+        </div>
+        <div class="ags-entry-panel__stats">
+          <div class="ags-entry-panel__stat">
+            <div class="ags-entry-panel__stat-num">${eligible}</div>
+            <div class="ags-entry-panel__stat-label">Eligible</div>
+          </div>
+          <div class="ags-entry-panel__stat">
+            <div class="ags-entry-panel__stat-num">${archived}</div>
+            <div class="ags-entry-panel__stat-label">Archived</div>
+          </div>
+          <div class="ags-entry-panel__stat">
+            <div class="ags-entry-panel__stat-num">${highest}</div>
+            <div class="ags-entry-panel__stat-label">Top Grade</div>
+          </div>
+        </div>
+      </div>
+      <button class="ags-entry-panel__cta" id="ags-entry-cta" type="button">
+        Enter Archive Services
+      </button>
+    </div>
+  `;
+
+  const panel = host.querySelector('#ags-entry-panel');
+  const cta   = host.querySelector('#ags-entry-cta');
+  const open  = (e) => {
+    e?.stopPropagation?.();
+    haptic('soft');
+    openAgsScreen();
+  };
+  panel.addEventListener('click', open);
+  iosTap(panel, () => openAgsScreen());
+  cta.addEventListener('click', open);
+  iosTap(cta, () => openAgsScreen());
+  panel.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAgsScreen(); }
   });
 }
 
@@ -1138,6 +2500,12 @@ async function openBinderScreen(setId, highlightCardId) {
   const packInfo = PACK_STORE[setId];
   document.getElementById('binder-set-name').textContent = packInfo?.name || setId;
 
+  // v1.2.2d/e — save scroll position and record whether collection was already
+  // visible so closeBinderScreen can balance the lock count correctly.
+  const _collEl = document.getElementById('collection-screen');
+  _binderCameFromCollection = !!_collEl && !_collEl.classList.contains('hidden');
+  if (_collEl) _collectionScrollTop = _collEl.scrollTop;
+
   hideScreen(document.getElementById('collection-screen'));
   hideScreen(document.getElementById('stats-screen'));
   showScreen(document.getElementById('binder-screen'));
@@ -1151,9 +2519,28 @@ async function openBinderScreen(setId, highlightCardId) {
 }
 
 function closeBinderScreen() {
-  unlockBodyScroll();
+  // v1.2.2d — Root-cause fix for blank collection on return.
+  // When the binder is opened from the Broker (not from openCollectionScreen),
+  // collection-screen was never rendered — #set-list is empty.
+  // Always re-render before showing: it's a pure localStorage read + DOM
+  // rebuild so it's fast and safe regardless of how the binder was entered.
   hideScreen(document.getElementById('binder-screen'));
-  showScreen(document.getElementById('collection-screen'));
+  const collScreen = document.getElementById('collection-screen');
+  try { renderCollectionScreen(); } catch (err) {
+    console.error('[Nav] closeBinderScreen — renderCollectionScreen threw:', err);
+  }
+  // v1.2.2e — reference-count balance:
+  // openBinderScreen() always adds one lock (+1). Two cases:
+  //   a) Came from collection (depth was ≥1): remove binder's extra lock so
+  //      collection's own lock remains at depth=1.
+  //   b) Came from Hub/Broker (depth was 0, only binder's lock): repurpose
+  //      that lock as collection's lock — no call needed.
+  if (_binderCameFromCollection) unlockBodyScroll();
+  showScreen(collScreen);
+  // Restore the scroll position saved when the binder was opened
+  if (_collectionScrollTop > 0) {
+    requestAnimationFrame(() => { collScreen.scrollTop = _collectionScrollTop; });
+  }
 }
 
 function renderBinderPage() {
@@ -1206,7 +2593,7 @@ function renderBinderPage() {
       if (ownedEntry.count > 1) {
         const badge = document.createElement('div');
         badge.className   = 'duplicate-badge';
-        badge.textContent = '×' + ownedEntry.count;
+        badge.textContent = 'DP ×' + ownedEntry.count;
         slot.appendChild(badge);
       }
 
@@ -1216,6 +2603,28 @@ function renderBinderPage() {
         lock.className   = 'lock-corner';
         lock.textContent = '🔒';
         slot.appendChild(lock);
+      }
+
+      // v1.2.1 — reverse holo variant indicator
+      if (ownedEntry.reverseHolo > 0) {
+        const rhBadge = document.createElement('div');
+        rhBadge.className   = 'rh-badge';
+        rhBadge.textContent = 'RH';
+        slot.appendChild(rhBadge);
+      }
+
+      // v1.6.0 — graded badge + acrylic-edge effect when a slab exists for
+      // this card. Tier class drives the color of both the medallion and the
+      // ::before slab-edge inset (defined in style.css).
+      const _topSlab = getHighestSlabForCard(_binderSetId, apiCard.id);
+      if (_topSlab) {
+        const tierClass = (_topSlab.grade?.tier?.id || 'na').toLowerCase().replace(/_/g, '-');
+        slot.classList.add('has-archived', `archived-tier-${tierClass}`);
+        const medallion = document.createElement('div');
+        medallion.className   = `binder-grade-badge binder-grade-badge--${tierClass}`;
+        medallion.textContent = _topSlab.grade?.tier?.label || 'AGS';
+        medallion.title       = `Archived · ${_topSlab.grade?.label || ''}`;
+        slot.appendChild(medallion);
       }
 
       slot.onclick = () => openCardDetail(apiCard, ownedEntry, _binderSetId);
@@ -1253,10 +2662,12 @@ function renderBinderPage() {
     setTimeout(() => {
       const target = grid.querySelector(`[data-card-id="${id}"]`);
       if (target) {
+        // v1.2.2 — scroll card into view then pulse-highlight it
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         target.classList.add('slot-highlight');
-        setTimeout(() => target.classList.remove('slot-highlight'), 1400);
+        setTimeout(() => target.classList.remove('slot-highlight'), 1600);
       }
-    }, 60);
+    }, 80);
   }
 }
 
@@ -1307,6 +2718,7 @@ function openCardDetail(apiCard, ownedEntry, setId) {
   const pullRate   = PULL_RATES[rarityTier]    || '~1 in 1 pack';
   const rarityLbl  = RARITY_LABELS[rarityTier] || apiCard.rarity;
   const wishlisted = isWishlisted(apiCard.id);
+  const favorited  = isFavorited(apiCard.id);
 
   const setName = apiCard.set?.name  || '';
   const cardNum = apiCard.number     ? `#${apiCard.number}` : '';
@@ -1332,7 +2744,47 @@ function openCardDetail(apiCard, ownedEntry, setId) {
   }
 
   const ownedLine     = isOwned ? `<div class="cdp-owned">Owned: ×${ownedEntry.count} ${(ownedEntry.locked !== false && ownedEntry.count === 1) ? '🔒' : ''}</div>` : '';
+  const rhCount       = isOwned ? (ownedEntry.reverseHolo || 0) : 0;
+  const rhLine        = rhCount > 0 ? `<div class="cdp-rh-owned">Reverse Holo ×${rhCount}</div>` : '';
   const previewNotice = !isOwned ? `<div class="cdp-not-owned">Not in your collection yet</div>` : '';
+
+  // v1.6.0 — "Archived copy available" section (mini archive preview).
+  // Surfaced only when at least one slab exists for this card. Tap the row
+  // or the CTA to open the full slab viewer for the highest-grade copy.
+  let archiveSectionHTML = '';
+  let _archiveTopSlab = null;
+  if (resolvedSetId) {
+    const _slabsForCard = getSlabsForCard(resolvedSetId, apiCard.id);
+    if (_slabsForCard.length > 0) {
+      _archiveTopSlab = _slabsForCard.reduce((best, s) =>
+        (s.grade?.tier?.rank || 0) > (best.grade?.tier?.rank || 0) ? s : best,
+        _slabsForCard[0]);
+      const _delta = gradedDeltaForSlab(_archiveTopSlab, value);
+      const _tierClass = (_archiveTopSlab.grade?.tier?.id || 'na').toLowerCase().replace(/_/g, '-');
+      const _gradeLbl  = _archiveTopSlab.grade?.tier?.label || 'Graded';
+      const _serial    = _archiveTopSlab.serial || '—';
+      const _moreCount = _slabsForCard.length - 1;
+      archiveSectionHTML = `
+        <div class="cdp-archive-section cdp-archive-section--${_tierClass}" id="cdp-archive-section">
+          <div class="cdp-archive-section__head">
+            <span class="cdp-archive-section__badge">AGS</span>
+            <span class="cdp-archive-section__label">Archived copy available</span>
+          </div>
+          <div class="cdp-archive-section__body">
+            <div class="cdp-archive-section__grade">${_gradeLbl}</div>
+            <div class="cdp-archive-section__serial">${_serial}</div>
+            <div class="cdp-archive-section__value">
+              <span class="cdp-archive-section__val-raw">$${_delta.raw.toFixed(2)} raw</span>
+              <span class="cdp-archive-section__val-arrow">→</span>
+              <span class="cdp-archive-section__val-graded">$${_delta.graded.toFixed(2)}</span>
+            </div>
+            ${_moreCount > 0 ? `<div class="cdp-archive-section__more">+${_moreCount} more in registry</div>` : ''}
+          </div>
+          <button class="cdp-archive-section__cta" id="cdp-view-slab" type="button">View Archive Slab →</button>
+        </div>
+      `;
+    }
+  }
   const viewInBinderBtn = (isOwned && resolvedSetId)
     ? `<button class="cdp-view-binder-btn" id="cdp-view-binder">📖 View In Binder</button>` : '';
   const sellBtn = (isOwned && resolvedSetId)
@@ -1345,11 +2797,21 @@ function openCardDetail(apiCard, ownedEntry, setId) {
         ${!isOwned ? `<div class="cdp-preview-badge">${rarityLbl}</div>` : ''}
       </div>
       <div class="card-detail-info">
-        <div class="cdp-name">${apiCard.name}</div>
+        <div class="cdp-header-row">
+          <div class="cdp-name">${apiCard.name}</div>
+          ${isOwned ? `
+            <button class="cdp-fav-btn ${favorited ? 'is-favorited' : ''}"
+                    id="cdp-fav-btn" type="button"
+                    aria-label="${favorited ? 'Remove from favorites' : 'Add to favorites'}"
+                    aria-pressed="${favorited ? 'true' : 'false'}">
+              ${favorited ? '♥' : '♡'}
+            </button>` : ''}
+        </div>
         <div class="cdp-rarity cdp-rarity-${rarityTier}">${rarityLbl}</div>
         ${setLine  ? `<div class="cdp-set">${setLine}</div>` : ''}
         ${chainHTML}
         <div class="cdp-divider"></div>
+        ${archiveSectionHTML}
         <div class="cdp-row"><span>Est. Value</span><span class="cdp-value">$${value.toFixed(2)}</span></div>
         <div class="cdp-row"><span>Pull Rate</span><span>${pullRate}</span></div>
         ${types  ? `<div class="cdp-row"><span>Type</span><span>${types}</span></div>`  : ''}
@@ -1357,6 +2819,7 @@ function openCardDetail(apiCard, ownedEntry, setId) {
         ${stage  ? `<div class="cdp-row"><span>Stage</span><span>${stage}</span></div>` : ''}
         ${artist ? `<div class="cdp-row"><span>Artist</span><span>${artist}</span></div>` : ''}
         ${ownedLine}
+        ${rhLine}
         ${previewNotice}
         ${flavor ? `<div class="cdp-flavor">${flavor}</div>` : ''}
         <button class="cdp-wishlist-btn ${wishlisted ? 'active' : ''}" id="cdp-wishlist-btn">
@@ -1379,6 +2842,25 @@ function openCardDetail(apiCard, ownedEntry, setId) {
     btn.textContent = nowListed ? '★ On Wishlist' : '☆ Add to Wishlist';
     if (_binderSetId) renderBinderPage();
   };
+
+  // v1.5.1 — Favorite toggle (owned cards only).
+  const favBtn = modal.querySelector('#cdp-fav-btn');
+  if (favBtn) {
+    favBtn.onclick = e => {
+      e.stopPropagation();
+      haptic('soft');
+      const nowFav = toggleFavorite(apiCard.id);
+      favBtn.classList.toggle('is-favorited', nowFav);
+      favBtn.setAttribute('aria-pressed', nowFav ? 'true' : 'false');
+      favBtn.setAttribute('aria-label', nowFav ? 'Remove from favorites' : 'Add to favorites');
+      favBtn.textContent = nowFav ? '♥' : '♡';
+      logActivity(
+        nowFav ? 'favorited' : 'unfavorited',
+        nowFav ? `Added ${apiCard.name} to Favorites` : `Removed ${apiCard.name} from Favorites`,
+      );
+      try { refreshFavoritesScreen(); } catch {}
+    };
+  }
 
   modal.querySelectorAll('.evo-node:not(.evo-node--current)').forEach(node => {
     node.style.cursor = 'pointer';
@@ -1415,6 +2897,16 @@ function openCardDetail(apiCard, ownedEntry, setId) {
     };
   }
 
+  // v1.6.0 — open the slab viewer for the highest-grade archived copy.
+  const viewSlabBtn = modal.querySelector('#cdp-view-slab');
+  if (viewSlabBtn && _archiveTopSlab) {
+    viewSlabBtn.onclick = e => {
+      e.stopPropagation();
+      hideScreen(modal);
+      setTimeout(() => openSlabViewer(_archiveTopSlab, apiCard, { rawValue: value }), 220);
+    };
+  }
+
   const sellBtnEl = modal.querySelector('#cdp-sell');
   if (sellBtnEl) {
     sellBtnEl.onclick = e => {
@@ -1441,6 +2933,7 @@ function openSellModal(apiCard, ownedEntry, setId) {
   const rarityTier = mapPokemonRarity(apiCard.rarity) || 'common';
   const isLastCopy = ownedEntry.count === 1;
   const gated      = isSellGated(setId, apiCard.id, ownedEntry.count);
+  const isFav      = isFavorited(apiCard.id);
 
   // Build vendor cards (skip Broker — Broker buys nothing)
   const vendorRows = ['pokemart','retroVault','nightMarket'].map(vid => {
@@ -1474,6 +2967,14 @@ function openSellModal(apiCard, ownedEntry, setId) {
           <div class="sell-warning-text">
             <div class="sell-warning-title">Last copy locked</div>
             <div>You're about to sell your only copy of this card.</div>
+          </div>
+        </div>` : ''}
+      ${isFav ? `
+        <div class="sell-warning sell-warning--fav">
+          <div class="sell-warning-icon">♥</div>
+          <div class="sell-warning-text">
+            <div class="sell-warning-title">Part of your Favorites Collection</div>
+            <div>This card is in your personal showcase. Selling will remove it from your favorites as well.</div>
           </div>
         </div>` : ''}
       <div class="sell-vendor-list">${vendorRows}</div>
@@ -1511,13 +3012,23 @@ function openSellModal(apiCard, ownedEntry, setId) {
       if (!selectedVendor) return;
       haptic('medium');
       if (gated) unlockCard(setId, apiCard.id);
+      // v1.5.1 — sold favorites no longer represent owned copies.
+      if (isFav && ownedEntry.count <= 1) {
+        try { toggleFavorite(apiCard.id); } catch {}
+      }
+      // v1.2.0 — check if it was a duplicate before the sell removes it
+      const preSellEntry = getCollection()[setId]?.[apiCard.id];
+      const wasDuplicate = preSellEntry && preSellEntry.count > 1;
       const result = sellCard(setId, apiCard.id, rarityTier, selectedVendor, { force: true });
+      // stat tracking
+      addLifetimeRevenue(result.payout);
+      if (wasDuplicate) incrementDuplicatesSold();
+      checkDistressTransition();
       updateBalanceUI();
       const vName = VENDORS[selectedVendor].name;
       showToast(`Sold for $${result.payout.toFixed(2)} · ${vName} Favor +${result.favorReward}`, 'sell');
       hideScreen(modal);
       unlockBodyScroll();
-      // Refresh whatever's behind
       if (_binderSetId) renderBinderPage();
       renderVendorHub();
     };
@@ -1543,6 +3054,15 @@ iosTap(document.getElementById('market-btn'), () => {
   openMarketScreen();
 });
 document.addEventListener('market-screen-closed', () => unlockBodyScroll());
+
+// v1.5.0 — AGS · Archive Services screen wiring. AGS_SCREEN_HOOKS and
+// openAgsScreen are declared in the hoisting zone above renderVendorHub
+// to satisfy the iOS WebKit TDZ rule.
+// v1.5.1 — AGS top-bar button removed. Entry points are now the Collection
+// page panel (#collection-ags-entry) and the Stats screen (#stats-ags-entry).
+// `openAgsScreen` is still exposed via AGS_SCREEN_HOOKS / module scope so the
+// new entry panels and any deferred deep links can call it.
+document.addEventListener('archive-services-closed', () => unlockBodyScroll());
 
 function openStatsScreen() {
   const el = document.getElementById('stats-screen');
@@ -1614,11 +3134,115 @@ function renderStatsScreen() {
 
   const container = document.getElementById('stats-content');
   container.innerHTML = `
-    <div class="stats-rank-card">
-      <div class="stats-rank-label">Collector Rank</div>
+    ${(() => {
+      // v1.5.1 — Stats AGS entry link.
+      try {
+        const s = computeAgsEntrySummary();
+        return `
+          <div class="stats-ags-card" id="stats-ags-entry" role="button" tabindex="0"
+               aria-label="Open Archive Grading Services">
+            <div class="stats-ags-card__brand">
+              <div class="stats-ags-card__mark">AGS</div>
+              <div class="stats-ags-card__text">
+                <div class="stats-ags-card__title">Archive Grading Services</div>
+                <div class="stats-ags-card__tagline">Preservation · Authentication · Prestige</div>
+              </div>
+            </div>
+            <div class="stats-ags-card__stats">
+              <div class="stats-ags-card__stat"><span>${s.archived}</span><em>Archived</em></div>
+              <div class="stats-ags-card__stat"><span>${s.highest}</span><em>Top Grade</em></div>
+            </div>
+          </div>
+        `;
+      } catch { return ''; }
+    })()}
+
+    <div class="stats-rank-card stats-rank-card--clickable" id="stats-rank-card-link" role="button" aria-label="Open Collector Archive" style="cursor:pointer">
+      <div class="stats-rank-label">Collector Rank <span class="stats-rank-tap-hint">· Tap to view archive</span></div>
       <div class="stats-rank-name">${rank.name}</div>
       <div class="stats-rank-points">${rank.current} reputation${rank.nextMin ? ` · next at ${rank.nextMin}` : ''}</div>
     </div>
+
+    ${(() => {
+      // v1.4.0 — Collection Prestige tier card
+      try {
+        const p = getPrestigeTier();
+        return `
+          <div class="stats-prestige-card">
+            <div class="stats-prestige-label">Collection Prestige</div>
+            <div class="stats-prestige-name">${p.name}</div>
+            <div class="stats-prestige-bar"><div class="stats-prestige-fill" style="width:${p.progressPct.toFixed(0)}%"></div></div>
+            <div class="stats-prestige-meta">${p.score} pts${p.nextMin ? ` · next tier at ${p.nextMin}` : ' · top tier'}</div>
+          </div>
+        `;
+      } catch { return ''; }
+    })()}
+
+    ${(() => {
+      // v1.4.0 — Collection Value summary + sparkline
+      try {
+        // Snapshot current value so the summary always reflects "now"
+        recordCollectionValueSnapshot();
+        const v = getValueSummary();
+        const sign = v.delta > 0 ? '+' : (v.delta < 0 ? '' : '');
+        const dColor = v.delta > 0 ? 'is-up' : (v.delta < 0 ? 'is-down' : '');
+        // Inline sparkline (last up-to-30 points)
+        const pts = v.points.slice(-30);
+        let sparkSvg = '';
+        if (pts.length >= 2) {
+          const max = Math.max(...pts.map(p => p.value), 1);
+          const min = Math.min(...pts.map(p => p.value));
+          const span = Math.max(1, max - min);
+          const w = 220, h = 36;
+          const stepX = w / (pts.length - 1);
+          const path = pts.map((p, i) => {
+            const x = i * stepX;
+            const y = h - ((p.value - min) / span) * h;
+            return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+          }).join(' ');
+          sparkSvg = `<svg class="stats-value-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${path}" /></svg>`;
+        } else {
+          sparkSvg = `<div class="stats-value-spark stats-value-spark--empty">More history coming…</div>`;
+        }
+        return `
+          <div class="stats-value-card">
+            <div class="stats-value-head">
+              <div class="stats-value-label">Collection Value</div>
+              <div class="stats-value-meta ${dColor}">${sign}$${Math.abs(v.delta).toFixed(2)} today · peak $${v.peak.toFixed(2)}</div>
+            </div>
+            <div class="stats-value-current">$${v.today.toFixed(2)}</div>
+            ${sparkSvg}
+          </div>
+        `;
+      } catch { return ''; }
+    })()}
+
+    ${(() => {
+      // v1.4.0 — Archive History panel
+      try {
+        const entries = getArchiveEntries(6);
+        if (!entries.length) {
+          return `
+            <div class="stats-archive-card">
+              <div class="stats-archive-label">Archive History</div>
+              <div class="stats-archive-empty">Your collector log will fill in as you pull, complete sets, and weather the market.</div>
+            </div>
+          `;
+        }
+        const rows = entries.map(e => `
+          <div class="stats-archive-row">
+            <span class="stats-archive-day">Day ${e.day}</span>
+            <span class="stats-archive-text">${e.label}</span>
+          </div>
+        `).join('');
+        return `
+          <div class="stats-archive-card">
+            <div class="stats-archive-label">Archive History</div>
+            ${rows}
+          </div>
+        `;
+      } catch { return ''; }
+    })()}
 
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-value">${packsOpened}</div><div class="stat-label">Packs Opened</div></div>
@@ -1626,7 +3250,7 @@ function renderStatsScreen() {
       <div class="stat-card"><div class="stat-value">${avgCompletion.toFixed(1)}%</div><div class="stat-label">Avg. Completion</div></div>
       <div class="stat-card"><div class="stat-value">$${totalValue.toFixed(2)}</div><div class="stat-label">Collection Value</div></div>
       <div class="stat-card"><div class="stat-value">${secretRares}</div><div class="stat-label">Secret Rares</div></div>
-      <div class="stat-card"><div class="stat-value">${totalDupes}</div><div class="stat-label">Duplicates</div></div>
+      <div class="stat-card stat-card--clickable" id="stat-card-duplicates" role="button" aria-label="Open Duplicate Vault"><div class="stat-value">${totalDupes}</div><div class="stat-label">Duplicates · Tap to manage</div></div>
       <div class="stat-card"><div class="stat-value">${wishlistHits}</div><div class="stat-label">Wishlist Owned</div></div>
       <div class="stat-card"><div class="stat-value stat-value--small">${favSetName}</div><div class="stat-label">Most Collected</div></div>
     </div>
@@ -1650,6 +3274,30 @@ function renderStatsScreen() {
       <div class="stats-showcase-value">${RARITY_LABELS[RARITY_ORDER[rarestIdx]] || ''}</div>
     </div>` : ''}
   `;
+
+  const dupCard = container.querySelector('#stat-card-duplicates');
+  if (dupCard) {
+    dupCard.addEventListener('click', () => openDuplicateVault());
+    iosTap(dupCard, () => openDuplicateVault());
+  }
+
+  // v1.5.1 — Stats AGS entry tap → openAgsScreen.
+  const agsEntry = container.querySelector('#stats-ags-entry');
+  if (agsEntry) {
+    const _open = () => { haptic('soft'); openAgsScreen(); };
+    agsEntry.addEventListener('click', _open);
+    iosTap(agsEntry, _open);
+    agsEntry.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _open(); }
+    });
+  }
+
+  // v1.2.0 — rank card opens Collector Archive
+  const rankCard = container.querySelector('#stats-rank-card-link');
+  if (rankCard) {
+    rankCard.addEventListener('click', () => openCollectorArchive());
+    iosTap(rankCard, () => openCollectorArchive());
+  }
 
   if (mostValCard) container.querySelector('#showcase-most-val')?.addEventListener('click', () => {
     const ownedEntry = getCollection()[mostValCard.set?.id]?.[mostValCard.id] ?? null;

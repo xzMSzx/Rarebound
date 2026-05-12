@@ -1,0 +1,1047 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* ════════════════════════════════════════════════════════════
+   STAGE — pure cinematic black + faint radial bloom behind slab
+   ════════════════════════════════════════════════════════════ */
+.slab-stage {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #000;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 10px;
+  color: #f0ede4;
+  position: relative;
+  overflow: hidden;
+}
+.slab-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 50% at 50% 45%, rgba(220,232,255,0.045) 0%, rgba(0,0,0,0) 60%);
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ROOT SLAB — wraps the outer shell, holds drop-shadow physics
+   ════════════════════════════════════════════════════════════ */
+.ags-slab {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 1 / 1.72;
+  filter:
+    drop-shadow(0 30px 50px rgba(0,0,0,0.95))
+    drop-shadow(0 8px 20px rgba(0,0,0,0.55));
+}
+
+/* ════════════════════════════════════════════════════════════
+   OUTER ACRYLIC SHELL — visible thick bevel frame around the slab
+   ════════════════════════════════════════════════════════════ */
+.slab-outer-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  padding: 16px;
+  border: 2.5px solid transparent;
+
+  /* dual background: faint clear body + BRIGHT chrome bevel via border-image */
+  background:
+    /* faint clear acrylic body */
+    linear-gradient(180deg,
+      rgba(255,255,255,0.055) 0%,
+      rgba(255,255,255,0.018) 8%,
+      rgba(255,255,255,0.010) 50%,
+      rgba(255,255,255,0.020) 92%,
+      rgba(255,255,255,0.045) 100%) padding-box,
+    /* outer rim — pronounced chrome bevel with strong highlights */
+    linear-gradient(135deg,
+      rgba(255,255,255,0.95) 0%,
+      rgba(255,255,255,0.55) 12%,
+      rgba(180,185,195,0.30) 26%,
+      rgba(120,125,135,0.22) 50%,
+      rgba(180,185,195,0.30) 74%,
+      rgba(255,255,255,0.55) 88%,
+      rgba(255,255,255,0.92) 100%) border-box;
+
+  box-shadow:
+    /* secondary inner border per spec */
+    inset 0 0 0 1px rgba(255,255,255,0.10),
+    /* very bright top-edge highlight */
+    inset 0 2px 0 rgba(255,255,255,0.85),
+    inset 0 4px 8px -3px rgba(255,255,255,0.55),
+    /* side bevel highlights — much stronger */
+    inset 2px 0 1px -1px rgba(255,255,255,0.45),
+    inset -2px 0 1px -1px rgba(255,255,255,0.45),
+    /* bottom rim */
+    inset 0 -2px 0 rgba(255,255,255,0.20),
+    inset 0 -4px 8px -3px rgba(255,255,255,0.10),
+    /* outer atmospheric glow */
+    0 0 50px rgba(255,255,255,0.10),
+    0 0 90px rgba(255,255,255,0.05);
+
+  isolation: isolate;
+}
+
+/* OUTER SHELL CORNER BLOOMS — bright crystalline catches at the bezel corners */
+.slab-outer-corner {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: screen;
+}
+.slab-outer-corner--tl {
+  top: -2px; left: -2px; border-top-left-radius: 22px;
+  background: radial-gradient(circle at 26% 26%,
+    rgba(255,255,255,1) 0%, rgba(255,255,255,0.55) 14%, rgba(255,255,255,0.18) 32%, rgba(255,255,255,0) 60%);
+}
+.slab-outer-corner--tr {
+  top: -2px; right: -2px; border-top-right-radius: 22px;
+  background: radial-gradient(circle at 74% 26%,
+    rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.45) 14%, rgba(255,255,255,0.16) 32%, rgba(255,255,255,0) 60%);
+}
+.slab-outer-corner--bl {
+  bottom: -2px; left: -2px; border-bottom-left-radius: 22px;
+  background: radial-gradient(circle at 26% 74%,
+    rgba(255,255,255,0.70) 0%, rgba(255,255,255,0.28) 16%, rgba(255,255,255,0.10) 34%, rgba(255,255,255,0) 60%);
+}
+.slab-outer-corner--br {
+  bottom: -2px; right: -2px; border-bottom-right-radius: 22px;
+  background: radial-gradient(circle at 74% 74%,
+    rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.32) 16%, rgba(255,255,255,0.12) 34%, rgba(255,255,255,0) 60%);
+}
+
+/* THIN VERTICAL EDGE REFRACTIONS on left/right of outer shell — light bending through acrylic */
+.slab-outer-shell::before,
+.slab-outer-shell::after {
+  content: '';
+  position: absolute;
+  top: 6%;
+  bottom: 6%;
+  width: 2px;
+  pointer-events: none;
+  z-index: 3;
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,0.35) 0%,
+    rgba(255,255,255,0.04) 35%,
+    rgba(255,255,255,0.02) 65%,
+    rgba(255,255,255,0.28) 100%);
+  border-radius: 2px;
+  filter: blur(0.4px);
+}
+.slab-outer-shell::before { left: 4px; }
+.slab-outer-shell::after { right: 4px; }
+
+/* ════════════════════════════════════════════════════════════
+   INNER SHELL — where the floating panels live
+   ════════════════════════════════════════════════════════════ */
+.slab-inner-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PANEL BASE — every inner panel gets its own acrylic frame
+   ════════════════════════════════════════════════════════════ */
+.slab-panel {
+  position: relative;
+  border: 1.5px solid transparent;
+  border-radius: 7px;
+  background:
+    /* dark interior */
+    linear-gradient(180deg, #16161e 0%, #07070c 100%) padding-box,
+    /* bright acrylic frame around the panel — visible chrome bevel */
+    linear-gradient(135deg,
+      rgba(255,255,255,0.85) 0%,
+      rgba(255,255,255,0.35) 18%,
+      rgba(180,185,195,0.18) 40%,
+      rgba(160,165,175,0.18) 60%,
+      rgba(255,255,255,0.35) 82%,
+      rgba(255,255,255,0.78) 100%) border-box;
+  box-shadow:
+    /* bright top highlight on the panel frame */
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 2px 4px -2px rgba(255,255,255,0.18),
+    inset 1px 0 0 rgba(255,255,255,0.10),
+    inset -1px 0 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.65),
+    /* small contact shadow under panel onto the clear acrylic body */
+    0 3px 8px rgba(0,0,0,0.7),
+    0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* ════════════════════════════════════════════════════════════
+   LABEL PANEL — ~22%, AGS / card info / grade
+   ════════════════════════════════════════════════════════════ */
+.slab-label {
+  flex: 0 0 22%;
+  display: grid;
+  grid-template-columns: 22% 50% 28%;
+  padding: 10px 0;
+}
+
+.slab-label__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+  padding: 0 6px;
+}
+.slab-label__logo {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.16em;
+  background: linear-gradient(180deg,
+    #ffffff 0%, #e0e0e6 30%, #9a9aa2 50%, #e0e0e6 70%, #ffffff 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.5));
+}
+.slab-label__sub {
+  font-size: 5.5px;
+  letter-spacing: 0.32em;
+  color: rgba(220,220,228,0.55);
+  text-align: center;
+  line-height: 1.6;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.slab-label__center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 0 12px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+.slab-label__name {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #f5f2e8;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slab-label__set {
+  font-size: 8.5px;
+  letter-spacing: 0.10em;
+  color: rgba(220,220,228,0.65);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.slab-label__set em { font-style: normal; color: rgba(220,220,228,0.85); }
+.slab-label__rarity {
+  font-size: 7px;
+  letter-spacing: 0.20em;
+  color: rgba(220,220,228,0.45);
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+.slab-label__barcode {
+  display: flex;
+  gap: 1px;
+  margin-top: 5px;
+  height: 12px;
+  align-items: stretch;
+}
+.slab-label__barcode span {
+  background: rgba(232,228,216,0.85);
+  display: block;
+}
+.slab-label__cert {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  letter-spacing: 0.10em;
+  color: rgba(220,220,228,0.65);
+  margin-top: 3px;
+}
+
+.slab-label__grade {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+.slab-label__grade-num {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 46px;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg,
+    #ffffff 0%, #ececf2 30%, #b8b8c0 60%, #ffffff 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.55));
+}
+.slab-label__grade-num--small { font-size: 34px; letter-spacing: -0.03em; }
+.slab-label__grade-name {
+  font-size: 6.5px;
+  letter-spacing: 0.22em;
+  color: rgba(220,220,228,0.62);
+  text-transform: uppercase;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  margin-top: 4px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   GEM — small silver dot between label and chamber
+   ════════════════════════════════════════════════════════════ */
+.slab-gem {
+  position: absolute;
+  top: calc(22% + 16px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 30%,
+      #f8f6e8 0%, #c8c0a8 35%, #6e6850 75%, #2a2618 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.65),
+    inset 0 -1px 2px rgba(0,0,0,0.45),
+    0 1px 3px rgba(0,0,0,0.6),
+    0 0 0 0.5px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 7;
+}
+.slab-gem span {
+  font-size: 5.5px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: #1a1812;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+}
+
+/* ════════════════════════════════════════════════════════════
+   CARD CHAMBER — its own thick clear acrylic display case
+   ════════════════════════════════════════════════════════════ */
+.slab-card-chamber {
+  flex: 1 1 auto;
+  padding: 11px;
+  border-radius: 8px;
+  /* the chamber's "frame" is the brightest clear acrylic — like a display case */
+  background:
+    /* slightly darker interior so the recess reads */
+    linear-gradient(180deg, #040406 0%, #010102 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(255,255,255,1) 0%,
+      rgba(255,255,255,0.55) 14%,
+      rgba(200,205,215,0.30) 32%,
+      rgba(160,165,175,0.22) 50%,
+      rgba(200,205,215,0.30) 68%,
+      rgba(255,255,255,0.55) 86%,
+      rgba(255,255,255,0.95) 100%) border-box;
+  border: 2.5px solid transparent;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.65),
+    inset 0 4px 6px -2px rgba(255,255,255,0.30),
+    inset 1px 0 0 rgba(255,255,255,0.20),
+    inset -1px 0 0 rgba(255,255,255,0.20),
+    inset 0 -2px 0 rgba(255,255,255,0.15),
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    0 3px 10px rgba(0,0,0,0.7),
+    0 1px 3px rgba(0,0,0,0.6);
+}
+/* the recess where the card sits — deep inset with bright lip */
+.slab-card-chamber__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  overflow: hidden;
+  box-shadow:
+    /* bright lip where the recess opens */
+    inset 0 0 0 1px rgba(255,255,255,0.10),
+    inset 0 2px 1px -1px rgba(255,255,255,0.20),
+    /* deep inner well shadow */
+    inset 0 6px 18px rgba(0,0,0,0.95),
+    inset 0 -3px 10px rgba(0,0,0,0.6),
+    inset 5px 0 12px -3px rgba(0,0,0,0.55),
+    inset -5px 0 12px -3px rgba(0,0,0,0.55);
+}
+/* faint diagonal acrylic glaze across the recessed card */
+.slab-card-chamber__inner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(155deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0) 38%,
+    rgba(255,255,255,0) 75%,
+    rgba(255,255,255,0.025) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+.slab-card {
+  max-width: 84%;
+  max-height: 95%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.85));
+  position: relative;
+  z-index: 1;
+}
+.slab-card--fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(220,220,228,0.4);
+  text-transform: uppercase;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SUBGRADES PANEL — own acrylic frame, lab readout interior
+   ════════════════════════════════════════════════════════════ */
+.slab-subgrades {
+  flex: 0 0 22%;
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.slab-col-title {
+  font-size: 6px;
+  letter-spacing: 0.26em;
+  color: rgba(220,220,228,0.50);
+  text-transform: uppercase;
+  margin-bottom: 7px;
+  font-weight: 500;
+}
+
+.slab-sub-col { display: flex; flex-direction: column; }
+.slab-sub { display: flex; flex-direction: column; gap: 5px; }
+.slab-sub__row {
+  display: grid;
+  grid-template-columns: 56px 1fr 18px;
+  align-items: center;
+  gap: 6px;
+  font-size: 6.5px;
+  letter-spacing: 0.10em;
+}
+.slab-sub__key {
+  color: rgba(220,220,228,0.55);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.slab-sub__bar {
+  height: 1px;
+  background: rgba(220,220,228,0.10);
+  position: relative;
+  overflow: hidden;
+}
+.slab-sub__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(220,220,228,0.35), rgba(255,255,255,0.85));
+  width: var(--w, 100%);
+}
+.slab-sub__val {
+  font-family: 'JetBrains Mono', monospace;
+  color: #f5f2e8;
+  text-align: right;
+  font-weight: 600;
+  font-size: 7px;
+  letter-spacing: 0.04em;
+}
+
+.slab-medal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  position: relative;
+  padding: 0 2px;
+}
+.slab-medal__num {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  background: linear-gradient(180deg,
+    #ffffff 0%, #ececf2 30%, #b8b8c0 60%, #ffffff 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.slab-medal__lbl {
+  font-size: 4.5px;
+  letter-spacing: 0.22em;
+  color: rgba(220,220,228,0.55);
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.2;
+  margin-top: 1px;
+}
+.slab-medal__laurel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.slab-medal__laurel svg {
+  width: 52px;
+  height: 52px;
+  opacity: 0.40;
+}
+.slab-medal__laurel path { stroke: rgba(220,220,228,0.7); stroke-width: 0.55; fill: none; }
+
+.slab-details { display: flex; flex-direction: column; gap: 5px; }
+.slab-details__row { display: flex; flex-direction: column; gap: 1px; }
+.slab-details__lbl {
+  font-size: 5px;
+  letter-spacing: 0.22em;
+  color: rgba(220,220,228,0.45);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.slab-details__val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  color: #f5f2e8;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+/* small AGS pin at very bottom */
+.slab-pin {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #1a1a22 0%, #08080c 100%);
+  padding: 3px 12px;
+  border-radius: 2px;
+  z-index: 5;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 1px 2px rgba(0,0,0,0.5),
+    0 0 0 0.5px rgba(0,0,0,0.4);
+}
+.slab-pin span {
+  color: rgba(220,220,228,0.75);
+  font-size: 6px;
+  letter-spacing: 0.28em;
+  font-weight: 700;
+}
+
+/* ════════════════════════════════════════════════════════════
+   LIGHT/REFRACTION OVERLAYS — slow sheen + corner spectral catches
+   ════════════════════════════════════════════════════════════ */
+.slab-light-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 8;
+  overflow: hidden;
+  background: linear-gradient(115deg,
+    transparent 30%,
+    rgba(255,255,255,0.04) 48%,
+    rgba(255,255,255,0.10) 50%,
+    rgba(255,255,255,0.04) 52%,
+    transparent 70%);
+  background-size: 250% 100%;
+  background-position: -120% 0;
+  animation: slab-sheen 12s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+@keyframes slab-sheen {
+  0%   { background-position: -120% 0; opacity: 0; }
+  18%  { opacity: 1; }
+  60%  { background-position: 220% 0; opacity: 1; }
+  100% { background-position: 220% 0; opacity: 0; }
+}
+
+.slab-edge-reflections {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 7;
+}
+.slab-refr {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(2px);
+  opacity: 0.7;
+}
+.slab-refr--tl {
+  top: -12px; left: -10px;
+  background: radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 60%);
+}
+.slab-refr--tr {
+  top: -12px; right: -10px;
+  background: radial-gradient(circle, rgba(220,235,255,0.45) 0%, rgba(220,235,255,0) 60%);
+}
+.slab-refr--bl {
+  bottom: -12px; left: -10px;
+  background: radial-gradient(circle, rgba(255,210,230,0.32) 0%, rgba(255,210,230,0) 60%);
+}
+.slab-refr--br {
+  bottom: -12px; right: -10px;
+  background: radial-gradient(circle, rgba(255,225,170,0.32) 0%, rgba(255,225,170,0) 60%);
+}
+
+.slab-specular {
+  position: absolute;
+  top: 6%;
+  left: 14%;
+  width: 38%;
+  height: 4px;
+  pointer-events: none;
+  z-index: 9;
+  background: linear-gradient(90deg,
+    transparent, rgba(255,255,255,0.55), transparent);
+  filter: blur(0.6px);
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slab-light-overlay { animation: none; opacity: 0.4; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   TIER ESCALATION — colored bevel rims on outer shell, spectral edges only on AGS 10
+   ════════════════════════════════════════════════════════════ */
+
+/* AGS 6 — muted graphite, low refraction */
+.ags-slab.tier-ags-6 .slab-outer-shell {
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.030) 0%, rgba(255,255,255,0.010) 50%, rgba(255,255,255,0.022) 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(180,180,188,0.45) 0%,
+      rgba(120,120,128,0.18) 28%,
+      rgba(80,80,88,0.10) 50%,
+      rgba(120,120,128,0.18) 72%,
+      rgba(180,180,188,0.42) 100%) border-box;
+}
+.ags-slab.tier-ags-6 .slab-light-overlay { opacity: 0; animation: none; }
+.ags-slab.tier-ags-6 .slab-refr { opacity: 0.25; filter: grayscale(1) blur(2px); }
+.ags-slab.tier-ags-6 .slab-outer-corner { opacity: 0.55; }
+
+/* AGS 7 — slightly cleaner silver */
+.ags-slab.tier-ags-7 .slab-outer-shell {
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.040) 0%, rgba(255,255,255,0.012) 50%, rgba(255,255,255,0.028) 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(220,220,228,0.55) 0%,
+      rgba(160,160,170,0.22) 26%,
+      rgba(110,110,120,0.10) 50%,
+      rgba(160,160,170,0.22) 74%,
+      rgba(220,220,228,0.50) 100%) border-box;
+}
+.ags-slab.tier-ags-7 .slab-refr { opacity: 0.4; }
+
+/* AGS 8 — cool white-blue clarity */
+.ags-slab.tier-ags-8 .slab-outer-shell {
+  background:
+    linear-gradient(180deg,
+      rgba(232,242,255,0.060) 0%, rgba(232,242,255,0.018) 50%, rgba(232,242,255,0.040) 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(220,235,255,0.65) 0%,
+      rgba(200,220,250,0.24) 26%,
+      rgba(160,180,210,0.10) 50%,
+      rgba(200,220,250,0.24) 74%,
+      rgba(220,235,255,0.60) 100%) border-box;
+}
+
+/* AGS 9 — gold edge reflections */
+.ags-slab.tier-ags-9 .slab-outer-shell {
+  background:
+    linear-gradient(180deg,
+      rgba(255,232,170,0.075) 0%, rgba(255,232,170,0.022) 50%, rgba(255,232,170,0.050) 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(255,240,190,0.98) 0%,
+      rgba(255,220,140,0.65) 12%,
+      rgba(220,180,90,0.40) 26%,
+      rgba(140,108,40,0.28) 50%,
+      rgba(220,180,90,0.40) 74%,
+      rgba(255,220,140,0.65) 88%,
+      rgba(255,240,190,0.95) 100%) border-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(232,196,128,0.16),
+    inset 0 2px 0 rgba(255,240,190,0.85),
+    inset 0 4px 8px -3px rgba(255,220,140,0.50),
+    inset 2px 0 1px -1px rgba(255,220,140,0.45),
+    inset -2px 0 1px -1px rgba(255,220,140,0.45),
+    inset 0 -2px 0 rgba(255,220,140,0.22),
+    inset 0 -4px 8px -3px rgba(180,140,70,0.20),
+    0 0 50px rgba(220,180,90,0.16),
+    0 0 90px rgba(220,180,90,0.08);
+}
+.ags-slab.tier-ags-9 .slab-panel {
+  background:
+    linear-gradient(180deg, #16140d 0%, #08070d 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(255,228,160,0.55) 0%,
+      rgba(220,180,90,0.18) 28%,
+      rgba(140,108,40,0.10) 50%,
+      rgba(220,180,90,0.18) 72%,
+      rgba(255,228,160,0.50) 100%) border-box;
+}
+.ags-slab.tier-ags-9 .slab-card-chamber {
+  background:
+    linear-gradient(180deg, #060503 0%, #020201 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(255,228,160,0.70) 0%,
+      rgba(220,180,90,0.20) 25%,
+      rgba(140,108,40,0.12) 50%,
+      rgba(220,180,90,0.20) 75%,
+      rgba(255,228,160,0.65) 100%) border-box;
+}
+.tier-ags-9 .slab-label__grade-num,
+.tier-ags-9 .slab-medal__num,
+.tier-ags-9 .slab-label__logo {
+  background: linear-gradient(180deg, #fff2cc 0%, #f0d488 30%, #b08838 60%, #fff2cc 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.tier-ags-9 .slab-medal__laurel path { stroke: rgba(240,212,136,0.85); }
+.tier-ags-9 .slab-gem {
+  background: radial-gradient(circle at 32% 30%, #fff2cc 0%, #d8b878 35%, #6e5018 75%, #2a1c08 100%);
+}
+.tier-ags-9 .slab-refr--bl,
+.tier-ags-9 .slab-refr--br {
+  background: radial-gradient(circle, rgba(255,220,140,0.45) 0%, rgba(255,220,140,0) 60%);
+}
+
+/* AGS 9.5 — violet spectral refractions */
+.ags-slab.tier-ags-9-5 .slab-outer-shell {
+  background:
+    linear-gradient(180deg,
+      rgba(232,222,255,0.080) 0%, rgba(232,222,255,0.024) 50%, rgba(232,222,255,0.055) 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(245,238,255,0.98) 0%,
+      rgba(220,205,255,0.68) 12%,
+      rgba(180,160,235,0.45) 26%,
+      rgba(110,90,160,0.28) 50%,
+      rgba(180,160,235,0.45) 74%,
+      rgba(220,205,255,0.68) 88%,
+      rgba(245,238,255,0.95) 100%) border-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(210,195,250,0.16),
+    inset 0 2px 0 rgba(245,238,255,0.85),
+    inset 0 4px 8px -3px rgba(220,205,255,0.50),
+    inset 2px 0 1px -1px rgba(220,205,255,0.45),
+    inset -2px 0 1px -1px rgba(220,205,255,0.45),
+    inset 0 -2px 0 rgba(220,205,255,0.22),
+    inset 0 -4px 8px -3px rgba(180,160,235,0.20),
+    0 0 50px rgba(180,160,235,0.16),
+    0 0 90px rgba(180,160,235,0.08);
+}
+.ags-slab.tier-ags-9-5 .slab-panel {
+  background:
+    linear-gradient(180deg, #131027 0%, #07060d 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(225,210,255,0.55) 0%,
+      rgba(180,160,235,0.20) 28%,
+      rgba(110,90,160,0.10) 50%,
+      rgba(180,160,235,0.20) 72%,
+      rgba(225,210,255,0.50) 100%) border-box;
+}
+.ags-slab.tier-ags-9-5 .slab-card-chamber {
+  background:
+    linear-gradient(180deg, #050410 0%, #020108 100%) padding-box,
+    linear-gradient(135deg,
+      rgba(225,210,255,0.70) 0%,
+      rgba(180,160,235,0.22) 25%,
+      rgba(110,90,160,0.12) 50%,
+      rgba(180,160,235,0.22) 75%,
+      rgba(225,210,255,0.65) 100%) border-box;
+}
+.tier-ags-9-5 .slab-label__grade-num,
+.tier-ags-9-5 .slab-medal__num {
+  background: linear-gradient(180deg, #f5eeff 0%, #d8c8f5 30%, #8870c0 60%, #f5eeff 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.tier-ags-9-5 .slab-medal__laurel path { stroke: rgba(216,200,245,0.85); }
+.tier-ags-9-5 .slab-gem {
+  background: radial-gradient(circle at 32% 30%, #f5eeff 0%, #b8a8e8 35%, #4a3878 75%, #181028 100%);
+}
+.tier-ags-9-5 .slab-refr--bl,
+.tier-ags-9-5 .slab-refr--br {
+  background: radial-gradient(circle, rgba(210,180,255,0.45) 0%, rgba(210,180,255,0) 60%);
+}
+
+/* AGS 10 — ARCHIVE PRISTINE: museum crystal, faint spectral catches at corners ONLY */
+.ags-slab.tier-ags-10 .slab-outer-shell {
+  border-width: 2.5px;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.025) 50%, rgba(255,255,255,0.055) 100%) padding-box,
+    /* the rim itself is bright crystal silver — color comes from the spectral CORNER refractions, not the border */
+    linear-gradient(135deg,
+      rgba(255,255,255,1) 0%,
+      rgba(255,255,255,0.65) 12%,
+      rgba(220,235,255,0.34) 26%,
+      rgba(180,200,225,0.24) 50%,
+      rgba(220,235,255,0.34) 74%,
+      rgba(255,255,255,0.65) 88%,
+      rgba(255,255,255,1) 100%) border-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.18),
+    inset 0 2px 0 rgba(255,255,255,0.95),
+    inset 0 4px 8px -3px rgba(255,255,255,0.65),
+    inset 2px 0 1px -1px rgba(255,255,255,0.55),
+    inset -2px 0 1px -1px rgba(255,255,255,0.55),
+    inset 0 -2px 0 rgba(255,255,255,0.30),
+    inset 0 -4px 8px -3px rgba(255,255,255,0.18),
+    /* museum-grade white halo */
+    0 0 60px rgba(255,255,255,0.22),
+    0 0 110px rgba(255,255,255,0.10);
+}
+.ags-slab.tier-ags-10 .slab-outer-corner { filter: brightness(1.45); }
+.tier-ags-10 .slab-label__grade-num,
+.tier-ags-10 .slab-medal__num {
+  background: linear-gradient(180deg,
+    #ffffff 0%, #f8f8fc 25%, #c8c8d0 55%, #ffffff 80%, #ececf2 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5)) drop-shadow(0 0 8px rgba(255,255,255,0.10));
+}
+.tier-ags-10 .slab-medal__laurel { opacity: 0.55; }
+.tier-ags-10 .slab-medal__laurel path { stroke: rgba(255,255,255,0.95); }
+.tier-ags-10 .slab-gem {
+  background: radial-gradient(circle at 32% 30%, #ffffff 0%, #ececf2 30%, #8e8e96 70%, #2c2c34 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.85),
+    inset 0 -1px 2px rgba(0,0,0,0.45),
+    0 1px 3px rgba(0,0,0,0.6),
+    0 0 0 0.5px rgba(0,0,0,0.4),
+    0 0 8px rgba(255,255,255,0.25);
+}
+/* spectral corner catches — cyan, magenta, gold per spec */
+.tier-ags-10 .slab-refr--tl {
+  background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(220,240,255,0.30) 30%, rgba(220,240,255,0) 60%);
+  width: 80px; height: 80px;
+}
+.tier-ags-10 .slab-refr--tr {
+  background: radial-gradient(circle, rgba(180,235,255,0.55) 0%, rgba(180,235,255,0) 60%);
+  width: 80px; height: 80px;
+}
+.tier-ags-10 .slab-refr--bl {
+  background: radial-gradient(circle, rgba(255,200,235,0.50) 0%, rgba(255,200,235,0) 60%);
+  width: 80px; height: 80px;
+}
+.tier-ags-10 .slab-refr--br {
+  background: radial-gradient(circle, rgba(255,225,180,0.50) 0%, rgba(255,225,180,0) 60%);
+  width: 80px; height: 80px;
+}
+.tier-ags-10 .slab-pin span { color: rgba(255,255,255,0.85); }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * v1.5.2 hotfix — proportion fixes (mirrors msge-lite/style.css)
+ * Content-drive label + subgrades heights, chamber gets the rest,
+ * tighten chamber padding so card fills, reposition gem with flex.
+ * ───────────────────────────────────────────────────────────────────── */
+.ags-slab {
+  aspect-ratio: auto;
+  max-width: 360px;
+}
+.slab-outer-shell {
+  height: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.18),
+    inset 0 2px 0 rgba(255,255,255,0.95),
+    inset 0 4px 8px -3px rgba(255,255,255,0.65),
+    inset 2px 0 1px -1px rgba(255,255,255,0.55),
+    inset -2px 0 1px -1px rgba(255,255,255,0.55),
+    inset 0 -2px 0 rgba(255,255,255,0.30),
+    inset 0 -4px 8px -3px rgba(255,255,255,0.18),
+    0 0 60px rgba(255,255,255,0.18),
+    0 0 110px rgba(255,255,255,0.10);
+}
+.slab-inner-shell { height: auto; gap: 6px; }
+
+.slab-label {
+  flex: 0 0 auto;
+  padding: 6px 0;
+  min-height: 0;
+}
+.slab-label__logo { font-size: 16px; }
+.slab-label__name { font-size: 11px; }
+.slab-label__set  { font-size: 8px; }
+.slab-label__grade-num { font-size: 38px; }
+.slab-label__grade-num--small { font-size: 28px; }
+
+.slab-gem {
+  position: relative;
+  top: auto; left: auto; transform: none;
+  margin: -11px auto -11px auto;
+  align-self: center;
+  z-index: 7;
+}
+
+.slab-card-chamber {
+  flex: 1 1 auto;
+  padding: 6px;
+  min-height: 380px;
+}
+.slab-card-chamber__inner { padding: 3px 2px; border-radius: 2px; }
+.slab-card { max-width: 98%; max-height: 100%; }
+
+.slab-subgrades {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  grid-template-columns: 1fr 56px 1fr;
+  gap: 8px;
+}
+.slab-sub__row { font-size: 6.5px; }
+.slab-medal__num { font-size: 20px; }
+.slab-medal__laurel svg { width: 48px; height: 48px; }
+
+.slab-light-overlay { border-radius: 18px; }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * v1.5.2 hotfix 2 — Remove chamber gap + upgrade medal/laurel
+ * ───────────────────────────────────────────────────────────────────── */
+
+.slab-card-chamber {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 5px;
+}
+.slab-card-chamber__inner {
+  display: block;
+  height: auto;
+  padding: 0;
+}
+.slab-card {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: none;
+  display: block;
+  border-radius: 3px;
+}
+
+/* Medal */
+.slab-subgrades { grid-template-columns: 1fr 72px 1fr; gap: 6px; }
+.slab-medal { padding: 4px 0; }
+.slab-medal::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(180,160,100,0.18) 0%, transparent 72%);
+}
+.slab-medal__num {
+  font-size: 30px; font-weight: 800; letter-spacing: -0.02em;
+  background: linear-gradient(175deg, #ffffff 0%, #e8e8f0 25%, #c0c0ca 55%, #ffffff 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  position: relative; z-index: 2;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+}
+.slab-medal__lbl { font-size: 5.5px; letter-spacing: 0.18em; color: rgba(220,220,228,0.75); position: relative; z-index: 2; }
+.slab-medal__laurel { position: absolute; inset: -6px; display: flex; align-items: center; justify-content: center; }
+.slab-medal__laurel svg { width: 72px; height: 72px; opacity: 0.75; }
+.slab-medal__laurel path { stroke-width: 0.65; stroke: rgba(200,185,130,0.90); fill: none; }
+
+.ags-slab--tier-7  .slab-medal::before { background: radial-gradient(circle, rgba(160,175,195,0.18) 0%, transparent 70%); }
+.ags-slab--tier-7  .slab-medal__laurel path { stroke: rgba(160,175,195,0.88); }
+
+.ags-slab--tier-8  .slab-medal::before { background: radial-gradient(circle, rgba(120,160,210,0.20) 0%, transparent 70%); }
+.ags-slab--tier-8  .slab-medal__laurel path { stroke: rgba(130,168,220,0.90); }
+
+.ags-slab--tier-9  .slab-medal::before { background: radial-gradient(circle, rgba(220,185,80,0.22) 0%, transparent 70%); }
+.ags-slab--tier-9  .slab-medal__num { background: linear-gradient(170deg, #fff9d0 0%, #f0d968 40%, #c8a820 70%, #f0e080 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.ags-slab--tier-9  .slab-medal__laurel path { stroke: rgba(240,212,136,0.95); }
+.ags-slab--tier-9  .slab-medal__laurel svg { opacity: 0.90; }
+
+.ags-slab--tier-9-5 .slab-medal::before { background: radial-gradient(circle, rgba(180,155,240,0.22) 0%, transparent 70%); }
+.ags-slab--tier-9-5 .slab-medal__num  { background: linear-gradient(170deg, #f8f0ff 0%, #d8b8f8 40%, #a870e8 70%, #e0c8ff 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.ags-slab--tier-9-5 .slab-medal__laurel path { stroke: rgba(216,200,245,0.95); }
+.ags-slab--tier-9-5 .slab-medal__laurel svg { opacity: 0.90; }
+
+.ags-slab--tier-10  .slab-medal::before { background: radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 70%); }
+.ags-slab--tier-10  .slab-medal__num { background: linear-gradient(170deg, #ffffff 0%, #f8f8ff 30%, #d8e8ff 60%, #ffffff 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.ags-slab--tier-10  .slab-medal__laurel path { stroke: rgba(255,255,255,0.98); }
+.ags-slab--tier-10  .slab-medal__laurel svg { opacity: 1.0; }
+
+.ags-slab--tier-black-label .slab-medal::before { background: radial-gradient(circle, rgba(255,100,50,0.22) 0%, transparent 70%); }
+.ags-slab--tier-black-label .slab-medal__num  { background: linear-gradient(170deg, #ffe8d0 0%, #ff9060 40%, #cc4010 70%, #ff8040 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.ags-slab--tier-black-label .slab-medal__laurel path { stroke: rgba(255,140,80,0.95); }
+.ags-slab--tier-black-label .slab-medal__laurel svg { opacity: 0.90; }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * v1.5.2 hotfix 3 — Remove laurel, fix sub-row gap, wrap card name
+ * ───────────────────────────────────────────────────────────────────── */
+
+.slab-medal__laurel { display: none !important; }
+
+.slab-sub__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  grid-template-columns: unset;
+}
+.slab-sub__bar { display: none; }
+.slab-sub__key { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slab-sub__val { flex: 0 0 auto; }
+
+.slab-medal {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 1px solid rgba(200,185,130,0.35);
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.7),
+    inset 0 -1px 2px rgba(255,255,255,0.08),
+    0 1px 4px rgba(0,0,0,0.5);
+  background: radial-gradient(circle at 40% 35%, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.55) 100%);
+  align-self: center;
+}
+.slab-medal__num { font-size: 26px; letter-spacing: -0.03em; }
+
+.ags-slab--tier-9   .slab-medal { border-color: rgba(240,212,136,0.55); background: radial-gradient(circle at 40% 35%, rgba(240,212,136,0.10) 0%, rgba(0,0,0,0.40) 60%, rgba(0,0,0,0.60) 100%); }
+.ags-slab--tier-9-5 .slab-medal { border-color: rgba(216,200,245,0.55); background: radial-gradient(circle at 40% 35%, rgba(200,170,255,0.10) 0%, rgba(0,0,0,0.40) 60%, rgba(0,0,0,0.60) 100%); }
+.ags-slab--tier-10  .slab-medal { border-color: rgba(255,255,255,0.60); background: radial-gradient(circle at 40% 35%, rgba(220,235,255,0.12) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.55) 100%); }
+.ags-slab--tier-black-label .slab-medal { border-color: rgba(255,140,80,0.55); background: radial-gradient(circle at 40% 35%, rgba(255,120,50,0.12) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.65) 100%); }
+
+.slab-label__name {
+  font-size: 10px; white-space: normal; overflow-wrap: break-word; word-break: break-word;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; line-height: 1.25;
+}

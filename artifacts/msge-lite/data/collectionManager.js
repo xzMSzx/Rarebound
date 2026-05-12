@@ -1,18 +1,18 @@
 /**
- * data/collectionManager.js — Phase 9
+ * data/collectionManager.js — Phase 9 / v1.2.1
  *
  * v2 collection storage. Cards are keyed by set then card ID, with a
- * duplicate count and an auto-lock flag (Phase 9 selling system).
+ * duplicate count, an auto-lock flag, and an optional reverseHolo count.
  *
  * Shape:
  *   {
  *     [setId]: {
- *       [cardId]: { count: number, locked: boolean }
+ *       [cardId]: { count: number, locked: boolean, reverseHolo?: number }
  *     }
  *   }
  *
  * A missing `locked` field is treated as `true` for backward compatibility
- * with Phase 7/8 saves.
+ * with Phase 7/8 saves. `reverseHolo` is absent on pre-v1.2.1 saves (treat as 0).
  */
 
 const STORAGE_KEY = 'tcg_collection_v2';
@@ -28,9 +28,10 @@ export function saveCollection(collection) {
 
 /**
  * Increments the count for a card. First add auto-locks the card.
+ * v1.2.1: if card.isReverseHolo is true, increments the reverseHolo variant count.
  */
 export function addCardToCollection(card) {
-  const { setId, id: cardId } = card;
+  const { setId, id: cardId, isReverseHolo } = card;
   if (!setId || !cardId) return;
 
   const collection = getCollection();
@@ -38,6 +39,9 @@ export function addCardToCollection(card) {
   if (!collection[setId][cardId]) collection[setId][cardId] = { count: 0, locked: true };
 
   collection[setId][cardId].count += 1;
+  if (isReverseHolo) {
+    collection[setId][cardId].reverseHolo = (collection[setId][cardId].reverseHolo || 0) + 1;
+  }
   saveCollection(collection);
 }
 

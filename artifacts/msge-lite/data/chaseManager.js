@@ -31,11 +31,15 @@ const ALL_SET_IDS    = ['swsh7','swsh11','sv4pt5','sv2','sv3pt5'];
 const CHASE_TIERS    = ['ultraRare','specialIllustrationRare','hyperRare','illustrationRare'];
 const BROKER_TIERS   = ['hyperRare','specialIllustrationRare','ultraRare'];
 
+// v1.2.0 — Broker pricing rebalanced. Target range: $250–$700 typical,
+// $800–$1000 max. Old multipliers produced absurd $1600–$2500 prices
+// that felt out of reach. New numbers keep the Broker prestigious but
+// reachable by mid-game players.
 const RARITY_MULT = {
-  ultraRare:               2.5,
-  illustrationRare:        2.5,
-  specialIllustrationRare: 5.0,
-  hyperRare:               6.5,
+  ultraRare:               1.8,
+  illustrationRare:        1.8,
+  specialIllustrationRare: 2.8,
+  hyperRare:               2.5,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -166,9 +170,9 @@ function buildBrokerPick({ apiCard, setId, tier }) {
   const rarityMult = RARITY_MULT[tier] ?? 3;
   // Scarcity multiplier: cards with fewer alt-arts in their set feel rarer.
   // We approximate via a small jitter + a flat 1.0–1.6 band.
-  const scarcity   = 1.0 + Math.random() * 0.6;
+  const scarcity   = 1.0 + Math.random() * 0.3;    // 1.0–1.30 (tighter band)
   let price        = baseValue * rarityMult * scarcity;
-  price            = Math.max(350, Math.min(2200, price));
+  price            = Math.max(250, Math.min(1000, price));  // $250–$1000 range
   return {
     cardId:   apiCard.id,
     setId,

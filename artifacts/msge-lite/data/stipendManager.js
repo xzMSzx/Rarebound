@@ -16,18 +16,27 @@ const CLAIM_INTERVAL_MS = 24 * 60 * 60 * 1000;
 function load() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } }
 function save(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
 
-const RANK_BONUS = {
-  'Rookie Collector':      0,
-  'Experienced Collector': 6,
-  'Archivist':             18,
-  'Master Collector':      30,
+// v1.2.1 — Stipend ranges per rank. The exact amount varies daily within
+// the band (seeded by calendar day so it's consistent within a single day).
+// Ranges feel earned: $10–15 at Rookie, $60–65 cap at Legendary.
+const RANK_STIPEND_RANGE = {
+  'Rookie Collector':      [10, 15],
+  'Collector':             [20, 25],
+  'Advanced Collector':    [30, 40],
+  'Elite Collector':       [45, 50],
+  'Master Collector':      [52, 58],
+  'Archive Curator':       [58, 62],
+  'Legendary Collector':   [60, 65],
 };
 
 /** Total stipend amount (USD) the player would receive right now. */
 export function getStipendAmount() {
   const rank  = getRank();
-  const bonus = RANK_BONUS[rank.name] ?? 0;
-  return 10 + bonus;
+  const range = RANK_STIPEND_RANGE[rank.name] ?? [10, 15];
+  // Deterministic daily variation: same amount all day, changes tomorrow.
+  const dayKey = Math.floor(Date.now() / 86_400_000);
+  const seed   = ((dayKey * 9_301 + 49_297) % 233_280) / 233_280;
+  return Math.round(range[0] + seed * (range[1] - range[0]));
 }
 
 export function timeUntilNextClaimMs() {

@@ -37,13 +37,18 @@
 
     <!-- ═══ COLLECTION SCREEN ═════════════════════════════════════════════ -->
     <div id="collection-screen" class="screen overlay-scroll-screen hidden">
-      <div class="screen-header">
+      <div class="screen-header collection-screen-header collection-screen-header--minimal">
         <button class="screen-back-btn" id="collection-back-btn">← Back</button>
         <h2>My Collection</h2>
-        <button class="screen-action-btn" id="wishlist-btn">☆ Wishlist</button>
+        <div class="screen-spacer"></div>
       </div>
+      <div id="collection-filters" class="collection-filters rb-pill-row" role="tablist" aria-label="Collection filter"></div>
+      <div id="collection-ags-entry"></div>
       <div id="set-list"></div>
     </div>
+
+    <!-- ═══ FAVORITES SCREEN (v1.5.1) ═════════════════════════════════════ -->
+    <div id="favorites-screen" class="screen overlay-scroll-screen hidden"></div>
 
     <!-- ═══ BINDER SCREEN ═════════════════════════════════════════════════ -->
     <div id="binder-screen" class="screen overlay-scroll-screen hidden">
@@ -91,6 +96,18 @@
 
     <!-- ═══ HELP SCREEN (Phase 10) ════════════════════════════════════════ -->
     <div id="help-screen" class="screen overlay-scroll-screen hidden"></div>
+
+    <!-- ═══ COLLECTOR PROGRESSION SCREEN (Phase 10.5) ═════════════════════ -->
+    <div id="progression-screen" class="screen overlay-scroll-screen hidden"></div>
+
+    <!-- ═══ DUPLICATE VAULT SCREEN (Phase 10.5) ═══════════════════════════ -->
+    <div id="duplicate-vault-screen" class="screen overlay-scroll-screen hidden"></div>
+
+    <!-- ═══ COLLECTOR ARCHIVE SCREEN (Phase 11 / v1.2.0) ════════════════════ -->
+    <div id="collector-archive-screen" class="screen overlay-scroll-screen hidden"></div>
+
+    <!-- ═══ ARCHIVE SERVICES SCREEN (v1.5.0 — AGS) ═════════════════════════ -->
+    <div id="archive-services-screen" class="screen overlay-scroll-screen hidden"></div>
 
     <!-- ═══ STORE / VENDOR HUB ════════════════════════════════════════════ -->
     <div id="store-screen">
