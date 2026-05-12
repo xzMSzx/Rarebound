@@ -19,6 +19,7 @@ import {
 import { regenerateAllVendorStocks, regenerateVendorStock } from '../data/vendorManager.js';
 import { runRefresh } from '../data/economyManager.js';
 import { addBalance } from '../state/playerState.js';
+import { clearHistory } from '../data/marketHistory.js';
 import {
   isDiagnosticsEnabled, setDiagnosticsEnabled,
   getDiagFlags, setDiagFlag,
@@ -441,7 +442,7 @@ function render() {
           break;
         case 'clearMarketHistory':
           askConfirm('Clear market history?', 'All market sparkline and graph history will be erased.', () => {
-            localStorage.removeItem('tcg_market_history');
+            clearHistory();
             _hooks.onMarketRefreshed?.();
           });
           break;
