@@ -15,15 +15,16 @@
  * with Phase 7/8 saves. `reverseHolo` is absent on pre-v1.2.1 saves (treat as 0).
  */
 
+import { isPlainObject, readJson, writeJson } from './persistenceStore.js';
+
 const STORAGE_KEY = 'tcg_collection_v2';
 
 export function getCollection() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-  catch { return {}; }
+  return readJson(STORAGE_KEY, {}, isPlainObject).value;
 }
 
 export function saveCollection(collection) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
+  return writeJson(STORAGE_KEY, collection);
 }
 
 /**

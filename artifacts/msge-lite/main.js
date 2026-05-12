@@ -74,13 +74,14 @@ import { DEBUG_FLAGS, isDebugMode, isDebugFromUrl, logActiveFlags, mountDebugTap
 import { isDiagFlag, initDiagnosticsFromStorage } from './data/diagnosticsManager.js';
 import {
   getRequestsForVendor, getRefreshLabel as getRequestRefreshLabel,
-  getRequestProgress, completeRequest, anyVendorRequestsStale,
+  getRequestProgress, anyVendorRequestsStale,
 } from './data/requestManager.js';
-import { autoClaimReadyMilestones, getCategoryStatus } from './data/milestoneManager.js';
+import { fulfillVendorRequest } from './data/requestFulfillmentManager.js';
+import { getReadyMilestoneRewards, markMilestonesClaimed, getCategoryStatus } from './data/milestoneManager.js';
+import { withLocalStorageRollback } from './data/localStorageTransaction.js';
 import {
   getPacksOpened, incrementPacksOpened,
   incrementDuplicatesSold,
-  incrementRequestsCompleted,
   addLifetimeRevenue,
   incrementBrokerPurchases,
 } from './data/statsManager.js';
@@ -91,7 +92,7 @@ import {
   getReliefAmount, claimReliefStipend, tickRecovery,
 } from './data/recoveryManager.js';
 import {
-  getEmergencyRequestForVendor, completeEmergencyRequest, getRotationLabel as getEmergencyRotationLabel,
+  getEmergencyRequestForVendor, getRotationLabel as getEmergencyRotationLabel,
 } from './data/emergencyRequestManager.js';
 import { logActivity, getActivityFeed }          from './data/activityFeed.js';
 import {
@@ -1931,27 +1932,19 @@ function fulfillRequest(requestId, vendor, btn) {
   // Re-validate atomically — collection may have changed since render
   if (btn) { btn.disabled = true; btn.textContent = 'Working…'; }
 
-  // v1.3.0a — emergency request ids are prefixed with 'emerg_'; route to the
-  // emergency-request completion path so we hit the right storage namespace.
-  const isEmergency = typeof requestId === 'string' && requestId.startsWith('emerg_');
-  const result = isEmergency
-    ? completeEmergencyRequest(requestId)
-    : completeRequest(requestId);
+  const result = fulfillVendorRequest(requestId);
   if (!result.ok) {
     if (btn) {
-      btn.textContent = result.reason === 'insufficient' ? 'Not enough' : 'Unavailable';
+      btn.textContent = result.reason === 'insufficient' ? 'Not enough'
+        : result.reason === 'write-failed' ? 'Save failed'
+        : 'Unavailable';
       setTimeout(() => renderVendorHub(), 1200);
     }
     return;
   }
 
-  addBalance(result.reward);
-  addFavor(vendor.id, result.favorReward);
   haptic('medium');
   sfx.purchase();
-  // v1.2.0 — stat tracking + distress
-  incrementRequestsCompleted();
-  addLifetimeRevenue(result.reward);
   checkDistressTransition();
   updateBalanceUI();
   showToast(`Request fulfilled · +$${result.reward} · ${vendor.name} Favor +${result.favorReward}`, 'sell');
@@ -1967,36 +1960,44 @@ function fulfillRequest(requestId, vendor, btn) {
 
 function sweepMilestones() {
   try {
-    const claimed = autoClaimReadyMilestones();
+    const claimed = getReadyMilestoneRewards();
     if (claimed.length === 0) return;
-    let totalCash = 0;
-    let totalRep  = 0;
-    for (const m of claimed) {
-      totalCash += m.rewardCash || 0;
-      totalRep  += m.rewardRep  || 0;
-    }
-    if (totalCash > 0) { addBalance(totalCash); checkDistressTransition(); }
-    if (totalRep  > 0) addReputation(totalRep);
+    withLocalStorageRollback([
+      'tcg_milestones',
+      'tcg_player_v2',
+      'tcg_reputation',
+      'tcg_favor',
+      'tcg_prestige_bonus',
+      'tcg_archive_history',
+    ], () => {
+      let totalCash = 0;
+      let totalRep  = 0;
+      for (const m of claimed) {
+        totalCash += m.rewardCash || 0;
+        totalRep  += m.rewardRep  || 0;
+      }
+      if (totalCash > 0) { addBalance(totalCash); checkDistressTransition(); }
+      if (totalRep  > 0) addReputation(totalRep);
 
-    // v1.4.0 — diversified rewards: process favor / prestige / discount / archive
-    for (const m of claimed) {
-      if (m.rewardFavor && m.rewardFavor.vendorId && m.rewardFavor.amount) {
-        try { addFavor(m.rewardFavor.vendorId, m.rewardFavor.amount); } catch {}
-      }
-      if (m.rewardPrestige) {
-        try { addPrestigeBonus(m.rewardPrestige, `milestone:${m.id}`); } catch {}
-      }
-      if (m.rewardDiscount && m.rewardDiscount.vendorId && m.rewardDiscount.pct) {
-        const dur = m.rewardDiscount.durationMs || 6 * 60 * 60 * 1000;
-        try { applyTempVendorDiscount(m.rewardDiscount.vendorId, m.rewardDiscount.pct, dur); } catch {}
-      }
-      if (m.rewardArchive) {
-        try {
+      // v1.4.0 — diversified rewards: process favor / prestige / discount / archive
+      for (const m of claimed) {
+        if (m.rewardFavor && m.rewardFavor.vendorId && m.rewardFavor.amount) {
+          addFavor(m.rewardFavor.vendorId, m.rewardFavor.amount);
+        }
+        if (m.rewardPrestige) {
+          addPrestigeBonus(m.rewardPrestige, `milestone:${m.id}`);
+        }
+        if (m.rewardDiscount && m.rewardDiscount.vendorId && m.rewardDiscount.pct) {
+          const dur = m.rewardDiscount.durationMs || 6 * 60 * 60 * 1000;
+          applyTempVendorDiscount(m.rewardDiscount.vendorId, m.rewardDiscount.pct, dur);
+        }
+        if (m.rewardArchive) {
           recordArchiveEvent('milestone_major', m.rewardArchive,
             { key: `milestone:${m.id}` });
-        } catch {}
+        }
       }
-    }
+      markMilestonesClaimed(claimed.map(m => m.id));
+    });
 
     updateBalanceUI();
     claimed.forEach((m, i) => {
@@ -2022,6 +2023,7 @@ function sweepMilestones() {
     });
   } catch (err) {
     console.error('[milestones] sweep failed', err);
+    try { loadPlayerState(); updateBalanceUI(); } catch {}
   }
 }
 

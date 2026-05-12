@@ -33,6 +33,7 @@
 
 import { copyKey, getOrCreateQuality } from './cardQualityManager.js';
 import { summarizeGrade } from './agsGradingEngine.js';
+import { isPlainObject, readJson, writeJson } from './persistenceStore.js';
 
 const STORAGE_KEY = 'tcg_ags_submissions';
 
@@ -77,23 +78,20 @@ export const REVIEW_STATUSES = [
 ];
 
 function load() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!raw || typeof raw !== 'object') {
-      return { active: [], completed: [], nextSerial: 1001 };
-    }
-    return {
-      active:    Array.isArray(raw.active)    ? raw.active    : [],
-      completed: Array.isArray(raw.completed) ? raw.completed : [],
-      nextSerial: Number.isFinite(raw.nextSerial) ? raw.nextSerial : 1001,
-    };
-  } catch {
+  const result = readJson(STORAGE_KEY, null, isPlainObject);
+  const raw = result.value;
+  if (!raw) {
     return { active: [], completed: [], nextSerial: 1001 };
   }
+  return {
+    active:    Array.isArray(raw.active)    ? raw.active    : [],
+    completed: Array.isArray(raw.completed) ? raw.completed : [],
+    nextSerial: Number.isFinite(raw.nextSerial) ? raw.nextSerial : 1001,
+  };
 }
 function save(store) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    writeJson(STORAGE_KEY, store);
     return true;
   } catch {
     return false;

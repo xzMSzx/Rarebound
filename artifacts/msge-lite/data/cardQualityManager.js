@@ -20,6 +20,8 @@
  *   tcg_card_quality_v2  — v1.5.0 per-copy records, keyed `setId:cardId:c{N}`
  */
 
+import { isPlainObject, readJson, writeJson } from './persistenceStore.js';
+
 const STORAGE_KEY_V1 = 'tcg_card_quality';
 const STORAGE_KEY_V2 = 'tcg_card_quality_v2';
 
@@ -32,15 +34,13 @@ const ELIGIBLE_RARITIES = new Set([
 ]);
 
 function loadV1() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_V1)) || {}; }
-  catch { return {}; }
+  return readJson(STORAGE_KEY_V1, {}, isPlainObject).value;
 }
 function loadV2() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_V2)) || {}; }
-  catch { return {}; }
+  return readJson(STORAGE_KEY_V2, {}, isPlainObject).value;
 }
 function saveV2(store) {
-  try { localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(store)); }
+  try { writeJson(STORAGE_KEY_V2, store); }
   catch {}
 }
 

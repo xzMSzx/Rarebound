@@ -14,15 +14,16 @@
  * Storage key: tcg_favorites  →  string[] (serialised Set)
  */
 
+import { isStringArray, readJson, writeJson } from './persistenceStore.js';
+
 const STORAGE_KEY = 'tcg_favorites';
 
 function load() {
-  try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []); }
-  catch { return new Set(); }
+  return new Set(readJson(STORAGE_KEY, [], isStringArray).value);
 }
 
 function save(s) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...s]));
+  return writeJson(STORAGE_KEY, [...s]);
 }
 
 /** Full favorites as a Set of card IDs. */

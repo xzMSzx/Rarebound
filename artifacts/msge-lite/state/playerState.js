@@ -10,6 +10,7 @@
  */
 
 import { isInfiniteBalance } from '../data/devAccess.js';
+import { isPlainObject, readJson, writeJson } from '../data/persistenceStore.js';
 
 const STORAGE_KEY      = 'tcg_player_v2';
 const STARTING_BALANCE = 120.00;
@@ -23,9 +24,11 @@ let _wasFreshLaunch = false;
 
 export function loadPlayerState() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      playerState = { ...playerState, ...JSON.parse(saved) };
+    if (localStorage.getItem(STORAGE_KEY)) {
+      playerState = {
+        ...playerState,
+        ...readJson(STORAGE_KEY, playerState, isPlainObject).value,
+      };
     } else {
       _wasFreshLaunch = true;
       savePlayerState();   // persist the starter grant immediately
@@ -40,7 +43,7 @@ export function loadPlayerState() {
 export function wasFreshLaunch() { return _wasFreshLaunch; }
 
 export function savePlayerState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(playerState));
+  return writeJson(STORAGE_KEY, playerState);
 }
 
 export function getBalance() { return playerState.balance; }

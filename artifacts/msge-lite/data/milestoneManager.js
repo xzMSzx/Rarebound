@@ -24,6 +24,7 @@ import { getCachedSetCards } from './cardPoolManager.js';
 import { mapPokemonRarity }  from './rarityMapper.js';
 import { getReputation }     from './reputationManager.js';
 import { getFavorLevel }     from './vendorManager.js';
+import { isPlainObject, readJson, writeJson } from './persistenceStore.js';
 import {
   getPacksOpened,
   getDuplicatesSold,
@@ -192,10 +193,10 @@ export const MILESTONES = CATEGORIES.flatMap(c => c.milestones);
 // ─── Persistence ──────────────────────────────────────────────────────────────
 
 function load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { claimed: [] }; }
-  catch { return { claimed: [] }; }
+  const raw = readJson(STORAGE_KEY, { claimed: [] }, isPlainObject).value;
+  return { claimed: Array.isArray(raw.claimed) ? raw.claimed : [] };
 }
-function save(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+function save(s) { return writeJson(STORAGE_KEY, s); }
 
 // ─── Progress computations ────────────────────────────────────────────────────
 
@@ -456,14 +457,11 @@ export function getMilestoneStatus() {
  *   rewardDiscount  { vendorId, pct, durationMs } — temporary pack discount
  *   rewardArchive   string          — atmospheric archive history label
  */
-export function autoClaimReadyMilestones() {
+export function getReadyMilestoneRewards() {
   const status  = getMilestoneStatus();
   const claimed = [];
-  const s       = load();
-  const set     = new Set(s.claimed);
   for (const m of status) {
     if (m.claimable) {
-      set.add(m.id);
       claimed.push({
         id:             m.id,
         title:          m.title,
@@ -477,11 +475,27 @@ export function autoClaimReadyMilestones() {
       });
     }
   }
-  if (claimed.length > 0) { s.claimed = [...set]; save(s); }
   return claimed;
 }
 
 /** v1.4.0 — read-only list of all claimed milestone IDs. */
+export function markMilestonesClaimed(ids) {
+  const s = load();
+  const set = new Set(s.claimed);
+  for (const id of ids || []) {
+    if (id) set.add(id);
+  }
+  s.claimed = [...set];
+  save(s);
+  return s.claimed;
+}
+
+export function autoClaimReadyMilestones() {
+  const claimed = getReadyMilestoneRewards();
+  if (claimed.length > 0) markMilestonesClaimed(claimed.map(m => m.id));
+  return claimed;
+}
+
 export function getClaimedMilestones() {
   return load().claimed.slice();
 }
