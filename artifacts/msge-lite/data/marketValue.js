@@ -1,4 +1,5 @@
 import { bulkAppendHistory } from './marketHistory.js';
+import { secureRandom } from './cryptoUtils.js';
 
 /**
  * data/marketValue.js — Phase 8 + Phase 9 drift
@@ -108,7 +109,7 @@ export function tickMarketValues(trend) {
     if (trend?.rarities?.includes(tier))                            bias = trend.multiplier;
     if (trend?.types   && m?.types?.some(t => trend.types.includes(t)))  bias = trend.multiplier;
     if (trend?.sets    && m?.setId && trend.sets.includes(m.setId))     bias = trend.multiplier;
-    const drift  = (Math.random() * 2 - 1) * vol;   // ±vol
+    const drift  = (secureRandom() * 2 - 1) * vol;   // ±vol
     let next     = values[id] * (1 + drift) * bias;
     next         = Math.min(range[1], Math.max(range[0], next));
     values[id]   = +next.toFixed(2);

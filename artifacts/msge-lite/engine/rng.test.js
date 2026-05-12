@@ -1,16 +1,21 @@
-import { describe, it, expect } from 'vitest';
-import { weightedRandom } from './rng.js';
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { setSeed, getSeed } from './rng.js';
 
-describe('weightedRandom', () => {
-  it('throws an error if options is an empty array', () => {
-    expect(() => weightedRandom([])).toThrowError('weightedRandom: options array must not be empty');
+describe('RNG setSeed', () => {
+  test('should update the seed value', () => {
+    setSeed(999);
+    assert.strictEqual(getSeed(), 999);
   });
 
-  it('throws an error if options is null', () => {
-    expect(() => weightedRandom(null)).toThrowError('weightedRandom: options array must not be empty');
-  });
+  test('should treat seed as unsigned 32-bit integer', () => {
+    setSeed(-1);
+    assert.strictEqual(getSeed(), 4294967295);
 
-  it('throws an error if options is undefined', () => {
-    expect(() => weightedRandom(undefined)).toThrowError('weightedRandom: options array must not be empty');
+    setSeed(4294967296);
+    assert.strictEqual(getSeed(), 0);
+
+    setSeed(0.5);
+    assert.strictEqual(getSeed(), 0);
   });
 });
