@@ -57,7 +57,7 @@ export function getRank() {
   const progressPct = next
     ? Math.min(100, ((points - current.min) / (next.min - current.min)) * 100)
     : 100;
-  return { name: current.name, description: current.description || '', current: points, nextMin: next?.min ?? null, progressPct };
+  return { name: current.name, description: current.description ?? '', current: points, nextMin: next?.min ?? null, progressPct };
 }
 
 export function getAllRanks() { return RANKS.slice(); }
