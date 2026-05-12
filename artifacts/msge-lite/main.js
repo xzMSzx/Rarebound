@@ -2676,7 +2676,8 @@ function renderBinderPage() {
 function buildEvolutionChain(apiCard, setId) {
   const setCards = getCachedSetCards(setId) || [];
   const pokémon  = setCards.filter(c => c.supertype === 'Pokémon');
-  const byName   = (n) => pokémon.find(c => c.name === n);
+  const pokémonMap = new Map(pokémon.map(c => [c.name, c]));
+  const byName   = (n) => pokémonMap.get(n);
   const chain    = [];
   const visited  = new Set();
 
@@ -2704,17 +2705,8 @@ function buildEvolutionChain(apiCard, setId) {
 
 // ─── Card detail / preview modal ──────────────────────────────────────────────
 
-function openCardDetail(apiCard, ownedEntry, setId) {
-  const modal      = document.getElementById('card-detail-modal');
-  // Phase 10.1.8: ?nooverlays=1 removes this node from the DOM at boot.
-  // Without this guard, every card tap would crash with TypeError.
-  if (!modal) {
-    console.warn('[Modal] #card-detail-modal not in DOM — open SKIPPED (nooverlays flag?)');
-    return;
-  }
+function buildCardDetailHTML(apiCard, ownedEntry, resolvedSetId, value, rarityTier) {
   const isOwned    = ownedEntry !== null;
-  const rarityTier = mapPokemonRarity(apiCard.rarity) || 'common';
-  const value      = getMarketValue(apiCard.id, rarityTier);
   const pullRate   = PULL_RATES[rarityTier]    || '~1 in 1 pack';
   const rarityLbl  = RARITY_LABELS[rarityTier] || apiCard.rarity;
   const wishlisted = isWishlisted(apiCard.id);
@@ -2732,7 +2724,6 @@ function openCardDetail(apiCard, ownedEntry, setId) {
   const imgClass = isOwned ? 'cdp-image' : 'cdp-image cdp-image--preview';
   const imgSrc   = apiCard.images.large || apiCard.images.small;
 
-  const resolvedSetId = setId || apiCard.set?.id;
   const chain         = resolvedSetId ? buildEvolutionChain(apiCard, resolvedSetId) : null;
   let chainHTML = '';
   if (chain) {
@@ -2748,21 +2739,18 @@ function openCardDetail(apiCard, ownedEntry, setId) {
   const rhLine        = rhCount > 0 ? `<div class="cdp-rh-owned">Reverse Holo ×${rhCount}</div>` : '';
   const previewNotice = !isOwned ? `<div class="cdp-not-owned">Not in your collection yet</div>` : '';
 
-  // v1.6.0 — "Archived copy available" section (mini archive preview).
-  // Surfaced only when at least one slab exists for this card. Tap the row
-  // or the CTA to open the full slab viewer for the highest-grade copy.
   let archiveSectionHTML = '';
-  let _archiveTopSlab = null;
+  let archiveTopSlab = null;
   if (resolvedSetId) {
     const _slabsForCard = getSlabsForCard(resolvedSetId, apiCard.id);
     if (_slabsForCard.length > 0) {
-      _archiveTopSlab = _slabsForCard.reduce((best, s) =>
+      archiveTopSlab = _slabsForCard.reduce((best, s) =>
         (s.grade?.tier?.rank || 0) > (best.grade?.tier?.rank || 0) ? s : best,
         _slabsForCard[0]);
-      const _delta = gradedDeltaForSlab(_archiveTopSlab, value);
-      const _tierClass = (_archiveTopSlab.grade?.tier?.id || 'na').toLowerCase().replace(/_/g, '-');
-      const _gradeLbl  = _archiveTopSlab.grade?.tier?.label || 'Graded';
-      const _serial    = _archiveTopSlab.serial || '—';
+      const _delta = gradedDeltaForSlab(archiveTopSlab, value);
+      const _tierClass = (archiveTopSlab.grade?.tier?.id || 'na').toLowerCase().replace(/_/g, '-');
+      const _gradeLbl  = archiveTopSlab.grade?.tier?.label || 'Graded';
+      const _serial    = archiveTopSlab.serial || '—';
       const _moreCount = _slabsForCard.length - 1;
       archiveSectionHTML = `
         <div class="cdp-archive-section cdp-archive-section--${_tierClass}" id="cdp-archive-section">
@@ -2785,12 +2773,13 @@ function openCardDetail(apiCard, ownedEntry, setId) {
       `;
     }
   }
+
   const viewInBinderBtn = (isOwned && resolvedSetId)
     ? `<button class="cdp-view-binder-btn" id="cdp-view-binder">📖 View In Binder</button>` : '';
   const sellBtn = (isOwned && resolvedSetId)
     ? `<button class="cdp-sell-btn" id="cdp-sell">💰 Sell to Vendor</button>` : '';
 
-  modal.innerHTML = `
+  const html = `
     <div class="card-detail-content" id="cdp-panel">
       <div class="cdp-image-wrap">
         <img src="${imgSrc}" alt="${apiCard.name}" class="${imgClass}" />
@@ -2830,7 +2819,10 @@ function openCardDetail(apiCard, ownedEntry, setId) {
       </div>
     </div>
   `;
+  return { html, archiveTopSlab };
+}
 
+function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, value, archiveTopSlab) {
   modal.querySelector('#cdp-panel').onclick = e => e.stopPropagation();
 
   modal.querySelector('#cdp-wishlist-btn').onclick = e => {
@@ -2843,7 +2835,6 @@ function openCardDetail(apiCard, ownedEntry, setId) {
     if (_binderSetId) renderBinderPage();
   };
 
-  // v1.5.1 — Favorite toggle (owned cards only).
   const favBtn = modal.querySelector('#cdp-fav-btn');
   if (favBtn) {
     favBtn.onclick = e => {
@@ -2856,7 +2847,7 @@ function openCardDetail(apiCard, ownedEntry, setId) {
       favBtn.textContent = nowFav ? '♥' : '♡';
       logActivity(
         nowFav ? 'favorited' : 'unfavorited',
-        nowFav ? `Added ${apiCard.name} to Favorites` : `Removed ${apiCard.name} from Favorites`,
+        nowFav ? `Added ${apiCard.name} to Favorites` : `Removed ${apiCard.name} from Favorites`
       );
       try { refreshFavoritesScreen(); } catch {}
     };
@@ -2897,13 +2888,12 @@ function openCardDetail(apiCard, ownedEntry, setId) {
     };
   }
 
-  // v1.6.0 — open the slab viewer for the highest-grade archived copy.
   const viewSlabBtn = modal.querySelector('#cdp-view-slab');
-  if (viewSlabBtn && _archiveTopSlab) {
+  if (viewSlabBtn && archiveTopSlab) {
     viewSlabBtn.onclick = e => {
       e.stopPropagation();
       hideScreen(modal);
-      setTimeout(() => openSlabViewer(_archiveTopSlab, apiCard, { rawValue: value }), 220);
+      setTimeout(() => openSlabViewer(archiveTopSlab, apiCard, { rawValue: value }), 220);
     };
   }
 
@@ -2915,6 +2905,25 @@ function openCardDetail(apiCard, ownedEntry, setId) {
       setTimeout(() => openSellModal(apiCard, ownedEntry, resolvedSetId), 260);
     };
   }
+}
+
+function openCardDetail(apiCard, ownedEntry, setId) {
+  const modal = document.getElementById('card-detail-modal');
+  // Phase 10.1.8: ?nooverlays=1 removes this node from the DOM at boot.
+  // Without this guard, every card tap would crash with TypeError.
+  if (!modal) {
+    console.warn('[Modal] #card-detail-modal not in DOM — open SKIPPED (nooverlays flag?)');
+    return;
+  }
+
+  const resolvedSetId = setId || apiCard.set?.id;
+  const rarityTier = mapPokemonRarity(apiCard.rarity) || 'common';
+  const value      = getMarketValue(apiCard.id, rarityTier);
+
+  const { html, archiveTopSlab } = buildCardDetailHTML(apiCard, ownedEntry, resolvedSetId, value, rarityTier);
+  modal.innerHTML = html;
+
+  attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, value, archiveTopSlab);
 
   showScreen(modal);
   lockBodyScroll();
