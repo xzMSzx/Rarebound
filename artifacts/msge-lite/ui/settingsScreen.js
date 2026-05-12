@@ -196,10 +196,8 @@ function devToolsHTML() {
   `;
 }
 
-function render() {
-  const s    = getSettings();
-  const dev  = isDevUnlocked();
-  screenEl.innerHTML = `
+function getSettingsHTML(s, dev) {
+  return `
     <div class="screen-header">
       <button class="screen-back-btn" id="settings-back-btn">← Back</button>
       <h2>Settings</h2>
@@ -304,8 +302,9 @@ function render() {
       </div>
     </div>
   `;
+}
 
-  // ─── Wire base toggles ─────────────────────────────────────────────────
+function wireBaseSettings() {
   screenEl.querySelectorAll('.settings-row[data-key]').forEach(row => {
     const key = row.getAttribute('data-key');
     if (key === 'infinite') return;        // dev tool, wired below
@@ -324,8 +323,9 @@ function render() {
     sfx.click();
     closeSettingsScreen();
   };
+}
 
-  // ─── Reset Local Save ─────────────────────────────────────────────────
+function wireResetModal() {
   const modal = screenEl.querySelector('#settings-confirm-modal');
   screenEl.querySelector('#settings-reset-btn').onclick = () => {
     haptic('medium');
@@ -338,8 +338,9 @@ function render() {
     resetLocalSave();
     location.reload();
   };
+}
 
-  // ─── Developer Access link / modal ────────────────────────────────────
+function wireDevAccess() {
   const devLink   = screenEl.querySelector('#settings-dev-link');
   const devModal  = screenEl.querySelector('#dev-access-modal');
   const devInput  = devModal.querySelector('#dev-access-input');
@@ -375,8 +376,9 @@ function render() {
   };
   devModal.querySelector('#dev-access-unlock').onclick = tryUnlock;
   devInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
+}
 
-  // ─── Developer Tools (only present when unlocked) ─────────────────────
+function wireDevTools() {
   if (!isDevUnlocked()) return;
 
   const confirmModal = screenEl.querySelector('#dev-confirm-modal');
@@ -456,8 +458,10 @@ function render() {
       }
     });
   });
+}
 
-  // ─── System Diagnostics wiring ─────────────────────────────────────────
+function wireDiagnostics() {
+  if (!isDevUnlocked()) return;
 
   // Collapsible toggle
   const diagToggle = screenEl.querySelector('#diag-section-toggle');
@@ -544,6 +548,18 @@ function render() {
     haptic('heavy');
     location.reload();
   });
+}
+
+function render() {
+  const s    = getSettings();
+  const dev  = isDevUnlocked();
+  screenEl.innerHTML = getSettingsHTML(s, dev);
+
+  wireBaseSettings();
+  wireResetModal();
+  wireDevAccess();
+  wireDevTools();
+  wireDiagnostics();
 }
 
 export function openSettingsScreen() {
