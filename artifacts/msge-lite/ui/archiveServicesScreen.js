@@ -25,6 +25,7 @@ import {
 } from '../data/agsSubmissionManager.js';
 import { isEligibleRarity } from '../data/cardQualityManager.js';
 import { getCollection } from '../data/collectionManager.js';
+import { rawCopiesAvailable } from '../data/agsAvailability.js';
 import { getCachedSetCards } from '../data/cardPoolManager.js';
 import { mapPokemonRarity } from '../data/rarityMapper.js';
 import { getMarketValue, getAllMarketValues } from '../data/marketValue.js';
@@ -468,6 +469,11 @@ function onSubmitClicked(btn, hooks) {
   if (!apiCard) return;
 
   const ownedCount = getCollection()[setId]?.[cardId]?.count || 0;
+  if (rawCopiesAvailable(setId, cardId, ownedCount) <= 0) {
+    hooks.showToast?.('No free copies available for submission.', 'warn');
+    renderArchiveServicesScreen(hooks);
+    return;
+  }
   const copyN = nextSubmittableCopyN(setId, cardId, ownedCount);
   if (!copyN) {
     hooks.showToast?.('No free copies available for submission.', 'warn');
@@ -491,6 +497,12 @@ function onSubmitClicked(btn, hooks) {
       }
       const sub = submitForGrading({ setId, cardId, copyN, tier: tierId, rarity: tier });
       if (!sub) {
+        try {
+          hooks.addBalance?.(cost);
+          hooks.onBalanceChanged?.();
+        } catch (err) {
+          console.error('[AGS] refund failed after submission queue failure', err);
+        }
         hooks.showToast?.('Submission could not be queued.', 'warn');
         return;
       }

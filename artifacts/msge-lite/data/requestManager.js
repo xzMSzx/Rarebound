@@ -26,6 +26,7 @@
  */
 
 import { getCollection, decrementCard }   from './collectionManager.js';
+import { rawCopiesAvailable }             from './agsAvailability.js';
 import { getWishlist }                    from './wishlistManager.js';
 import { getCachedSetCards }              from './cardPoolManager.js';
 import { mapPokemonRarity }               from './rarityMapper.js';
@@ -399,17 +400,19 @@ export function findEligibleCards(request) {
       if (wishlist.has(cardId)) continue;
       if (!matchesCriteria(setId, cardId, request.criteria)) continue;
 
+      const rawCount = rawCopiesAvailable(setId, cardId, entry.count);
+      const entryLocked = entry.locked !== false;
       let available;
       if (isAcquire) {
-        // Locked entries always preserve at least one copy.
-        available = entry.locked
-          ? Math.max(0, entry.count - 1)
-          : entry.count;
+        // Locked entries always preserve at least one raw copy.
+        available = entryLocked
+          ? Math.max(0, rawCount - 1)
+          : rawCount;
       } else {
-        // Duplicate mode — sole copies always preserved, locked-last-copy
-        // double-guarded via the count===1 short-circuit.
-        if (entry.locked === true && entry.count <= 1) continue;
-        available = Math.max(0, entry.count - 1);
+        // Duplicate mode preserves one raw copy. AGS-locked copies are not raw
+        // inventory and must not be consumed by request fulfillment.
+        if (entryLocked && rawCount <= 1) continue;
+        available = Math.max(0, rawCount - 1);
       }
       if (available <= 0) continue;
       eligible.push({ setId, cardId, available });

@@ -10,6 +10,7 @@
 
 import { getMarketValue }  from './marketValue.js';
 import { decrementCard, isLocked, unlockCard, getOwnedEntry } from './collectionManager.js';
+import { hasRawCopyAvailable } from './agsAvailability.js';
 import { addFavor, VENDORS } from './vendorManager.js';
 import { addBalance }       from '../state/playerState.js';
 
@@ -53,6 +54,9 @@ export function isSellGated(setId, cardId, count) {
 export function sellCard(setId, cardId, rarityTier, vendorId, opts = {}) {
   const entry = getOwnedEntry(setId, cardId);
   if (!entry) throw new Error('CARD_NOT_OWNED');
+  if (!hasRawCopyAvailable(setId, cardId, entry.count)) {
+    throw new Error('NO_RAW_COPY_AVAILABLE');
+  }
 
   if (entry.count === 1 && isLocked(setId, cardId) && !opts.force) {
     throw new Error('LOCKED_LAST_COPY: caller must confirm unlock before selling.');

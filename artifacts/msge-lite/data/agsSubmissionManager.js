@@ -92,7 +92,12 @@ function load() {
   }
 }
 function save(store) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch {}
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function formatSerial(n) {
@@ -156,7 +161,7 @@ export function submitForGrading({ setId, cardId, copyN, tier, rarity }) {
   };
   const store = load();
   store.active.push(sub);
-  save(store);
+  if (!save(store)) return null;
   return sub;
 }
 
@@ -240,7 +245,7 @@ export function tickSubmissions() {
 
   store.active     = stillActive;
   store.nextSerial = serial;
-  save(store);
+  if (!save(store)) return [];
   return newlyCompleted;
 }
 

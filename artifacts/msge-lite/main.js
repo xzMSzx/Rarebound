@@ -31,7 +31,6 @@ import {
 } from './state/playerState.js';
 import {
   getCollection, addCardToCollection, getOwnedEntry,
-  isLocked, unlockCard,
 } from './data/collectionManager.js';
 import { getMarketValue, getAllMarketValues, enrichMarketMeta } from './data/marketValue.js';
 import { isWishlisted, toggleWishlist, getWishlist } from './data/wishlistManager.js';
@@ -522,6 +521,7 @@ let _agsRevealSafetyTimer = null;
 const AGS_SCREEN_HOOKS = {
   getBalance,
   spendBalance,
+  addBalance,
   onBalanceChanged: updateBalanceUI,
   logActivity,
   showToast,
@@ -1697,24 +1697,26 @@ async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
 
   // v1.2.2e — lock background scroll for the full pack-opening sequence.
   // Prevents Safari rubber-band / scroll-bleed behind the overlay.
-  // Balanced by unlockBodyScroll() after openPackOverlay resolves.
+  // Balanced in finally so load/reveal errors cannot strand iOS scroll.
   lockBodyScroll();
 
-  const animationDone = openPackInteraction(setId);
-  let dataReady = false;
-  const loadDone = (async () => {
-    if (getCurrentSetId() !== setId) await loadSet(setId);
-    setCurrentSet(setId); dataReady = true; hidePackLoadingIndicator();
-  })();
-  await animationDone;
-  if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
+  let newCards = [];
+  try {
+    const animationDone = openPackInteraction(setId);
+    let dataReady = false;
+    const loadDone = (async () => {
+      if (getCurrentSetId() !== setId) await loadSet(setId);
+      setCurrentSet(setId); dataReady = true; hidePackLoadingIndicator();
+    })();
+    await animationDone;
+    if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
 
-  engine.stepSimulation();
-  const newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
-  await openPackOverlay(newCards, engine.state.packsOpened);
-
-  // v1.2.2e — release the pack-opening scroll lock now that the overlay is gone.
-  unlockBodyScroll();
+    engine.stepSimulation();
+    newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
+    await openPackOverlay(newCards, engine.state.packsOpened);
+  } finally {
+    unlockBodyScroll();
+  }
 
   const newDiscoveries = newCards.filter(c => !getOwnedEntry(setId, c.id)).length;
   newCards.forEach(addCard);
@@ -2940,8 +2942,13 @@ function openSellModal(apiCard, ownedEntry, setId) {
     return;
   }
   const rarityTier = mapPokemonRarity(apiCard.rarity) || 'common';
-  const isLastCopy = ownedEntry.count === 1;
-  const gated      = isSellGated(setId, apiCard.id, ownedEntry.count);
+  const agsLocked  = Number(lockedCopiesFor(setId, apiCard.id)) || 0;
+  const rawAvailable = Math.max(0, (ownedEntry.count || 0) - agsLocked);
+  if (rawAvailable <= 0) {
+    showToast('All copies of this card are archived or under AGS review.', 'warn');
+    return;
+  }
+  const gated      = isSellGated(setId, apiCard.id, rawAvailable);
   const isFav      = isFavorited(apiCard.id);
 
   // Build vendor cards (skip Broker — Broker buys nothing)
@@ -3020,15 +3027,21 @@ function openSellModal(apiCard, ownedEntry, setId) {
     confirmBtn.onclick = () => {
       if (!selectedVendor) return;
       haptic('medium');
-      if (gated) unlockCard(setId, apiCard.id);
+      // v1.2.0 — check if it was a duplicate before the sell removes it
+      const preSellEntry = getCollection()[setId]?.[apiCard.id];
+      const wasDuplicate = preSellEntry && preSellEntry.count > 1;
+      let result;
+      try {
+        result = sellCard(setId, apiCard.id, rarityTier, selectedVendor, { force: true });
+      } catch (err) {
+        console.warn('[sell] sale blocked', err);
+        showToast('No raw copy is available to sell.', 'warn');
+        return;
+      }
       // v1.5.1 — sold favorites no longer represent owned copies.
       if (isFav && ownedEntry.count <= 1) {
         try { toggleFavorite(apiCard.id); } catch {}
       }
-      // v1.2.0 — check if it was a duplicate before the sell removes it
-      const preSellEntry = getCollection()[setId]?.[apiCard.id];
-      const wasDuplicate = preSellEntry && preSellEntry.count > 1;
-      const result = sellCard(setId, apiCard.id, rarityTier, selectedVendor, { force: true });
       // stat tracking
       addLifetimeRevenue(result.payout);
       if (wasDuplicate) incrementDuplicatesSold();
