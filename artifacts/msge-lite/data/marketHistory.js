@@ -12,8 +12,29 @@
 const STORAGE_KEY = 'tcg_market_history';
 const MAX_POINTS  = 30;
 
-function load()  { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } }
-function save(h) { localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
+let _cache = null;
+
+function load()  {
+  if (_cache) return _cache;
+  try {
+    _cache = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    return _cache;
+  } catch {
+    _cache = {};
+    return _cache;
+  }
+}
+
+function save(h) {
+  _cache = h;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
+}
+
+/** Wipes all market history from both cache and localStorage. */
+export function clearHistory() {
+  _cache = {};
+  localStorage.removeItem(STORAGE_KEY);
+}
 
 /** Append a new value point for a card. Trims to MAX_POINTS. */
 export function appendHistory(cardId, value) {
