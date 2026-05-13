@@ -3211,7 +3211,10 @@ function renderStatsScreen() {
         const sign = v.delta > 0 ? '+' : (v.delta < 0 ? '' : '');
         const dColor = v.delta > 0 ? 'is-up' : (v.delta < 0 ? 'is-down' : '');
         // Inline sparkline (last up-to-30 points)
-        const pts = v.points.slice(-30);
+        let pts = v.points.slice(-30);
+        if (pts.length === 1) {
+          pts = [{ value: 0 }, pts[0]];
+        }
         let sparkSvg = '';
         if (pts.length >= 2) {
           const max = Math.max(...pts.map(p => p.value), 1);

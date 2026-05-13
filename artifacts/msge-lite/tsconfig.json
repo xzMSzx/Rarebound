@@ -25,8 +25,8 @@
       "@/*": ["./src/*"]
     },
 
-    /* TS 5 deprecation handling */
-    "ignoreDeprecations": "5.0",
+    /* TS 6 deprecation handling */
+    "ignoreDeprecations": "6.0",
 
     "types": ["node", "vite/client"]
   },

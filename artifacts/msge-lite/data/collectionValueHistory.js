@@ -78,7 +78,7 @@ export function recordValueSnapshot(value) {
   const today   = value;
   const prevPt  = points.length >= 2 ? points[points.length - 2] : null;
   const prevDay = prevPt ? prevPt.value : null;
-  const delta   = prevDay === null ? 0 : today - prevDay;
+  const delta   = prevDay === null ? today : today - prevDay;
   return { today, peak: state.lifetimePeak, prevDay, delta };
 }
 
@@ -102,7 +102,7 @@ export function getValueSummary() {
   }
   const today   = points[points.length - 1].value;
   const prevDay = points.length >= 2 ? points[points.length - 2].value : null;
-  const delta   = prevDay === null ? 0 : today - prevDay;
+  const delta   = prevDay === null ? today : today - prevDay;
   return { today, peak: s.lifetimePeak, prevDay, delta, points };
 }
 
