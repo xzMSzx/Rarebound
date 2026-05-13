@@ -426,6 +426,7 @@ function wireDevTools() {
           _hooks.onMarketRefreshed?.();
           break;
         case 'forceBroker':
+          localStorage.setItem('tcg_dev_force_broker', 'true');
           regenerateVendorStock('broker');
           _hooks.onVendorsChanged?.();
           break;

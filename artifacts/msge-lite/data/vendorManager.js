@@ -105,12 +105,14 @@ export function getFavorProgress(vendorId) {
 /** True if the vendor is currently accepting business. Broker = Fri/Sat/Sun. */
 export function isVendorOpen(vendorId) {
   if (vendorId !== 'broker') return true;
+  if (localStorage.getItem('tcg_dev_force_broker') === 'true') return true;
   const day = new Date().getDay();   // 0 Sun … 5 Fri 6 Sat
   return day === 5 || day === 6 || day === 0;
 }
 
 /** Friendly label for when the Broker returns. */
 export function getBrokerNextOpenLabel() {
+  if (localStorage.getItem('tcg_dev_force_broker') === 'true') return null;
   const day = new Date().getDay();
   if (day === 5 || day === 6 || day === 0) return null;
   // 1 Mon → Fri = 4 days, etc.
