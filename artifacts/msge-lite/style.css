@@ -4504,6 +4504,24 @@ body.boot-locked #settings-icon-btn {
   transition: background 0.18s ease;
 }
 .settings-danger-btn:hover { background: rgba(255, 90, 90, 0.08); }
+
+.settings-neutral-btn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(245, 245, 240, 0.65);
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.settings-neutral-btn:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(245, 245, 240, 0.95);
+}
+
 .settings-danger-note {
   padding: 10px 16px 14px;
   font-size: 11px;

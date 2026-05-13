@@ -61,7 +61,7 @@ function authSectionHTML() {
             ${_recentlyConnected ? '<div class="auth-success-msg">Archive Connected</div>' : ''}
           </div>
         </div>
-        <button class="settings-danger-btn" id="settings-logout-btn" style="border-radius: 0 0 14px 14px; border-left: none; border-right: none; border-bottom: none;">Logout</button>
+        <button class="settings-neutral-btn" id="settings-logout-btn">Logout</button>
       </section>
     `;
   }
