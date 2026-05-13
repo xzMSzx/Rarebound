@@ -38,9 +38,11 @@ function authSectionHTML() {
   if (!isAuthConfigured()) {
     return `
       <section class="settings-group auth-panel">
-        <div class="settings-row-text">
-          <div class="settings-row-title">Collector Archive</div>
-          <div class="settings-row-desc">Cloud archive unavailable. Running in local collector mode.</div>
+        <div class="settings-row" style="border-bottom: none;">
+          <div class="settings-row-text">
+            <div class="settings-row-title">Collector Archive</div>
+            <div class="settings-row-desc">Cloud archive unavailable. Running in local collector mode.</div>
+          </div>
         </div>
       </section>
     `;
@@ -50,20 +52,22 @@ function authSectionHTML() {
   if (user) {
     return `
       <section class="settings-group auth-panel">
-        <div class="settings-row-text">
-          <div class="settings-row-title">Collector Archive</div>
-          <div class="settings-row-desc">Collection archive synchronization enabled.</div>
-          <div class="auth-status-email">${user.email}</div>
-          <div class="auth-status-badge">Archive Active</div>
-          ${_recentlyConnected ? '<div class="auth-success-msg">Archive Connected</div>' : ''}
+        <div class="settings-row" style="border-bottom: none;">
+          <div class="settings-row-text">
+            <div class="settings-row-title">Collector Archive</div>
+            <div class="settings-row-desc">Collection archive synchronization enabled.</div>
+            <div class="auth-status-email">${user.email}</div>
+            <div class="auth-status-badge">Archive Active</div>
+            ${_recentlyConnected ? '<div class="auth-success-msg">Archive Connected</div>' : ''}
+          </div>
         </div>
-        <button class="settings-danger-btn" id="settings-logout-btn" style="margin-top: 12px;">Logout</button>
+        <button class="settings-danger-btn" id="settings-logout-btn" style="border-radius: 0 0 14px 14px; border-left: none; border-right: none; border-bottom: none;">Logout</button>
       </section>
     `;
   }
 
   return `
-    <section class="settings-group auth-panel">
+    <section class="settings-group auth-panel" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <div class="settings-row-text">
         <div class="settings-row-title">Collector Archive</div>
         <div class="settings-row-desc">Cloud archive synchronization is unavailable in guest mode.</div>
@@ -278,6 +282,7 @@ function diagSectionHTML() {
 
 function devToolsHTML() {
   const infinite = isInfiniteBalance();
+  const brokerForced = localStorage.getItem('tcg_dev_force_broker') === 'true';
   return `
     <section class="settings-group dev-tools">
       <div class="dev-tools-title">Archive Utilities</div>
@@ -302,12 +307,24 @@ function devToolsHTML() {
         </label>
       </div>
 
+      <div class="settings-row dev-tool-toggle-row">
+        <div class="settings-row-text">
+          <div class="settings-row-title">Force Broker Arrival</div>
+          <div class="settings-row-desc">
+            Overrides time-gates to keep the Broker active.
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="dev-broker-toggle" ${brokerForced ? 'checked' : ''} />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
       <div class="dev-tool-row">
         <button class="dev-tool-btn" data-act="refreshVendors">Refresh Vendor Inventory</button>
         <button class="dev-tool-btn" data-act="refreshMarket">Force Market Refresh</button>
       </div>
       <div class="dev-tool-row">
-        <button class="dev-tool-btn" data-act="forceBroker">Force Broker Arrival</button>
         <button class="dev-tool-btn" data-act="resetRep">Reset Reputation</button>
       </div>
       <div class="dev-tool-row">
