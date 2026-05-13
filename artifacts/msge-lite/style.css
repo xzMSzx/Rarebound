@@ -10040,3 +10040,77 @@ html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::befor
 .cdp-archive-section--ags-8::before {
   background: linear-gradient(90deg, transparent, rgba(150, 180, 220, 0.75), transparent);
 }
+
+/* --- Collector Archive (Auth Section) ---------------------------------- */
+
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.auth-inputs input {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  color: #eee;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: border-color 0.2s, background-color 0.2s;
+  outline: none;
+}
+
+.auth-inputs input:focus {
+  border-color: #bb9955;
+  background-color: #222;
+}
+
+.auth-inputs input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-status-email {
+  font-size: 0.9rem;
+  color: #fff;
+  margin-top: 8px;
+  letter-spacing: 0.03em;
+}
+
+.auth-status-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #bb9955;
+  border: 1px solid #bb9955;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+.auth-error-msg {
+  color: #cc7777;
+  font-size: 0.75rem;
+  margin-top: -4px;
+  margin-bottom: 4px;
+}
+
+.auth-error-msg.hidden {
+  display: none;
+}
+
+.auth-success-msg {
+  color: #bb9955;
+  font-size: 0.8rem;
+  margin-top: 8px;
+  letter-spacing: 0.05em;
+}

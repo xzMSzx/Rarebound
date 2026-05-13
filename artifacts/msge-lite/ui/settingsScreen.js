@@ -26,6 +26,132 @@ import {
   getDiagIsolation, setDiagIsolation,
   applyDiagnosticsState,
 } from '../data/diagnosticsManager.js';
+import {
+  getCurrentUser, isGuestMode, isAuthConfigured,
+  loginUser, signUpUser, handleLogout,
+  lockAuthUI, unlockAuthUI, checkUserSession
+} from './authScreen.js';
+
+let _recentlyConnected = false;
+
+function authSectionHTML() {
+  if (!isAuthConfigured()) {
+    return `
+      <section class="settings-group auth-panel">
+        <div class="settings-row-text">
+          <div class="settings-row-title">Collector Archive</div>
+          <div class="settings-row-desc">Cloud archive unavailable. Running in local collector mode.</div>
+        </div>
+      </section>
+    `;
+  }
+
+  const user = getCurrentUser();
+  if (user) {
+    return `
+      <section class="settings-group auth-panel">
+        <div class="settings-row-text">
+          <div class="settings-row-title">Collector Archive</div>
+          <div class="settings-row-desc">Collection archive synchronization enabled.</div>
+          <div class="auth-status-email">${user.email}</div>
+          <div class="auth-status-badge">Archive Active</div>
+          ${_recentlyConnected ? '<div class="auth-success-msg">Archive Connected</div>' : ''}
+        </div>
+        <button class="settings-danger-btn" id="settings-logout-btn" style="margin-top: 12px;">Logout</button>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="settings-group auth-panel">
+      <div class="settings-row-text">
+        <div class="settings-row-title">Collector Archive</div>
+        <div class="settings-row-desc">Cloud archive synchronization is unavailable in guest mode.</div>
+      </div>
+      <div class="auth-inputs">
+        <input type="email" id="auth-settings-email" placeholder="Email" autocomplete="off" />
+        <input type="password" id="auth-settings-password" placeholder="Password" autocomplete="off" />
+      </div>
+      <div class="auth-error-msg hidden" id="auth-settings-error"></div>
+      <div class="button-row" style="margin-top: 8px;">
+        <button id="auth-settings-login-btn">Login</button>
+        <button id="auth-settings-signup-btn">Create Account</button>
+      </div>
+    </section>
+  `;
+}
+
+function wireAuth() {
+  const loginBtn = screenEl.querySelector('#auth-settings-login-btn');
+  const signupBtn = screenEl.querySelector('#auth-settings-signup-btn');
+  const logoutBtn = screenEl.querySelector('#settings-logout-btn');
+  const emailIn = screenEl.querySelector('#auth-settings-email');
+  const passIn = screenEl.querySelector('#auth-settings-password');
+  const errorMsg = screenEl.querySelector('#auth-settings-error');
+  const panel = screenEl.querySelector('.auth-panel');
+
+  const showError = (msg) => {
+    if (errorMsg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.remove('hidden');
+    }
+  };
+
+  const getCreds = () => {
+    return { email: emailIn?.value.trim(), password: passIn?.value };
+  };
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', async () => {
+      const { email, password } = getCreds();
+      if (!email || !password) return showError('Please enter email and password.');
+      if (errorMsg) errorMsg.classList.add('hidden');
+      lockAuthUI(panel, loginBtn, 'CONNECTING...');
+      const { error } = await loginUser(email, password);
+      unlockAuthUI(panel, loginBtn);
+      if (error) {
+        showError(error.message);
+      } else {
+        _recentlyConnected = true;
+        render();
+        setTimeout(() => {
+          _recentlyConnected = false;
+          render();
+        }, 3000);
+      }
+    });
+  }
+
+  if (signupBtn) {
+    signupBtn.addEventListener('click', async () => {
+      const { email, password } = getCreds();
+      if (!email || !password) return showError('Please enter email and password.');
+      if (errorMsg) errorMsg.classList.add('hidden');
+      lockAuthUI(panel, signupBtn, 'CREATING...');
+      const { data, error } = await signUpUser(email, password);
+      unlockAuthUI(panel, signupBtn);
+      if (error) {
+        showError(error.message);
+      } else if (data?.session) {
+        _recentlyConnected = true;
+        render();
+        setTimeout(() => {
+          _recentlyConnected = false;
+          render();
+        }, 3000);
+      } else {
+        showError('Check your email for the confirmation link.');
+      }
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      lockAuthUI(panel, logoutBtn, 'DISCONNECTING...');
+      await handleLogout();
+    });
+  }
+}
 
 let screenEl;
 
@@ -242,6 +368,8 @@ function getSettingsHTML(s, dev) {
           </label>
         </div>
       </section>
+
+      ${authSectionHTML()}
 
       <section class="settings-group">
         <button class="settings-danger-btn" id="settings-reset-btn">Reset Local Save</button>
@@ -556,6 +684,7 @@ function render() {
   const dev  = isDevUnlocked();
   screenEl.innerHTML = getSettingsHTML(s, dev);
 
+  wireAuth();
   wireBaseSettings();
   wireResetModal();
   wireDevAccess();
