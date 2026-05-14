@@ -646,6 +646,24 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 .rarity-summary-epic      { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
 .rarity-summary-legendary { background-color: #201000; color: #ffcf40; border-color: #664a00; }
 
+/* =========================================
+   Collector Archive / Save Management
+========================================= */
+.auth-panel-layout {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.settings-save-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 16px;
+}
+.settings-group-header {
+  padding: 16px 16px 0;
+}
+
 @media (max-width: 700px) {
   .skip-summary-card { width: 58px; height: 82px; }
   .skip-summary-letter { font-size: 1.5rem; }

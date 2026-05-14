@@ -9,6 +9,9 @@
 import {
   getSettings, setSetting, resetLocalSave, APP_VERSION,
 } from '../data/settingsManager.js';
+import {
+  exportSnapshot, importSnapshot 
+} from '../persistence/snapshotUtility.js';
 import { haptic } from '../data/hapticManager.js';
 import { sfx, refreshAmbientFromSettings } from '../data/ambientAudioManager.js';
 import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
@@ -67,7 +70,7 @@ function authSectionHTML() {
   }
 
   return `
-    <section class="settings-group auth-panel" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+    <section class="settings-group auth-panel auth-panel-layout">
       <div class="settings-row-text">
         <div class="settings-row-title">Collector Archive</div>
         <div class="settings-row-desc">Cloud archive synchronization is unavailable in guest mode.</div>
@@ -388,12 +391,34 @@ function getSettingsHTML(s, dev) {
 
       ${authSectionHTML()}
 
-      <section class="settings-group">
-        <button class="settings-danger-btn" id="settings-reset-btn">Reset Local Save</button>
-        <div class="settings-danger-note">
-          Permanently clears your collection, balance, favor, and market history on this device.
-        </div>
-      </section>
+<section class="settings-group">
+  <div class="settings-group-header">
+    <div class="settings-row-title">Local Save Management</div>
+    <div class="settings-row-desc">
+      Manually backup or restore your local collector data.
+    </div>
+  </div>
+
+  <div class="settings-save-actions">
+    <button class="settings-neutral-btn" id="settings-export-btn">
+      Export Save
+    </button>
+
+    <button class="settings-neutral-btn" id="settings-import-btn">
+      Import Save
+    </button>
+  </div>
+</section>
+
+<section class="settings-group">
+  <button class="settings-danger-btn" id="settings-reset-btn">
+    Reset Local Save
+  </button>
+
+  <div class="settings-danger-note">
+    Permanently clears your collection, balance, favor, and market history on this device.
+  </div>
+</section>
 
       ${dev ? devToolsHTML() : ''}
 
@@ -468,6 +493,27 @@ function wireBaseSettings() {
     sfx.click();
     closeSettingsScreen();
   };
+}
+
+function wireSaveManagement() {
+  const exportBtn = screenEl.querySelector('#settings-export-btn');
+  const importBtn = screenEl.querySelector('#settings-import-btn');
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      haptic('soft');
+      sfx.click();
+      exportSnapshot();
+    });
+  }
+
+  if (importBtn) {
+    importBtn.addEventListener('click', () => {
+      haptic('soft');
+      sfx.click();
+      importSnapshot();
+    });
+  }
 }
 
 function wireResetModal() {
@@ -556,7 +602,11 @@ function wireDevTools() {
   const brokerBox = screenEl.querySelector('#dev-broker-toggle');
   if (brokerBox) {
     brokerBox.addEventListener('change', () => {
-      localStorage.setItem('tcg_dev_force_broker', brokerBox.checked ? 'true' : 'false');
+      if (brokerBox.checked) {
+        localStorage.setItem('tcg_dev_force_broker', 'true');
+      } else {
+        localStorage.removeItem('tcg_dev_force_broker');
+      }
       haptic('medium');
       sfx.click();
       if (brokerBox.checked) {
@@ -708,10 +758,12 @@ function wireDiagnostics() {
 function render() {
   const s    = getSettings();
   const dev  = isDevUnlocked();
+
   screenEl.innerHTML = getSettingsHTML(s, dev);
 
   wireAuth();
   wireBaseSettings();
+  wireSaveManagement();
   wireResetModal();
   wireDevAccess();
   wireDevTools();
