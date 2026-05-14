@@ -258,7 +258,7 @@ function openGraphModal(cardId) {
 
   modal.innerHTML = `
     <div class="graph-modal-content" id="graph-modal-content">
-      <button class="graph-close-btn" id="graph-close-btn">×</button>
+      <button class="graph-close-btn" id="graph-close-btn" aria-label="Close">×</button>
       <img class="graph-card-art" src="${meta.apiCard.images.large || meta.apiCard.images.small}" alt="${meta.apiCard.name}" />
       <div class="graph-card-name">${meta.apiCard.name}</div>
       <div class="graph-card-meta">${RARITY_LABELS[tier] || tier} · ${PACK_STORE[meta.setId]?.name || meta.setId}</div>
