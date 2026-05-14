@@ -1,19 +1,23 @@
 /**
- * Canonical Save Schema v1 Adapter
- * 
- * Acts as a compatibility bridge between the canonical JSON save payload
+ * Canonical Save Schema v1 Adapter (Hardened)
+ * * Acts as a strict compatibility bridge between the canonical JSON save payload
  * and the existing fragmented localStorage architecture.
  */
 
 const EXPECTED_SCHEMA_VERSION = 1;
 
 /**
- * Safely writes a value to localStorage, handling serialization and quotas.
- * @param {string} key 
+ * Safely writes a value to localStorage.
+ * If the value is null/undefined, it actively purges the local key 
+ * to prevent legacy ghost states from bleeding through a restored save.
+ * * @param {string} key 
  * @param {any} value 
  */
 function safeWrite(key, value) {
-    if (value === undefined || value === null) return;
+    if (value === undefined || value === null) {
+        localStorage.removeItem(key); // PATcH: Prevent Ghost State desync
+        return;
+    }
     try {
         localStorage.setItem(key, JSON.stringify(value));
     } catch (err) {
@@ -57,9 +61,9 @@ export function validateCanonicalPayload(payload) {
 }
 
 /**
- * Reads a canonical save payload and rehydrates the existing fragmented localStorage keys.
- * Allows current game systems/managers to continue functioning unchanged.
- * @param {object} payload - The canonical Save Schema v1 payload
+ * Reads a canonical save payload and strictly rehydrates the existing fragmented localStorage keys.
+ * actively sanitizing omitted state to prevent ghost data bleed.
+ * * @param {object} payload - The canonical Save Schema v1 payload
  * @returns {boolean} True if successful, false if validation failed
  */
 export function deserializeCanonicalSave(payload) {
@@ -68,6 +72,12 @@ export function deserializeCanonicalSave(payload) {
     }
 
     try {
+        // PATCH: Prevent Transient Log Haunting. 
+        // Actively clear high-frequency local state so it doesn't pollute the restored profile.
+        ['tcg_activity', 'tcg_recent_hits', 'tcg_market_history'].forEach(key => {
+            localStorage.removeItem(key);
+        });
+
         // --- PLAYER ---
         if (payload.player) {
             if (payload.player.profile) safeWrite('tcg_player_v2', payload.player.profile);
@@ -126,6 +136,7 @@ export function deserializeCanonicalSave(payload) {
             }
             safeWrite('tcg_box_offerings', payload.activities.mysteryBoxes);
             safeWrite('tcg_recovery_state', payload.activities.recovery);
+            safeWrite('tcg_distress_state', payload.activities.distress); // PATCH: Added missing mapping
         }
 
         // --- HISTORY ---
@@ -134,7 +145,7 @@ export function deserializeCanonicalSave(payload) {
             safeWrite('tcg_value_history', payload.history.valueHistory);
         }
 
-        console.log('[SaveAdapter] Successfully deserialized canonical payload into localStorage.');
+        console.log('[SaveAdapter] Successfully and strictly deserialized canonical payload into localStorage.');
         return true;
     } catch (err) {
         console.error('[SaveAdapter] Catastrophic failure during deserialization:', err);
@@ -200,7 +211,8 @@ export function serializeToCanonicalSave() {
                 emergency: safeRead('tcg_emergency_requests', {})
             },
             mysteryBoxes: safeRead('tcg_box_offerings', {}),
-            recovery: safeRead('tcg_recovery_state', null)
+            recovery: safeRead('tcg_recovery_state', null),
+            distress: safeRead('tcg_distress_state', null) // PATCH: Added missing mapping
         },
         history: {
             archiveHistory: safeRead('tcg_archive_history', []),
