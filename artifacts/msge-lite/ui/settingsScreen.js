@@ -552,6 +552,20 @@ function wireDevTools() {
     _hooks.onInfiniteToggled?.(infBox.checked);
   });
 
+  // Force Broker toggle
+  const brokerBox = screenEl.querySelector('#dev-broker-toggle');
+  if (brokerBox) {
+    brokerBox.addEventListener('change', () => {
+      localStorage.setItem('tcg_dev_force_broker', brokerBox.checked ? 'true' : 'false');
+      haptic('medium');
+      sfx.click();
+      if (brokerBox.checked) {
+        regenerateVendorStock('broker');
+      }
+      _hooks.onVendorsChanged?.();
+    });
+  }
+
   // Action buttons
   screenEl.querySelectorAll('.dev-tool-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -569,11 +583,6 @@ function wireDevTools() {
         case 'refreshMarket':
           runRefresh();
           _hooks.onMarketRefreshed?.();
-          break;
-        case 'forceBroker':
-          localStorage.setItem('tcg_dev_force_broker', 'true');
-          regenerateVendorStock('broker');
-          _hooks.onVendorsChanged?.();
           break;
         case 'resetRep':
           askConfirm('Reset reputation?', 'All collector rank progress will be cleared.', () => {
