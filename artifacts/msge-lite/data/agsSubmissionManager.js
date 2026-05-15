@@ -154,6 +154,7 @@ export function submitForGrading({ setId, cardId, copyN, tier, rarity }) {
     uid: copyKey(setId, cardId, copyN),
     setId, cardId, copyN,
     tier: tierDef.id,
+    rarity,
     submittedAt: now,
     returnAt:    now + tierDef.durationMs,
   };
@@ -233,6 +234,7 @@ export function tickSubmissions() {
       gradedAt: now,
       grade,
       prestigeSlab: !!SUBMISSION_TIERS[sub.tier]?.prestigeSlab,
+      rarity: sub.rarity,
       serial: formatSerial(serial++),
     };
     store.completed.push(slab);

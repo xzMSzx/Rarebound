@@ -1,5 +1,6 @@
 import { bulkAppendHistory } from './marketHistory.js';
 import { secureRandom } from './cryptoUtils.js';
+import * as profileStorage from './profileStorage.js';
 
 /**
  * data/marketValue.js — Phase 8 + Phase 9 drift
@@ -44,20 +45,28 @@ function hashFraction(str) {
   return h / 0xffffffff;
 }
 
-function loadValues() { try { return JSON.parse(localStorage.getItem(VALUE_KEY)) || {}; } catch { return {}; } }
-function saveValues(v) { localStorage.setItem(VALUE_KEY, JSON.stringify(v)); }
-function loadMeta()   { try { return JSON.parse(localStorage.getItem(META_KEY))  || {}; } catch { return {}; } }
-function saveMeta(m)  { localStorage.setItem(META_KEY,  JSON.stringify(m)); }
+function loadValues() { try { return JSON.parse(profileStorage.getItem(VALUE_KEY)) || {}; } catch { return {}; } }
+function saveValues(v) { profileStorage.setItem(VALUE_KEY, JSON.stringify(v)); }
+function loadMeta()   { try { return JSON.parse(profileStorage.getItem(META_KEY))  || {}; } catch { return {}; } }
+function saveMeta(m)  { profileStorage.setItem(META_KEY,  JSON.stringify(m)); }
 
 /** Persisted market value for a card. Generates + writes on first call. */
 export function getMarketValue(cardId, rarityTier) {
   if (!cardId) return 0;
   const values = loadValues();
-  if (values[cardId] != null) return values[cardId];
+  if (values[cardId] != null) {
+    console.log(`[MarketValue] cache hit - id: ${cardId}, tier: ${rarityTier}, val: ${values[cardId]}`);
+    return values[cardId];
+  }
 
   const [min, max] = VALUE_RANGES[rarityTier] ?? VALUE_RANGES.common;
+  const fallbackSource = VALUE_RANGES[rarityTier] ? 'rarity-range' : 'common-fallback';
   const v = min + hashFraction(cardId) * (max - min);
-  values[cardId] = +v.toFixed(2);
+  const finalVal = +v.toFixed(2);
+  
+  console.log(`[MarketValue] cache miss - id: ${cardId}, tier: ${rarityTier}, resolved val: ${finalVal}, fallback source: ${fallbackSource}`);
+  
+  values[cardId] = finalVal;
   saveValues(values);
 
   // Track tier so we can drift later

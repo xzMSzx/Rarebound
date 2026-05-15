@@ -1,3 +1,4 @@
+import * as profileStorage from './profileStorage.js';
 /**
  * data/marketHistory.js — Phase 9.8
  *
@@ -17,7 +18,7 @@ let _cache = null;
 function load()  {
   if (_cache) return _cache;
   try {
-    _cache = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    _cache = JSON.parse(profileStorage.getItem(STORAGE_KEY)) || {};
     return _cache;
   } catch {
     _cache = {};
@@ -27,13 +28,13 @@ function load()  {
 
 function save(h) {
   _cache = h;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
+  profileStorage.setItem(STORAGE_KEY, JSON.stringify(h));
 }
 
-/** Wipes all market history from both cache and localStorage. */
+/** Wipes all market history from both cache and profileStorage. */
 export function clearHistory() {
   _cache = {};
-  localStorage.removeItem(STORAGE_KEY);
+  profileStorage.removeItem(STORAGE_KEY);
 }
 
 /** Append a new value point for a card. Trims to MAX_POINTS. */
@@ -47,7 +48,7 @@ export function appendHistory(cardId, value) {
   save(h);
 }
 
-/** Bulk version: write many cards at once (one localStorage write). */
+/** Bulk version: write many cards at once (one profileStorage write). */
 export function bulkAppendHistory(entries) {
   if (!entries || entries.length === 0) return;
   const h  = load();
@@ -63,7 +64,7 @@ export function bulkAppendHistory(entries) {
 }
 
 /** Snapshot the entire history map. Useful for batch UI renders that
- *  would otherwise re-parse localStorage once per row. */
+ *  would otherwise re-parse profileStorage once per row. */
 export function getAllHistory() { return load(); }
 
 // ─── Seeding ─────────────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ export function seedInitialHistory(cardId, baseValue, tier = 'common') {
 }
 
 /**
- * Bulk-seed many cards at once (single localStorage write).
+ * Bulk-seed many cards at once (single profileStorage write).
  * Only seeds cards whose history array is empty or missing.
  * @param {Array<{cardId:string, value:number, tier:string}>} entries
  */

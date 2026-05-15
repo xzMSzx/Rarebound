@@ -70,7 +70,7 @@ export function gradedDeltaForSlab(slab, rawValue) {
 export function totalArchiveValue(slabs, rawLookup) {
   let sum = 0;
   for (const slab of slabs) {
-    const raw = rawLookup(slab.setId, slab.cardId, slab.grade?.tier ? '' : '') || 0;
+    const raw = rawLookup(slab.setId, slab.cardId, slab.rarity || slab.grade?.tier?.id || '') || 0;
     sum += gradedValueFromRaw(raw, slab.grade);
   }
   return Math.round(sum * 100) / 100;
