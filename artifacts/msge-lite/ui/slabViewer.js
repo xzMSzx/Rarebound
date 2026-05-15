@@ -13,6 +13,8 @@
 import { renderSlab, renderPremiumSlab } from './slabRenderer.js';
 import { tierLabel } from '../data/agsGradingEngine.js';
 import { gradedValueFromRaw } from '../data/agsMarketIntegration.js';
+import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
+import { onEscapeKey } from './overlayScrollLock.js';
 
 /**
  * @param {object} slab     — GradedSlab from agsSubmissionManager
@@ -80,6 +82,8 @@ export function openSlabViewer(slab, apiCard, opts = {}) {
   `;
 
   document.body.appendChild(root);
+  lockBodyScroll();
+
   // Mount the slab itself (full variant, with subgrades + serial)
   const slabWrap = root.querySelector('.slab-viewer__slab-wrap');
   // v1.5.2 — use the new premium nested-shell slab in the full-screen viewer.
@@ -87,9 +91,14 @@ export function openSlabViewer(slab, apiCard, opts = {}) {
   slabWrap?.appendChild(renderPremiumSlab(slab, apiCard));
 
   let closed = false;
+  /** @type {() => void} */
+  let disposeEscape = () => {};
+
   const close = () => {
     if (closed) return;
     closed = true;
+    disposeEscape();
+    unlockBodyScroll();
     root.classList.add('is-closing');
     setTimeout(() => {
       root.remove();
@@ -99,6 +108,11 @@ export function openSlabViewer(slab, apiCard, opts = {}) {
   requestAnimationFrame(() => root.classList.add('is-visible'));
   root.querySelector('.slab-viewer__close')?.addEventListener('click', close);
   root.querySelector('.slab-viewer__backdrop')?.addEventListener('click', close);
+
+  disposeEscape = onEscapeKey((e) => {
+    e.preventDefault();
+    close();
+  });
 
   return { close };
 }

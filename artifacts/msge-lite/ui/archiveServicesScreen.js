@@ -33,6 +33,8 @@ import { gradedValueFromRaw, gradedDeltaForSlab } from '../data/agsMarketIntegra
 import { showAgsSubmissionModal } from './agsSubmissionModal.js';
 import { openSlabViewer } from './slabViewer.js';
 import { renderSlab } from './slabRenderer.js';
+import { onEscapeKey } from './overlayScrollLock.js';
+import { recordChronologicalCollectionSnapshot } from '../data/collectionValueHistory.js';
 
 const ELIGIBLE_LABELS = {
   doubleRare:'Double Rare', ultraRare:'Ultra Rare',
@@ -48,6 +50,8 @@ let _state = {
 };
 
 let _hookedTick = false;
+
+const _agsArchiveEscapeDispose = new WeakMap();
 
 // ─── Public ──────────────────────────────────────────────────────────────────
 
@@ -73,6 +77,8 @@ export function openArchiveServicesScreen(hooks) {
 export function closeArchiveServicesScreen() {
   const screen = document.getElementById('archive-services-screen');
   if (!screen) return;
+  _agsArchiveEscapeDispose.get(screen)?.();
+  _agsArchiveEscapeDispose.delete(screen);
   screen.classList.add('hidden');
   setTimeout(() => {
     if (screen.classList.contains('hidden')) screen.style.display = 'none';
@@ -422,6 +428,13 @@ function renderEligibleTile(row) {
 // ─── Wire interactions (single function, called once per render) ────────────
 
 function wireInteractions(screen, hooks) {
+  _agsArchiveEscapeDispose.get(screen)?.();
+  _agsArchiveEscapeDispose.set(screen, onEscapeKey((e) => {
+    e.preventDefault();
+    if (screen.classList.contains('hidden')) return;
+    closeArchiveServicesScreen();
+  }));
+
   const backBtn = screen.querySelector('#ags-back-btn');
   backBtn?.addEventListener('click', closeArchiveServicesScreen);
 
@@ -511,6 +524,7 @@ function onSubmitClicked(btn, hooks) {
       hooks.showToast?.(`Submitted ${apiCard.name} to AGS.`, 'rep');
       hooks.logActivity?.('ags_submitted',
         `AGS · submitted ${apiCard.name} (${SUBMISSION_TIERS[tierId].label})`);
+      try { recordChronologicalCollectionSnapshot(); } catch {}
       // Auto-jump to Active tab so the player can see what they just submitted
       _state.activeTab = 'active';
       renderArchiveServicesScreen(hooks);

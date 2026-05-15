@@ -14,6 +14,8 @@
 
 import { SUBMISSION_TIERS } from '../data/agsSubmissionManager.js';
 import { atmosphericHint } from '../data/agsGradingEngine.js';
+import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
+import { onEscapeKey } from './overlayScrollLock.js';
 
 /**
  * @param {object} apiCard       — pokemontcg.io card object
@@ -67,11 +69,17 @@ export function showAgsSubmissionModal(apiCard, args) {
     </div>
   `;
   document.body.appendChild(root);
+  lockBodyScroll();
 
   let closed = false;
+  /** @type {() => void} */
+  let disposeEscape = () => {};
+
   const close = () => {
     if (closed) return;
     closed = true;
+    disposeEscape();
+    unlockBodyScroll();
     root.classList.add('is-closing');
     setTimeout(() => {
       root.remove();
@@ -82,6 +90,11 @@ export function showAgsSubmissionModal(apiCard, args) {
 
   root.querySelector('.ags-modal__close')?.addEventListener('click', close);
   root.querySelector('.ags-modal__backdrop')?.addEventListener('click', close);
+
+  disposeEscape = onEscapeKey((e) => {
+    e.preventDefault();
+    close();
+  });
 
   root.querySelectorAll('[data-tier-id]').forEach(btn => {
     btn.addEventListener('click', () => {

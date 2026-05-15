@@ -47,6 +47,8 @@ import {
 import { getReputation, addReputation, getRank, getAllRanks } from './data/reputationManager.js';
 import { calculateSellPayout, isSellGated, sellCard }    from './data/sellingManager.js';
 import { lockBodyScroll, unlockBodyScroll, getLockDepth } from './ui/scrollManager.js';
+import { onEscapeKey } from './ui/overlayScrollLock.js';
+import { computeTotalCollectionValue, lineValueForCollectionEntry } from './data/collectionValuation.js';
 import {
   getDailyChase, getChaseBoost, isChaseCard,
   getBrokerInventory, removeBrokerPick,
@@ -115,7 +117,7 @@ import {
   tickVendorEvents, getVendorEvent, getVendorEventEffect, getVendorEventTimeLeft,
 } from './data/vendorEventsManager.js';
 import {
-  recordValueSnapshot, getValueSummary,
+  recordChronologicalCollectionSnapshot, getValueSummary,
 } from './data/collectionValueHistory.js';
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
@@ -450,6 +452,13 @@ let _collectionScrollTop = 0;
 // decide whether to shed binder's extra lock or repurpose it as collection's.
 let _binderCameFromCollection = false;
 
+/** Card-detail modal Escape listener — cleared whenever the modal closes or spawns a child flow. */
+let _disposeCardDetailEscape = null;
+function tearDownCardDetailEscape() {
+  _disposeCardDetailEscape?.();
+  _disposeCardDetailEscape = null;
+}
+
 // ─── Mystery box emblems (must be declared before renderVendorHub() runs) ─────
 //
 // Per-vendor emblem SVGs (inline, no external assets).
@@ -519,6 +528,8 @@ window.__rb_getOrCreateQuality = getOrCreateQuality;
 const _agsRevealQueue = [];
 let _agsRevealActive = false;
 let _agsRevealSafetyTimer = null;
+/** Prevents stacking multiple body locks when openAgsScreen is invoked repeatedly. */
+let _agsHubScrollLockHeld = false;
 const AGS_SCREEN_HOOKS = {
   getBalance,
   spendBalance,
@@ -529,7 +540,10 @@ const AGS_SCREEN_HOOKS = {
   haptic,
 };
 function openAgsScreen() {
-  lockBodyScroll();
+  if (!_agsHubScrollLockHeld) {
+    lockBodyScroll();
+    _agsHubScrollLockHeld = true;
+  }
   openArchiveServicesScreen(AGS_SCREEN_HOOKS);
 }
 function enqueueAgsReveals(slabs, reducedMotion) {
@@ -696,6 +710,7 @@ setInterval(() => {
     if (completed.length > 0) {
       const reduced = !!getSettings().reducedMotion;
       enqueueAgsReveals(completed, reduced);
+      try { recordCollectionValueSnapshot(); } catch {}
       // Notify any open AGS screen so it re-renders.
       document.dispatchEvent(new CustomEvent('ags-tick'));
     } else {
@@ -2075,20 +2090,7 @@ function maybeFirstArchive(key, label) {
  * Lifetime-peak transitions are recorded as archive events.
  */
 function recordCollectionValueSnapshot() {
-  const collection = getCollection();
-  const allValues  = getAllMarketValues();
-  let totalValue = 0;
-  for (const [setId, cards] of Object.entries(collection)) {
-    const cached = getCachedSetCards(setId) || [];
-    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
-    for (const cardId of Object.keys(cards)) {
-      const apiCard = byId[cardId];
-      const tier    = apiCard ? mapPokemonRarity(apiCard.rarity) : 'common';
-      const val     = allValues[cardId] ?? getMarketValue(cardId, tier);
-      totalValue   += val;
-    }
-  }
-  const summary = recordValueSnapshot(totalValue);
+  const summary = recordChronologicalCollectionSnapshot();
   // Lifetime peak — archive once per peak (key includes rounded value to dedupe)
   if (summary.today === summary.peak && summary.today > 0) {
     const key = `value_peak:${Math.floor(summary.peak / 50) * 50}`;
@@ -2866,7 +2868,9 @@ function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, va
       const target = setCards.find(c => c.id === tid);
       if (!target) return;
       const ownedEvo = getCollection()[resolvedSetId]?.[tid] ?? null;
+      tearDownCardDetailEscape();
       hideScreen(modal);
+      unlockBodyScroll();
       setTimeout(() => openCardDetail(target, ownedEvo, resolvedSetId), 60);
     };
   });
@@ -2875,7 +2879,9 @@ function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, va
   if (viewBtn) {
     viewBtn.onclick = e => {
       e.stopPropagation();
+      tearDownCardDetailEscape();
       hideScreen(modal);
+      unlockBodyScroll();
       setTimeout(() => {
         if (_binderSetId === resolvedSetId) {
           const all = getCachedSetCards(resolvedSetId) || [];
@@ -2896,7 +2902,9 @@ function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, va
   if (viewSlabBtn && archiveTopSlab) {
     viewSlabBtn.onclick = e => {
       e.stopPropagation();
+      tearDownCardDetailEscape();
       hideScreen(modal);
+      unlockBodyScroll();
       setTimeout(() => openSlabViewer(archiveTopSlab, apiCard, { rawValue: value }), 220);
     };
   }
@@ -2905,6 +2913,7 @@ function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, va
   if (sellBtnEl) {
     sellBtnEl.onclick = e => {
       e.stopPropagation();
+      tearDownCardDetailEscape();
       hideScreen(modal);
       setTimeout(() => openSellModal(apiCard, ownedEntry, resolvedSetId), 260);
     };
@@ -2920,6 +2929,8 @@ function openCardDetail(apiCard, ownedEntry, setId) {
     return;
   }
 
+  tearDownCardDetailEscape();
+
   const resolvedSetId = setId || apiCard.set?.id;
   const rarityTier = mapPokemonRarity(apiCard.rarity) || 'common';
   const value      = getMarketValue(apiCard.id, rarityTier);
@@ -2931,7 +2942,18 @@ function openCardDetail(apiCard, ownedEntry, setId) {
 
   showScreen(modal);
   lockBodyScroll();
-  modal.onclick = () => { hideScreen(modal); unlockBodyScroll(); };
+  modal.onclick = () => {
+    tearDownCardDetailEscape();
+    hideScreen(modal);
+    unlockBodyScroll();
+  };
+  _disposeCardDetailEscape = onEscapeKey((e) => {
+    e.preventDefault();
+    if (modal.classList.contains('hidden')) return;
+    tearDownCardDetailEscape();
+    hideScreen(modal);
+    unlockBodyScroll();
+  });
 }
 
 // ─── Sell modal ───────────────────────────────────────────────────────────────
@@ -3086,7 +3108,12 @@ document.addEventListener('market-screen-closed', () => unlockBodyScroll());
 // page panel (#collection-ags-entry) and the Stats screen (#stats-ags-entry).
 // `openAgsScreen` is still exposed via AGS_SCREEN_HOOKS / module scope so the
 // new entry panels and any deferred deep links can call it.
-document.addEventListener('archive-services-closed', () => unlockBodyScroll());
+document.addEventListener('archive-services-closed', () => {
+  if (_agsHubScrollLockHeld) {
+    unlockBodyScroll();
+    _agsHubScrollLockHeld = false;
+  }
+});
 
 function openStatsScreen() {
   const el = document.getElementById('stats-screen');
@@ -3114,6 +3141,12 @@ function renderStatsScreen() {
   let mostValCard = null, mostValAmount = 0;
   let rarestCard  = null, rarestIdx = -1;
   const setCardCounts = {};
+  const valCtx = {
+    getCachedSetCards,
+    allValues,
+    getMarketValue,
+    mapPokemonRarity,
+  };
 
   for (const [setId, cards] of Object.entries(collection)) {
     const cached = getCachedSetCards(setId) || [];
@@ -3124,9 +3157,9 @@ function renderStatsScreen() {
       totalDupes += Math.max(0, entry.count - 1);
       const apiCard = byId[cardId];
       const tier    = apiCard ? mapPokemonRarity(apiCard.rarity) : 'common';
-      const val     = allValues[cardId] ?? getMarketValue(cardId, tier);
-      totalValue   += val;
-      if (val > mostValAmount)    { mostValAmount = val; mostValCard = apiCard; }
+      const lineVal = lineValueForCollectionEntry(setId, cardId, entry, valCtx);
+      totalValue   += lineVal;
+      if (lineVal > mostValAmount)    { mostValAmount = lineVal; mostValCard = apiCard; }
       const ti = RARITY_ORDER.indexOf(tier);
       if (ti > rarestIdx)         { rarestIdx = ti; rarestCard = apiCard; }
       if (SECRET_TIERS.has(tier)) secretRares++;
@@ -3213,7 +3246,7 @@ function renderStatsScreen() {
         // Inline sparkline (last up-to-30 points)
         let pts = v.points.slice(-30);
         if (pts.length === 1) {
-          pts = [{ value: 0 }, pts[0]];
+          pts = [pts[0], { ...pts[0] }];
         }
         let sparkSvg = '';
         if (pts.length >= 2) {
@@ -3235,7 +3268,7 @@ function renderStatsScreen() {
           <div class="stats-value-card">
             <div class="stats-value-head">
               <div class="stats-value-label">Collection Value</div>
-              <div class="stats-value-meta ${dColor}">${sign}$${Math.abs(v.delta).toFixed(2)} today · peak $${v.peak.toFixed(2)}</div>
+              <div class="stats-value-meta ${dColor}">${sign}$${Math.abs(v.delta).toFixed(2)} vs prior · peak $${v.peak.toFixed(2)}</div>
             </div>
             <div class="stats-value-current">$${v.today.toFixed(2)}</div>
             ${sparkSvg}

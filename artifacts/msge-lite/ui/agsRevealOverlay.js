@@ -19,6 +19,8 @@
  */
 
 import { tierLabel } from '../data/agsGradingEngine.js';
+import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
+import { onEscapeKey } from './overlayScrollLock.js';
 
 const SUBGRADE_ORDER = [
   ['centering',    'Centering'],
@@ -96,11 +98,17 @@ export function showAgsRevealOverlay(slab, apiCard, opts = {}) {
     </div>
   `;
   document.body.appendChild(root);
+  lockBodyScroll();
 
   let closed = false;
+  /** @type {() => void} */
+  let disposeEscape = () => {};
+
   const close = () => {
     if (closed) return;
     closed = true;
+    disposeEscape();
+    unlockBodyScroll();
     root.classList.add('is-closing');
     setTimeout(() => {
       root.remove();
@@ -112,6 +120,11 @@ export function showAgsRevealOverlay(slab, apiCard, opts = {}) {
   const closeBtn = root.querySelector('.ags-reveal__close');
   closeBtn?.addEventListener('click', close);
   root.querySelector('.ags-reveal__backdrop')?.addEventListener('click', close);
+
+  disposeEscape = onEscapeKey((e) => {
+    e.preventDefault();
+    close();
+  });
 
   // Drive the cinematic sequence on rAF / setTimeout — no library needed.
   const stages = [
