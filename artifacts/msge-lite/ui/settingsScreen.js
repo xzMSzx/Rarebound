@@ -34,6 +34,7 @@ import {
   loginUser, signUpUser, handleLogout,
   lockAuthUI, unlockAuthUI, checkUserSession
 } from './authScreen.js';
+import { uploadCloudSave, restoreCloudSave, getCloudSaveMetadata } from '../data/supabase.js';
 
 let _recentlyConnected = false;
 
@@ -64,7 +65,23 @@ function authSectionHTML() {
             ${_recentlyConnected ? '<div class="auth-success-msg">Archive Connected</div>' : ''}
           </div>
         </div>
-        <button class="settings-neutral-btn" id="settings-logout-btn">Logout</button>
+
+        <div id="cloud-metadata-container" class="hidden" style="margin-top: 12px; padding: 12px; background: #161616; border: 1px solid #2a2a2a; border-radius: 6px;">
+            <div style="font-size: 0.68rem; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #222; padding-bottom: 6px;">Cloud Save Info</div>
+            <div style="font-size: 0.75rem; color: #ccc; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px;">
+                <span style="color: #666;">Last Upload</span> <span id="cloud-meta-updated" style="text-align: right;">...</span>
+                <span style="color: #666;">Collection Value</span> <span id="cloud-meta-value" style="text-align: right; color: #fbbf24;">...</span>
+                <span style="color: #666;">Total Cards</span> <span id="cloud-meta-cards" style="text-align: right;">...</span>
+                <span style="color: #666;">Platform</span> <span id="cloud-meta-platform" style="text-align: right; text-transform: capitalize;">...</span>
+            </div>
+        </div>
+
+        <div class="settings-save-actions" style="margin-top: 16px;">
+          <button class="settings-neutral-btn" id="settings-cloud-upload-btn">Upload to Cloud</button>
+          <button class="settings-neutral-btn" id="settings-cloud-restore-btn">Restore from Cloud</button>
+        </div>
+        <div class="auth-error-msg hidden" id="auth-settings-error" style="margin-top: 12px;"></div>
+        <button class="settings-neutral-btn" id="settings-logout-btn" style="margin-top: 12px;">Logout</button>
       </section>
     `;
   }
@@ -156,6 +173,67 @@ function wireAuth() {
     logoutBtn.addEventListener('click', async () => {
       lockAuthUI(panel, logoutBtn, 'DISCONNECTING...');
       await handleLogout();
+    });
+  }
+
+  const user = getCurrentUser();
+  if (user) {
+    const metaContainer = screenEl.querySelector('#cloud-metadata-container');
+    if (metaContainer) {
+      getCloudSaveMetadata().then(({ data, error }) => {
+        if (!error && data) {
+          const meta = data.metadata || {};
+          metaContainer.classList.remove('hidden');
+          
+          const updated = new Date(data.updated_at || meta.updatedAt);
+          const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+          const formattedDate = updated.toLocaleString(undefined, dateOpts);
+          
+          screenEl.querySelector('#cloud-meta-updated').textContent = isNaN(updated.getTime()) ? 'Unknown' : formattedDate;
+          screenEl.querySelector('#cloud-meta-value').textContent = meta.collectionValue !== undefined ? `$${meta.collectionValue.toLocaleString()}` : 'Unknown';
+          screenEl.querySelector('#cloud-meta-cards').textContent = meta.totalCards !== undefined ? meta.totalCards.toLocaleString() : 'Unknown';
+          screenEl.querySelector('#cloud-meta-platform').textContent = meta.platform || 'Unknown';
+        }
+      });
+    }
+  }
+
+  const uploadBtn = screenEl.querySelector('#settings-cloud-upload-btn');
+  const restoreBtn = screenEl.querySelector('#settings-cloud-restore-btn');
+
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', async () => {
+      if (!confirm('Upload your current local save to the cloud? This will overwrite your existing cloud save.')) return;
+      haptic('medium');
+      lockAuthUI(panel, uploadBtn, 'UPLOADING...');
+      const { error } = await uploadCloudSave();
+      unlockAuthUI(panel, uploadBtn);
+      if (error) {
+        showError(error.message);
+      } else {
+        _recentlyConnected = true;
+        render();
+        setTimeout(() => {
+          _recentlyConnected = false;
+          render();
+        }, 3000);
+      }
+    });
+  }
+
+  if (restoreBtn) {
+    restoreBtn.addEventListener('click', async () => {
+      if (!confirm('Restore your save from the cloud? This will overwrite your current local progress.')) return;
+      haptic('medium');
+      lockAuthUI(panel, restoreBtn, 'RESTORING...');
+      const { error } = await restoreCloudSave();
+      unlockAuthUI(panel, restoreBtn);
+      if (error) {
+        showError(error.message);
+      } else {
+        alert('Cloud save restored successfully! The game will now reload.');
+        location.reload();
+      }
     });
   }
 }
