@@ -6,7 +6,9 @@
  * Falls back to legacy non-namespaced keys for backward compatibility.
  */
 
-let activeProfileId = 'guest';
+// Synchronous boot hint: allows profileStorage to know the active profile
+// immediately during script parsing, before main.js hydrates managers.
+let activeProfileId = localStorage.getItem('rb_active_profile_id') || 'guest';
 
 /**
  * Gets the current active profile ID.
@@ -23,6 +25,7 @@ export function getActiveProfileId() {
 export function setActiveProfileId(id) {
   if (id) {
     activeProfileId = id;
+    localStorage.setItem('rb_active_profile_id', id);
     console.log(`[ProfileStorage] Active profile set to: ${id}`);
   }
 }

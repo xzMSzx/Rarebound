@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../data/supabase.js';
+import { setActiveProfileId } from '../data/profileStorage.js';
 
 let _currentUser = null;
 let _isGuestMode = true; // Guest mode by default
@@ -73,6 +74,8 @@ export async function loginUser(email, password) {
   if (data?.session) {
     _currentUser = data.session.user;
     _isGuestMode = false;
+    setActiveProfileId(_currentUser.id);
+    window.location.reload();
   }
   return { data, error };
 }
@@ -88,6 +91,8 @@ export async function signUpUser(email, password) {
   if (data?.session) {
     _currentUser = data.session.user;
     _isGuestMode = false;
+    setActiveProfileId(_currentUser.id);
+    window.location.reload();
   }
   return { data, error };
 }
@@ -98,5 +103,7 @@ export async function handleLogout() {
   }
   _currentUser = null;
   _isGuestMode = true;
+  setActiveProfileId('guest');
   window.location.reload();
 }
+

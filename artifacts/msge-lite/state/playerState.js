@@ -11,6 +11,7 @@
 
 import { isInfiniteBalance } from '../data/devAccess.js';
 import { isPlainObject, readJson, writeJson } from '../data/persistenceStore.js';
+import * as profileStorage from '../data/profileStorage.js';
 
 const STORAGE_KEY      = 'tcg_player_v2';
 const STARTING_BALANCE = 120.00;
@@ -24,7 +25,7 @@ let _wasFreshLaunch = false;
 
 export function loadPlayerState() {
   try {
-    if (localStorage.getItem(STORAGE_KEY)) {
+    if (profileStorage.getItem(STORAGE_KEY)) {
       playerState = {
         ...playerState,
         ...readJson(STORAGE_KEY, playerState, isPlainObject).value,
