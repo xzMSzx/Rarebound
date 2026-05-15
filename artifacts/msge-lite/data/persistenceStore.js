@@ -5,13 +5,15 @@
  * but quarantines malformed payloads instead of silently discarding them.
  */
 
+import * as profileStorage from './profileStorage.js';
+
 const BACKUP_PREFIX = 'tcg_corrupt_backup';
 
 function backupCorruptPayload(key, raw) {
   if (raw === null || raw === undefined) return;
   try {
     const backupKey = `${BACKUP_PREFIX}:${key}:${Date.now()}`;
-    localStorage.setItem(backupKey, raw);
+    profileStorage.setItem(backupKey, raw);
   } catch {
     // Best-effort only; never make recovery reads fail because backup failed.
   }
@@ -26,7 +28,7 @@ export function isStringArray(value) {
 }
 
 export function readJson(key, fallback, validate = () => true) {
-  const raw = localStorage.getItem(key);
+  const raw = profileStorage.getItem(key);
   if (raw === null) return { ok: true, value: fallback, recovered: false };
 
   try {
@@ -43,6 +45,6 @@ export function readJson(key, fallback, validate = () => true) {
 }
 
 export function writeJson(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+  profileStorage.setItem(key, JSON.stringify(value));
   return { ok: true };
 }

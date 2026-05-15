@@ -1,3 +1,5 @@
+import * as profileStorage from '../data/profileStorage.js';
+
 /**
  * Canonical Save Schema v1 Adapter (Hardened)
  * * Acts as a strict compatibility bridge between the canonical JSON save payload
@@ -15,11 +17,11 @@ const EXPECTED_SCHEMA_VERSION = 1;
  */
 function safeWrite(key, value) {
     if (value === undefined || value === null) {
-        localStorage.removeItem(key); // PATcH: Prevent Ghost State desync
+        profileStorage.removeItem(key); // PATcH: Prevent Ghost State desync
         return;
     }
     try {
-        localStorage.setItem(key, JSON.stringify(value));
+        profileStorage.setItem(key, JSON.stringify(value));
     } catch (err) {
         console.error(`[SaveAdapter] Failed to write key: ${key}`, err);
     }
@@ -33,7 +35,7 @@ function safeWrite(key, value) {
  */
 function safeRead(key, fallback = null) {
     try {
-        const item = localStorage.getItem(key);
+        const item = profileStorage.getItem(key);
         return item ? JSON.parse(item) : fallback;
     } catch (err) {
         console.warn(`[SaveAdapter] Failed to read/parse key: ${key}. Returning fallback.`, err);
@@ -75,7 +77,7 @@ export function deserializeCanonicalSave(payload) {
         // PATCH: Prevent Transient Log Haunting. 
         // Actively clear high-frequency local state so it doesn't pollute the restored profile.
         ['tcg_activity', 'tcg_recent_hits', 'tcg_market_history'].forEach(key => {
-            localStorage.removeItem(key);
+            profileStorage.removeItem(key);
         });
 
         // --- PLAYER ---

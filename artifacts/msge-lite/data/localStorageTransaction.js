@@ -1,3 +1,5 @@
+import * as profileStorage from './profileStorage.js';
+
 /**
  * data/localStorageTransaction.js
  *
@@ -9,7 +11,7 @@ export function withLocalStorageRollback(keys, operation) {
   const uniqueKeys = [...new Set(keys.filter(Boolean))];
   const snapshot = uniqueKeys.map(key => ({
     key,
-    value: localStorage.getItem(key),
+    value: profileStorage.getItem(key),
   }));
 
   try {
@@ -18,8 +20,8 @@ export function withLocalStorageRollback(keys, operation) {
     let rollbackError = null;
     for (const { key, value } of snapshot) {
       try {
-        if (value === null) localStorage.removeItem(key);
-        else localStorage.setItem(key, value);
+        if (value === null) profileStorage.removeItem(key);
+        else profileStorage.setItem(key, value);
       } catch (restoreErr) {
         rollbackError = rollbackError || restoreErr;
       }
