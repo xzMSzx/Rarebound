@@ -2905,7 +2905,7 @@ function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, va
       tearDownCardDetailEscape();
       hideScreen(modal);
       unlockBodyScroll();
-      setTimeout(() => openSlabViewer(archiveTopSlab, apiCard, { rawValue: value }), 220);
+      setTimeout(() => openSlabViewer(archiveTopSlab, apiCard, { rawValue: value, hooks: AGS_SCREEN_HOOKS }), 220);
     };
   }
 

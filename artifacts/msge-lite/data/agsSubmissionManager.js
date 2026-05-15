@@ -292,3 +292,16 @@ export function getAgsStats() {
 export function clearAllSubmissions() {
   localStorage.removeItem(STORAGE_KEY);
 }
+
+/**
+ * Remove a graded slab from the archive (e.g., after liquidation sale).
+ * @param {string} uid - The copyKey of the slab.
+ * @returns {boolean} - true if successful and slab was found, false otherwise.
+ */
+export function removeSlabFromArchive(uid) {
+  const store = load();
+  const index = store.completed.findIndex(g => g.uid === uid);
+  if (index === -1) return false;
+  store.completed.splice(index, 1);
+  return save(store);
+}

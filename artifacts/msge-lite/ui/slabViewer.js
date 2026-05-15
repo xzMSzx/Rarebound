@@ -15,6 +15,7 @@ import { tierLabel } from '../data/agsGradingEngine.js';
 import { gradedValueFromRaw } from '../data/agsMarketIntegration.js';
 import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
 import { onEscapeKey } from './overlayScrollLock.js';
+import { openAgsLiquidationModal } from './agsLiquidationModal.js';
 
 /**
  * @param {object} slab     — GradedSlab from agsSubmissionManager
@@ -22,6 +23,7 @@ import { onEscapeKey } from './overlayScrollLock.js';
  * @param {object} [opts]
  * @param {number} [opts.rawValue]   — current raw market value for valuation panel
  * @param {() => void} [opts.onClose]
+ * @param {object} [opts.hooks]      — AGS_SCREEN_HOOKS for liquidation
  */
 export function openSlabViewer(slab, apiCard, opts = {}) {
   const root = document.createElement('div');
@@ -77,6 +79,24 @@ export function openSlabViewer(slab, apiCard, opts = {}) {
           <div class="slab-viewer__note-row"><span>Service tier</span><span>${slab?.tier ? slab.tier[0].toUpperCase() + slab.tier.slice(1) : '—'}</span></div>
           <div class="slab-viewer__note-row"><span>Slab variant</span><span>${slab?.prestigeSlab ? 'Prestige Archive' : 'Standard Archive'}</span></div>
         </div>
+        
+        <div class="slab-viewer__actions" style="margin-top: 16px;">
+          <button class="slab-viewer__sell-btn" id="slab-viewer-sell" type="button" style="
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(218, 165, 32, 0.1), rgba(255, 215, 0, 0.05));
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            color: rgba(255, 215, 0, 0.9);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(255,215,0,0.05);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+          ">Archive Liquidation</button>
+        </div>
       </div>
     </div>
   `;
@@ -113,6 +133,34 @@ export function openSlabViewer(slab, apiCard, opts = {}) {
     e.preventDefault();
     close();
   });
+
+  const sellBtn = root.querySelector('#slab-viewer-sell');
+  if (sellBtn) {
+    sellBtn.addEventListener('mouseover', () => {
+      sellBtn.style.background = 'linear-gradient(135deg, rgba(218, 165, 32, 0.2), rgba(255, 215, 0, 0.1))';
+      sellBtn.style.boxShadow = '0 0 16px rgba(255,215,0,0.2)';
+    });
+    sellBtn.addEventListener('mouseout', () => {
+      sellBtn.style.background = 'linear-gradient(135deg, rgba(218, 165, 32, 0.1), rgba(255, 215, 0, 0.05))';
+      sellBtn.style.boxShadow = 'inset 0 0 10px rgba(255,215,0,0.05)';
+    });
+    sellBtn.addEventListener('click', () => {
+      if (!opts.hooks) {
+        console.warn('[slabViewer] cannot liquidate without hooks');
+        return;
+      }
+      close();
+      setTimeout(() => {
+        openAgsLiquidationModal(slab, apiCard, opts.hooks, {
+          rawValue,
+          onSaleComplete: () => {
+            // Re-render AGS screen or binder screen to show the slab is gone
+            document.dispatchEvent(new CustomEvent('ags-tick'));
+          }
+        });
+      }, 250);
+    });
+  }
 
   return { close };
 }

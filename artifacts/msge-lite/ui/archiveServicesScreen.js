@@ -161,7 +161,7 @@ function renderArchiveServicesScreen(hooks) {
       for (const slab of registryVisible) {
         const apiCard = lookupApiCard(slab.setId, slab.cardId);
         const raw     = allValues[slab.cardId] ?? 0;
-        const tile    = buildRegistryTile(slab, apiCard, raw);
+        const tile = buildRegistryTile(slab, apiCard, raw, hooks);
         grid.appendChild(tile);
       }
     }
@@ -236,7 +236,7 @@ function renderRegistryPanel(registrySorted, totalArchive) {
  *     .registry-tile__slab-host — compact slab mounts here
  *     .registry-tile__value     — raw → archive value with delta %
  */
-function buildRegistryTile(slab, apiCard, rawValue) {
+function buildRegistryTile(slab, apiCard, rawValue, hooks) {
   const tile = document.createElement('div');
   tile.className = 'registry-tile';
   const tierClass = (slab.grade?.tier?.id || 'na').toLowerCase().replace(/_/g, '-');
@@ -273,7 +273,7 @@ function buildRegistryTile(slab, apiCard, rawValue) {
   slabHost.appendChild(slabEl);
 
   tile.style.cursor = 'pointer';
-  tile.addEventListener('click', () => openSlabViewer(slab, apiCard, { rawValue }));
+  tile.addEventListener('click', () => openSlabViewer(slab, apiCard, { rawValue, hooks }));
   return tile;
 }
 

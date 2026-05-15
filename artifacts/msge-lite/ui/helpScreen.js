@@ -27,6 +27,32 @@ const TOPICS = [
     `,
   },
   {
+    title: 'Rarity Guide',
+    body: `
+      Every card in RAREBOUND belongs to a rarity tier. Higher rarities are
+      significantly harder to pull and often carry stronger collector demand,
+      higher market valuation, and greater archive prestige.
+      <br><br>
+
+      <div class="help-rarity-table">
+        <div class="help-rarity-row"><span class="r-name">Common</span><span class="r-sym">◇</span></div>
+        <div class="help-rarity-row"><span class="r-name">Uncommon</span><span class="r-sym">◇◇</span></div>
+        <div class="help-rarity-row"><span class="r-name">Rare</span><span class="r-sym">★</span></div>
+        <div class="help-rarity-row"><span class="r-name">Holo Rare</span><span class="r-sym">★</span></div>
+        <div class="help-rarity-row"><span class="r-name">Double Rare (ex)</span><span class="r-sym">★★</span></div>
+        <div class="help-rarity-row"><span class="r-name">Illustration Rare</span><span class="r-sym">★★</span></div>
+        <div class="help-rarity-row"><span class="r-name">Ultra Rare</span><span class="r-sym">★★★</span></div>
+        <div class="help-rarity-row"><span class="r-name">Special Illustration Rare</span><span class="r-sym">✦★</span></div>
+        <div class="help-rarity-row"><span class="r-name">Hyper Rare</span><span class="r-sym">👑</span></div>
+      </div>
+
+      <br>
+      Illustration Rare and Special Illustration Rare cards are designed as
+      collector-focused chase pulls, while Hyper Rares represent the absolute
+      pinnacle of pack openings.
+    `,
+  },
+  {
     title: 'Vendor Hub Explained',
     body: `
       Four vendors, four personalities:
@@ -520,7 +546,7 @@ const TOPICS = [
     `,
   },
   {
-    title: 'AGS Tab Navigation (v1.6.0)',
+    title: 'AGS Tab Navigation',
     body: `
       The Archive Services screen is split into three tabs:
       <strong>Registry</strong> (your certified slabs), <strong>Active</strong>
@@ -530,7 +556,7 @@ const TOPICS = [
     `,
   },
   {
-    title: 'Raw → Archive Value (v1.6.0)',
+    title: 'Raw → Archive Value',
     body: `
       Every certified slab now shows the difference between its raw market
       value and its graded archive value, with the gain percentage. Raw value
@@ -540,7 +566,7 @@ const TOPICS = [
     `,
   },
   {
-    title: 'Binder Grade Indicators (v1.6.0)',
+    title: 'Binder Grade Indicators',
     body: `
       Cards you've sent through AGS now carry a small grade medallion in the
       top-right of their binder slot, plus a faint per-tier acrylic edge.
@@ -549,8 +575,48 @@ const TOPICS = [
       jump straight to the slab.
     `,
   },
+{
+    title: 'Cloud Archive Sync',
+    body: `
+      Authenticated collector accounts can upload secure cloud snapshots of
+      their archive progression. Uploading stores a full snapshot of your current save to your account-bound
+      cloud archive. Restoring from the cloud replaces your active local progress
+      with the uploaded archive state. This allows seamless cross-device restoration between desktop and mobile sessions.
+    `,
+  },
   {
-    title: 'Collection Filters (v1.6.0)',
+    title: 'Profile-Isolated Persistence',
+    body: `
+      RAREBOUND now supports isolated save environments for every collector profile.
+      Guest progression remains local to the device, while authenticated accounts
+      load their own independent archive state and cloud synchronization.
+      Logging out safely returns you to the Guest profile without deleting
+      local guest progression.
+    `,
+  },
+  {
+    title: 'Archive Liquidation',
+    body: `
+      Certified AGS slabs can now be liquidated directly into the collector market.
+      Higher grades retain stronger liquidity and collector demand, while
+      Prestige Archive slabs receive elevated collector confidence and reduced
+      archival commission fees. Liquidation permanently transfers the certified slab out of your archive.
+    `,
+  },
+  {
+    title: 'Prestige Archive Slabs',
+    body: `
+      Prestige Archive certification represents the highest level of museum-grade
+      presentation available within AGS. Prestige slabs feature:<br>
+      • premium slab styling<br>
+      • cinematic certification reveals<br>
+      • elevated collector demand<br>
+      • luxury archival presentation<br>
+      These slabs are considered elite collector artifacts across the archive ecosystem.
+    `,
+  },
+  {
+    title: 'Collection Filters',
     body: `
       The My Collection header now stays clean — Wishlist and Favorites moved
       into a pill row right below the title, joined by an

@@ -4602,53 +4602,110 @@ body.boot-locked #settings-icon-btn {
   font-size: 13px;
   color: rgba(245, 245, 240, 0.55);
   line-height: 1.55;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   padding: 0 4px;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+.help-category {
+  margin-bottom: 32px;
+}
+.help-category-title {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(214, 188, 117, 0.85);
+  border-bottom: 1px solid rgba(214, 188, 117, 0.2);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  margin-left: 4px;
 }
 .help-accordion {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  background: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
   margin-bottom: 8px;
   overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.help-accordion:hover {
+  border-color: rgba(214, 188, 117, 0.25);
 }
 .help-accordion-head {
   width: 100%;
   background: transparent;
   border: none;
   color: #f5f5f0;
-  padding: 14px 16px;
+  padding: 16px 18px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  letter-spacing: 0.03em;
 }
 .help-accordion-chevron {
   font-size: 18px;
   color: rgba(214, 188, 117, 0.7);
-  font-weight: 400;
+  font-weight: 300;
   margin-left: 12px;
+  transition: transform 0.3s ease;
+}
+.help-accordion.is-open .help-accordion-chevron {
+  color: rgba(214, 188, 117, 1);
 }
 .help-accordion-body {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 0.32s ease, opacity 0.22s ease, padding 0.32s ease;
-  padding: 0 16px;
+  transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease;
+  padding: 0 18px;
   font-size: 13px;
-  line-height: 1.6;
-  color: rgba(245, 245, 240, 0.7);
+  line-height: 1.7;
+  color: rgba(245, 245, 240, 0.75);
 }
 .help-accordion.is-open .help-accordion-body {
-  max-height: 500px;
+  max-height: 800px;
   opacity: 1;
-  padding: 0 16px 16px;
+  padding: 0 18px 20px;
 }
-.help-accordion-body strong { color: #f5f5f0; }
+.help-accordion-body strong { color: #f5f5f0; font-weight: 600; }
 .help-accordion-body em { color: rgba(214, 188, 117, 0.85); font-style: normal; }
+
+/* ── Help Rarity Table ───────────────────────────────────────────── */
+.help-rarity-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+.help-rarity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+.help-rarity-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.r-name {
+  color: rgba(245, 245, 240, 0.85);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+.r-sym {
+  color: rgba(214, 188, 117, 0.9);
+  font-size: 14px;
+  font-weight: bold;
+}
 
 /* ── Reduced motion overrides ────────────────────────────────────────── */
 html[data-reduced-motion] *,
