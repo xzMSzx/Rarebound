@@ -40,7 +40,20 @@ let _state = {
 
 // ─── Card index ──────────────────────────────────────────────────────────────
 
+let _cachedCardIndex = null;
+let _cachedCardsCount = -1;
+
 function buildCardIndex() {
+  let currentCardsCount = 0;
+  for (const setId of SET_IDS) {
+    currentCardsCount += (getCachedSetCards(setId) || []).length;
+  }
+
+  // Cache invalidates if the number of loaded cards changes (e.g. async loading completes)
+  if (_cachedCardIndex && _cachedCardsCount === currentCardsCount) {
+    return _cachedCardIndex;
+  }
+
   const idx = {};
   for (const setId of SET_IDS) {
     const cached = getCachedSetCards(setId) || [];
@@ -48,6 +61,9 @@ function buildCardIndex() {
       idx[c.id] = { apiCard: c, setId };
     }
   }
+
+  _cachedCardIndex = idx;
+  _cachedCardsCount = currentCardsCount;
   return idx;
 }
 
@@ -93,25 +109,28 @@ function renderMarketScreen() {
   }
 
   // Build row data
-  let rows = Object.entries(values)
-    .map(([cardId, value]) => {
-      const meta    = idx[cardId];
-      if (!meta) return null;
-      const tier    = mapPokemonRarity(meta.apiCard.rarity) || 'common';
-      const hist    = histAll[cardId] || [];
-      // Compute movement from cached history (mirror of getMovementPct logic).
-      const move = hist.length < 2 ? 0
-        : ((hist[hist.length - 1].v - hist[0].v) / hist[0].v) * 100;
-      // Apply chase boost cosmetically to the displayed value.
-      const boost   = 1 + (getChaseBoost(cardId) / 100);
-      return {
-        cardId, value: value * boost, move, tier, hist,
-        name:    meta.apiCard.name,
-        imageUrl:meta.apiCard.images.small || meta.apiCard.images.large,
-        setId:   meta.setId,
-      };
-    })
-    .filter(Boolean);
+  let rows = [];
+  const entries = Object.entries(values);
+  for (let i = 0; i < entries.length; i++) {
+    const [cardId, value] = entries[i];
+    const meta    = idx[cardId];
+    if (!meta) continue;
+
+    const tier    = mapPokemonRarity(meta.apiCard.rarity) || 'common';
+    const hist    = histAll[cardId] || [];
+    // Compute movement from cached history (mirror of getMovementPct logic).
+    const move = hist.length < 2 ? 0
+      : ((hist[hist.length - 1].v - hist[0].v) / hist[0].v) * 100;
+    // Apply chase boost cosmetically to the displayed value.
+    const boost   = 1 + (getChaseBoost(cardId) / 100);
+
+    rows.push({
+      cardId, value: value * boost, move, tier, hist,
+      name:    meta.apiCard.name,
+      imageUrl:meta.apiCard.images.small || meta.apiCard.images.large,
+      setId:   meta.setId,
+    });
+  }
 
   // Filter
   if (_state.setFilter !== 'all') rows = rows.filter(r => r.setId === _state.setFilter);
