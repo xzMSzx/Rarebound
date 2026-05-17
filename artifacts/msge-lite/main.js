@@ -2679,10 +2679,23 @@ function renderBinderPage() {
 
 // ─── Evolution chain ──────────────────────────────────────────────────────────
 
+const _evolutionMapCache = new Map();
+
 function buildEvolutionChain(apiCard, setId) {
   const setCards = getCachedSetCards(setId) || [];
-  const pokémon  = setCards.filter(c => c.supertype === 'Pokémon');
-  const pokémonMap = new Map(pokémon.map(c => [c.name, c]));
+
+  // ⚡ Bolt: Memoize the Pokemon map per set to avoid O(N) map creation on every call
+  let pokémonMap = _evolutionMapCache.get(setId);
+  if (!pokémonMap) {
+    pokémonMap = new Map();
+    for (let i = 0; i < setCards.length; i++) {
+      if (setCards[i].supertype === 'Pokémon') {
+        pokémonMap.set(setCards[i].name, setCards[i]);
+      }
+    }
+    _evolutionMapCache.set(setId, pokémonMap);
+  }
+
   const byName   = (n) => pokémonMap.get(n);
   const chain    = [];
   const visited  = new Set();
