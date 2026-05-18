@@ -632,7 +632,7 @@ let screenEl;
 function render() {
   const sections = TOPICS.map((t, i) => `
     <div class="help-accordion" data-idx="${i}">
-      <button class="help-accordion-head" aria-expanded="false">
+      <button class="help-accordion-head">
         <span class="help-accordion-title">${t.title}</span>
         <span class="help-accordion-chevron">+</span>
       </button>
@@ -664,7 +664,6 @@ function render() {
     head.addEventListener('click', () => {
       const acc = head.parentElement;
       const open = acc.classList.toggle('is-open');
-      head.setAttribute('aria-expanded', open ? 'true' : 'false');
       head.querySelector('.help-accordion-chevron').textContent = open ? '−' : '+';
       haptic('soft');
     });
