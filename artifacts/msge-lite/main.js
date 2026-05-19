@@ -107,7 +107,7 @@ import {
 import { gradedDeltaForSlab } from './data/agsMarketIntegration.js';
 import { openArchiveServicesScreen, closeArchiveServicesScreen, setAgsActiveTab } from './ui/archiveServicesScreen.js';
 import { openSlabViewer } from './ui/slabViewer.js';
-import { renderSlab } from './ui/slabRenderer.js';
+import { renderPremiumSlab } from './ui/slabRenderer.js';
 import { showAgsRevealOverlay } from './ui/agsRevealOverlay.js';
 import { getSettings } from './data/settingsManager.js';
 import { getPrestigeTier, addPrestigeBonus }     from './data/prestigeManager.js';
@@ -577,6 +577,24 @@ const ESTATE_AUCTION_LOTS = [
     ends: '02h 41m',
   },
 ];
+
+const FOUNDATION_OPERATIONAL_NOTICES = {
+  capsuleCorner: {
+    title: 'Distribution Notice',
+    body: 'Additional capsule lines initializing soon.',
+    meta: 'Extended inventory pending authorization',
+  },
+  museumExchange: {
+    title: 'Preservation Notice',
+    body: 'Additional exhibition programs are currently under restoration.',
+    meta: 'Curator acquisition systems expanding',
+  },
+  estateAuctions: {
+    title: 'Access Notice',
+    body: 'Private collector channels are opening gradually.',
+    meta: 'Additional liquidation lots pending verification',
+  },
+};
 
 window.__rb_getOrCreateQuality = getOrCreateQuality;
 
@@ -1673,6 +1691,11 @@ function renderCapsuleCornerFoundation(vendor) {
         </div>
       `).join('')}
     </div>
+    ${renderCollectorNotice(
+      FOUNDATION_OPERATIONAL_NOTICES.capsuleCorner.title,
+      FOUNDATION_OPERATIONAL_NOTICES.capsuleCorner.body,
+      FOUNDATION_OPERATIONAL_NOTICES.capsuleCorner.meta
+    )}
   `;
   wrap.querySelectorAll('.foundation-action').forEach(btn => {
     attachFoundationButton(btn, vendor, btn.dataset.action || 'Dispense');
@@ -1710,7 +1733,11 @@ function renderMuseumExchangeFoundation(vendor) {
       <button class="foundation-action foundation-action--gold" data-action="Archive">Archive</button>
       <button class="foundation-action foundation-action--gold" data-action="Transfer">Transfer</button>
     </div>
-    ${renderCollectorNotice('Preservation Bulletin', 'Archival committees are reviewing full-art provenance records.', 'Stable demand - reputation oriented')}
+    ${renderCollectorNotice(
+      FOUNDATION_OPERATIONAL_NOTICES.museumExchange.title,
+      FOUNDATION_OPERATIONAL_NOTICES.museumExchange.body,
+      FOUNDATION_OPERATIONAL_NOTICES.museumExchange.meta
+    )}
   `;
   wrap.querySelectorAll('.foundation-action').forEach(btn => {
     attachFoundationButton(btn, vendor, btn.dataset.action || 'Archive');
@@ -1769,6 +1796,7 @@ function renderEstateAuctionsFoundation(vendor) {
   const slab = buildAuctionPreviewSlab(lot);
   slab.setId = preview.setId;
   slab.cardId = preview.apiCard.id;
+  const imgUrl = preview.apiCard.images?.small || preview.apiCard.images?.large || '';
 
   const wrap = document.createElement('div');
   wrap.className = 'foundation-vendor foundation-estate';
@@ -1778,15 +1806,24 @@ function renderEstateAuctionsFoundation(vendor) {
       ${renderCountdownPill('Ends In', lot.ends)}
     </div>
     <div class="estate-lot-card">
-      <div class="estate-lot-slab"></div>
+      <button class="estate-card-preview" type="button" aria-label="Inspect auction slab">
+        <span class="estate-card-preview__glow" aria-hidden="true"></span>
+        ${imgUrl
+          ? `<img class="estate-card-preview__img" src="${imgUrl}" alt="${preview.apiCard.name}" loading="lazy" />`
+          : `<span class="estate-card-preview__fallback">${preview.apiCard.name}</span>`
+        }
+        <span class="estate-card-preview__ags">AGS</span>
+        <span class="estate-card-preview__grade">10</span>
+      </button>
       <div class="estate-lot-copy">
         <div class="foundation-kicker">${lot.lot}</div>
         <div class="estate-lot-title">${lot.title}</div>
         <div class="estate-lot-name">${lot.cardName} <span>AGS 10</span></div>
         <div class="estate-lot-rarity">${lot.rarity}</div>
         <div class="estate-lot-estimate"><span>Est. Value</span>${lot.estimate}</div>
-        <div class="estate-interest" aria-label="Collector attention">
-          ${Array.from({ length: 8 }, (_, i) => `<span class="${i < lot.attention ? 'is-lit' : ''}"></span>`).join('')}
+        <div class="estate-interest-meter" aria-label="Collector interest extreme">
+          <div class="estate-interest-meter__label"><span>Collector Interest</span><strong>Extreme</strong></div>
+          <div class="estate-interest-meter__track"><span style="width:88%"></span></div>
         </div>
         ${renderCollectorNotice('Estate Notice', lot.note, 'Elite collector interest elevated.')}
       </div>
@@ -1796,12 +1833,81 @@ function renderEstateAuctionsFoundation(vendor) {
       <button class="foundation-action foundation-action--estate" data-action="Observe">Observe</button>
       <button class="foundation-action foundation-action--estate" data-action="Track Lot">Track Lot</button>
     </div>
+    ${renderCollectorNotice(
+      FOUNDATION_OPERATIONAL_NOTICES.estateAuctions.title,
+      FOUNDATION_OPERATIONAL_NOTICES.estateAuctions.body,
+      FOUNDATION_OPERATIONAL_NOTICES.estateAuctions.meta
+    )}
   `;
-  wrap.querySelector('.estate-lot-slab')?.appendChild(renderSlab(slab, preview.apiCard, { variant: 'compact' }));
+  const previewBtn = wrap.querySelector('.estate-card-preview');
+  const openPreview = () => openEstateAuctionLightbox(lot, slab, preview.apiCard);
+  if (previewBtn) {
+    previewBtn.onclick = openPreview;
+    iosTap(previewBtn, openPreview);
+  }
   wrap.querySelectorAll('.foundation-action').forEach(btn => {
     attachFoundationButton(btn, vendor, btn.dataset.action || 'Observe');
   });
   return wrap;
+}
+
+function openEstateAuctionLightbox(lot, slab, apiCard) {
+  const existing = document.querySelector('.estate-lightbox');
+  if (existing) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'estate-lightbox';
+  overlay.innerHTML = `
+    <div class="estate-lightbox__backdrop"></div>
+    <div class="estate-lightbox__stage" role="dialog" aria-modal="true" aria-label="Estate auction lot">
+      <button class="estate-lightbox__close" type="button" aria-label="Close">×</button>
+      <div class="estate-lightbox__header">
+        <div>
+          <div class="foundation-kicker">${lot.lot}</div>
+          <div class="estate-lightbox__title">${lot.title}</div>
+        </div>
+        ${renderCountdownPill('Ends In', lot.ends)}
+      </div>
+      <div class="estate-lightbox__slab"></div>
+      <div class="estate-lightbox__details">
+        <div class="estate-lightbox__detail">
+          <span>Card</span>
+          <strong>${lot.cardName}</strong>
+        </div>
+        <div class="estate-lightbox__detail">
+          <span>Certification</span>
+          <strong>${slab.serial}</strong>
+        </div>
+        <div class="estate-lightbox__detail">
+          <span>Grade</span>
+          <strong>${slab.grade.label} · ${slab.grade.name}</strong>
+        </div>
+        <div class="estate-lightbox__detail">
+          <span>Estimate</span>
+          <strong>${lot.estimate}</strong>
+        </div>
+      </div>
+      ${renderCollectorNotice('Auction House Note', 'Private bidding activity remains active around this archival lot.', 'Estate access remains limited during rollout')}
+    </div>
+  `;
+
+  overlay.querySelector('.estate-lightbox__slab')?.appendChild(renderPremiumSlab(slab, apiCard));
+  document.body.appendChild(overlay);
+  lockBodyScroll();
+
+  let disposeEsc = null;
+  const close = () => {
+    disposeEsc?.();
+    overlay.classList.add('is-closing');
+    setTimeout(() => {
+      overlay.remove();
+      unlockBodyScroll();
+    }, 180);
+  };
+  overlay.querySelector('.estate-lightbox__close')?.addEventListener('click', close);
+  overlay.querySelector('.estate-lightbox__backdrop')?.addEventListener('click', close);
+  disposeEsc = onEscapeKey(close);
+  requestAnimationFrame(() => overlay.classList.add('is-visible'));
 }
 
 function renderVendorPackTile(item, vendor) {

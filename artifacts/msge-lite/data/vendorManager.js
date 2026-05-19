@@ -23,37 +23,6 @@ export const VENDORS = {
     rotationCount: 3,
     sellCommissionBonus: 0,
   },
-  retroVault: {
-    id: 'retroVault',
-    name: 'Retro Vault',
-    tagline: 'Curated inventory sourced from private collector archives.',
-    theme: 'retroVault',
-    priceMultiplier: 1.20,             // 20% premium
-    setIds: ['swsh7', 'swsh11'],
-    rotationCount: 2,
-    sellCommissionBonus: 0.02,         // pays 2% better commission
-  },
-  nightMarket: {
-    id: 'nightMarket',
-    name: 'Night Market',
-    tagline: 'Unpredictable inventory with dangerous prices and rare finds.',
-    theme: 'nightMarket',
-    priceMultiplier: null,             // randomised per rotation
-    setIds: ['swsh7','swsh11','sv4pt5','sv2','sv3pt5'],
-    rotationCount: 2,
-    sellCommissionBonus: -0.02,        // skims commission
-  },
-  broker: {
-    id: 'broker',
-    name: 'The Broker',
-    tagline: 'A mysterious collector dealing in the rarest cards available.',
-    theme: 'broker',
-    priceMultiplier: null,
-    setIds: [],                        // no packs — chase singles only
-    rotationCount: 0,
-    sellCommissionBonus: 0,
-    timeGated: true,                   // Fri–Sun only
-  },
   capsuleCorner: {
     id: 'capsuleCorner',
     name: 'Capsule Corner',
@@ -64,6 +33,16 @@ export const VENDORS = {
     rotationCount: 0,
     sellCommissionBonus: -0.01,
     foundationOnly: true,
+  },
+  retroVault: {
+    id: 'retroVault',
+    name: 'Retro Vault',
+    tagline: 'Curated inventory sourced from private collector archives.',
+    theme: 'retroVault',
+    priceMultiplier: 1.20,             // 20% premium
+    setIds: ['swsh7', 'swsh11'],
+    rotationCount: 2,
+    sellCommissionBonus: 0.02,         // pays 2% better commission
   },
   museumExchange: {
     id: 'museumExchange',
@@ -76,6 +55,16 @@ export const VENDORS = {
     sellCommissionBonus: 0.03,
     foundationOnly: true,
   },
+  nightMarket: {
+    id: 'nightMarket',
+    name: 'Night Market',
+    tagline: 'Unpredictable inventory with dangerous prices and rare finds.',
+    theme: 'nightMarket',
+    priceMultiplier: null,             // randomised per rotation
+    setIds: ['swsh7','swsh11','sv4pt5','sv2','sv3pt5'],
+    rotationCount: 2,
+    sellCommissionBonus: -0.02,        // skims commission
+  },
   estateAuctions: {
     id: 'estateAuctions',
     name: 'Estate Auctions',
@@ -86,6 +75,17 @@ export const VENDORS = {
     rotationCount: 0,
     sellCommissionBonus: 0,
     foundationOnly: true,
+  },
+  broker: {
+    id: 'broker',
+    name: 'The Broker',
+    tagline: 'A mysterious collector dealing in the rarest cards available.',
+    theme: 'broker',
+    priceMultiplier: null,
+    setIds: [],                        // no packs — chase singles only
+    rotationCount: 0,
+    sellCommissionBonus: 0,
+    timeGated: true,                   // Fri–Sun only
   },
 };
 
