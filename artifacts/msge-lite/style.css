@@ -3487,6 +3487,79 @@ body.is-mobile button      { min-height: 44px; }
   letter-spacing: 0.06em;
 }
 
+/* Capsule Corner - automated midnight collector terminal */
+.vendor-capsuleCorner {
+  background:
+    linear-gradient(180deg, rgba(120, 245, 255, 0.035), transparent 42%),
+    linear-gradient(160deg, #07121c 0%, #03070b 100%);
+  border-color: rgba(0, 214, 224, 0.32);
+}
+
+.vendor-capsuleCorner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(180deg, rgba(120, 245, 255, 0.035) 0 1px, transparent 1px 5px),
+    radial-gradient(ellipse at 82% 0%, rgba(0, 214, 224, 0.11), transparent 52%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.vendor-capsuleCorner .vendor-name {
+  color: #38f4ff;
+  text-shadow: 0 0 14px rgba(0, 214, 224, 0.38);
+}
+
+/* Museum Exchange - obsidian, ivory, muted archive gold */
+.vendor-museumExchange {
+  background:
+    linear-gradient(160deg, rgba(87, 61, 22, 0.18), transparent 44%),
+    linear-gradient(160deg, #14110d 0%, #080807 100%);
+  border-color: rgba(214, 178, 92, 0.28);
+}
+
+.vendor-museumExchange::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 236, 190, 0.025), transparent 22%, rgba(255, 236, 190, 0.018) 45%, transparent 68%),
+    radial-gradient(ellipse at 20% 0%, rgba(214, 178, 92, 0.08), transparent 50%);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.vendor-museumExchange .vendor-name {
+  color: #ead39a;
+  text-shadow: 0 0 14px rgba(214, 178, 92, 0.28);
+  font-family: 'Georgia', serif;
+}
+
+/* Estate Auctions - private walnut and champagne auction room */
+.vendor-estateAuctions {
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(230, 198, 123, 0.13), transparent 36%),
+    linear-gradient(160deg, #140b08 0%, #050403 100%);
+  border-color: rgba(218, 185, 116, 0.26);
+}
+
+.vendor-estateAuctions::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 12% 30%, rgba(120, 20, 20, 0.11), transparent 42%),
+    linear-gradient(90deg, rgba(95, 55, 28, 0.09), transparent 48%, rgba(217, 174, 92, 0.035));
+  pointer-events: none;
+}
+
+.vendor-estateAuctions .vendor-name {
+  color: #e4be62;
+  text-shadow: 0 0 16px rgba(218, 185, 116, 0.36);
+  font-family: 'Georgia', serif;
+}
+
 .vendor-closed { opacity: 0.55; }
 
 /* Vendor header */
@@ -3651,6 +3724,455 @@ body.is-mobile button      { min-height: 44px; }
   font-weight: 800;
   color: #ffd700;
   font-family: 'Georgia', serif;
+}
+
+/* Phase 1 foundation vendor framework */
+.foundation-vendor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.foundation-status-row,
+.foundation-item-head,
+.foundation-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.foundation-status-row { flex-wrap: wrap; }
+
+.foundation-item-head {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.foundation-item-head > div {
+  min-width: 0;
+}
+
+.foundation-kicker,
+.foundation-section-title {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.44);
+}
+
+.foundation-countdown {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.foundation-countdown span {
+  color: rgba(255, 255, 255, 0.38);
+  text-transform: uppercase;
+  font-size: 8px;
+}
+
+.foundation-event-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 18px;
+  padding: 2px 7px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.foundation-event-tag--cyan {
+  border-color: rgba(0, 220, 230, 0.44);
+  color: #38f4ff;
+  background: rgba(0, 220, 230, 0.075);
+}
+
+.foundation-event-tag--gold {
+  border-color: rgba(214, 178, 92, 0.42);
+  color: #dcc17a;
+  background: rgba(214, 178, 92, 0.08);
+}
+
+.foundation-event-tag--crimson {
+  border-color: rgba(215, 76, 62, 0.42);
+  color: #f07868;
+  background: rgba(215, 76, 62, 0.075);
+}
+
+.foundation-inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.foundation-inventory-item,
+.collector-notice,
+.capsule-chamber,
+.museum-exhibition-panel,
+.estate-lot-card {
+  background: rgba(0, 0, 0, 0.29);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+}
+
+.foundation-inventory-item {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: border-color 0.24s ease-out, background 0.24s ease-out, transform 0.24s ease-out;
+}
+
+.foundation-inventory-item:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.foundation-item-name {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.foundation-item-sub {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+.foundation-signal {
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.foundation-reward-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.foundation-reward-list span {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 9.5px;
+  line-height: 1.2;
+}
+
+.foundation-action {
+  min-height: 32px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.22s ease-out, background 0.22s ease-out, box-shadow 0.22s ease-out, transform 0.12s ease-out;
+}
+
+.foundation-action span { float: right; opacity: 0.82; }
+.foundation-action:hover { transform: translateY(-1px); }
+.foundation-action:active { transform: scale(0.985); }
+
+.foundation-action--cyan {
+  border: 1px solid rgba(0, 220, 230, 0.48);
+  color: #38f4ff;
+}
+
+.foundation-action--cyan:hover {
+  background: rgba(0, 220, 230, 0.095);
+  box-shadow: 0 0 14px rgba(0, 220, 230, 0.16);
+}
+
+.foundation-action--gold {
+  flex: 1 1 0;
+  border: 1px solid rgba(214, 178, 92, 0.42);
+  color: #dcc17a;
+}
+
+.foundation-action--gold:hover {
+  background: rgba(214, 178, 92, 0.085);
+  box-shadow: 0 0 14px rgba(214, 178, 92, 0.12);
+}
+
+.foundation-action--estate {
+  flex: 1 1 0;
+  border: 1px solid rgba(218, 185, 116, 0.38);
+  color: #e4be62;
+}
+
+.foundation-action--estate:hover {
+  background: rgba(218, 185, 116, 0.08);
+  box-shadow: 0 0 16px rgba(218, 185, 116, 0.12);
+}
+
+.collector-notice {
+  padding: 9px 10px;
+}
+
+.collector-notice-title {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.collector-notice-body {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.collector-notice-meta {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.36);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.capsule-chamber {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-color: rgba(0, 220, 230, 0.2);
+  background:
+    radial-gradient(circle at 42px 50%, rgba(0, 220, 230, 0.16), transparent 42%),
+    rgba(0, 0, 0, 0.28);
+}
+
+.capsule-chamber-core {
+  position: relative;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  border: 1px solid rgba(56, 244, 255, 0.45);
+  box-shadow: inset 0 0 22px rgba(0, 220, 230, 0.16), 0 0 18px rgba(0, 220, 230, 0.12);
+}
+
+.capsule-chamber-core span {
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(56, 244, 255, 0.34);
+  border-radius: 50%;
+}
+
+.capsule-chamber-core span:nth-child(2) { inset: 22px 8px; }
+.capsule-chamber-core span:nth-child(3) { inset: 8px 22px; }
+
+.capsule-dispense-count {
+  margin-top: 4px;
+  color: #38f4ff;
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgba(0, 220, 230, 0.35);
+}
+
+.capsule-drop { border-color: rgba(0, 220, 230, 0.11); }
+.capsule-drop:hover { border-color: rgba(0, 220, 230, 0.28); }
+.capsule-drop.is-featured { background: rgba(0, 220, 230, 0.045); }
+
+.museum-exhibition-panel {
+  padding: 13px 12px;
+  border-color: rgba(214, 178, 92, 0.22);
+  text-align: center;
+}
+
+.museum-exhibition-title {
+  margin-top: 8px;
+  color: rgba(255, 245, 220, 0.9);
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+.museum-plaque-line {
+  width: 70px;
+  height: 1px;
+  margin: 9px auto;
+  background: rgba(214, 178, 92, 0.34);
+}
+
+.museum-exhibition-copy {
+  color: rgba(255, 245, 220, 0.58);
+  font-size: 11px;
+  line-height: 1.42;
+  margin-bottom: 9px;
+}
+
+.museum-request-list {
+  padding: 10px;
+  border: 1px solid rgba(214, 178, 92, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.museum-request {
+  border-color: rgba(214, 178, 92, 0.12);
+  background: rgba(255, 245, 220, 0.025);
+}
+
+.museum-request:hover { border-color: rgba(214, 178, 92, 0.26); }
+
+.museum-progress {
+  color: rgba(255, 245, 220, 0.72);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.estate-lot-card {
+  display: grid;
+  grid-template-columns: 102px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-color: rgba(218, 185, 116, 0.18);
+  background:
+    radial-gradient(ellipse at 52px 18%, rgba(218, 185, 116, 0.12), transparent 55%),
+    rgba(0, 0, 0, 0.34);
+}
+
+.estate-lot-slab {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.estate-lot-slab .ags-slab {
+  width: 92px;
+  cursor: default;
+}
+
+.estate-lot-title {
+  margin-top: 4px;
+  color: rgba(255, 248, 226, 0.9);
+  font-family: 'Georgia', serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+.estate-lot-name {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 12px;
+}
+
+.estate-lot-name span {
+  margin-left: 5px;
+  color: #e4be62;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.estate-lot-rarity {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10.5px;
+  margin-top: 2px;
+}
+
+.estate-lot-estimate {
+  margin-top: 9px;
+  color: #d8a92f;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.estate-lot-estimate span {
+  display: block;
+  color: rgba(255, 255, 255, 0.36);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.estate-interest {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.estate-interest span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(218, 185, 116, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.estate-interest span.is-lit {
+  border-color: rgba(204, 56, 46, 0.45);
+  background: rgba(204, 56, 46, 0.38);
+  box-shadow: 0 0 9px rgba(204, 56, 46, 0.24);
+}
+
+@media (max-width: 430px) {
+  .foundation-status-row {
+    align-items: stretch;
+  }
+  .foundation-countdown {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+  .foundation-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .foundation-action--gold,
+  .foundation-action--estate {
+    width: 100%;
+    flex: none;
+  }
+  .capsule-chamber,
+  .estate-lot-card {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+  .capsule-chamber-core {
+    margin: 0 auto;
+  }
+  .estate-lot-slab .ags-slab {
+    width: 104px;
+  }
 }
 
 /* Closed vendor message */
@@ -7039,6 +7561,12 @@ html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::befor
 .vendor-event-nightMarket .vendor-event-title { color: rgba(210, 150, 220, 0.85); }
 .vendor-event-broker      { border-left-color: rgba(212, 175, 55, 0.6); }
 .vendor-event-broker      .vendor-event-title { color: rgba(230, 200, 110, 0.9); }
+.vendor-event-capsuleCorner { border-left-color: rgba(0, 220, 230, 0.55); }
+.vendor-event-capsuleCorner .vendor-event-title { color: rgba(56, 244, 255, 0.88); }
+.vendor-event-museumExchange { border-left-color: rgba(214, 178, 92, 0.58); }
+.vendor-event-museumExchange .vendor-event-title { color: rgba(234, 211, 154, 0.88); }
+.vendor-event-estateAuctions { border-left-color: rgba(218, 185, 116, 0.58); }
+.vendor-event-estateAuctions .vendor-event-title { color: rgba(228, 190, 98, 0.9); }
 
 /* Stats: Collection Prestige tier card */
 .stats-prestige-card {

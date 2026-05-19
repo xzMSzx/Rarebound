@@ -54,6 +54,39 @@ export const VENDORS = {
     sellCommissionBonus: 0,
     timeGated: true,                   // Fri–Sun only
   },
+  capsuleCorner: {
+    id: 'capsuleCorner',
+    name: 'Capsule Corner',
+    tagline: 'Automated sealed inventory sourced from surplus distribution channels.',
+    theme: 'capsuleCorner',
+    priceMultiplier: null,
+    setIds: [],
+    rotationCount: 0,
+    sellCommissionBonus: -0.01,
+    foundationOnly: true,
+  },
+  museumExchange: {
+    id: 'museumExchange',
+    name: 'Museum Exchange',
+    tagline: 'Curated archival requests from preservation institutions.',
+    theme: 'museumExchange',
+    priceMultiplier: null,
+    setIds: [],
+    rotationCount: 0,
+    sellCommissionBonus: 0.03,
+    foundationOnly: true,
+  },
+  estateAuctions: {
+    id: 'estateAuctions',
+    name: 'Estate Auctions',
+    tagline: 'Private collector auctions featuring elite archival inventory.',
+    theme: 'estateAuctions',
+    priceMultiplier: null,
+    setIds: [],
+    rotationCount: 0,
+    sellCommissionBonus: 0,
+    foundationOnly: true,
+  },
 };
 
 // ─── Favor ────────────────────────────────────────────────────────────────────

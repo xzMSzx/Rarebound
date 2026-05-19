@@ -123,6 +123,33 @@ const VENDOR_RECIPES = {
     lfoDepth: 5,
     filter:   400,
   },
+  capsuleCorner: {
+    // Sleek automated terminal hum
+    tones:    [147, 220, 440],
+    type:     'sine',
+    detune:   2,
+    lfoRate:  0.08,
+    lfoDepth: 6,
+    filter:   900,
+  },
+  museumExchange: {
+    // Quiet archival room tone
+    tones:    [98, 147],
+    type:     'triangle',
+    detune:   3,
+    lfoRate:  0.035,
+    lfoDepth: 3,
+    filter:   520,
+  },
+  estateAuctions: {
+    // Low auction-house suspense
+    tones:    [49, 73.5, 110],
+    type:     'sine',
+    detune:   2,
+    lfoRate:  0.028,
+    lfoDepth: 4,
+    filter:   360,
+  },
 };
 
 function createVendorLayer(vendorId) {
