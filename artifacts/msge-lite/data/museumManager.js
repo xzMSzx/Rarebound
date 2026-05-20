@@ -63,7 +63,7 @@ const EXHIBITION_POOLS = [
     title: 'Paldea Contemporary Gallery',
     flavor: 'A modern exhibition of Paldean illustration.',
     requestText: 'Seeking Illustration Rares from contemporary Paldea-era collections.',
-    criteria: { kind: 'rarity', rarity: 'illustrationRare', setIds: ['sv2', 'sv4pt5', 'sv6', 'sv8a'] },
+    criteria: { kind: 'rarity', rarity: 'illustrationRare', setIds: ['sv2', 'sv4pt5', 'sv6', 'sv8pt5'] },
     goalRange: [1, 2],
     rewardRep: 25,
     rewardPrestige: 50

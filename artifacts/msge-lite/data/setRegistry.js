@@ -45,6 +45,10 @@ export const SET_REGISTRY = {
     name:  'Surging Sparks',
     apiId: 'sv8',
   },
+  sv8a: {
+    name:  'Prismatic Evolutions',
+    apiId: 'sv8pt5',
+  },
   sv8pt5: {
     name:  'Prismatic Evolutions',
     apiId: 'sv8pt5',

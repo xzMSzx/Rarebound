@@ -9,7 +9,7 @@ export const CAPSULE_ARCHETYPES = [
     bias: 'Contemporary collector demand stable.',
     signal: 'Illustration pressure elevated.',
     rewards: ['Modern sealed pull table', 'Stable outcomes', 'Premium modern atmosphere'],
-    sets: ['sv6', 'sv8a'],
+    sets: ['sv6', 'sv8pt5'],
     rarityShaping: { rare: { doubleRare: 0.1, illustrationRare: 0.05, rare: 0.85 } }
   },
   {
@@ -31,7 +31,7 @@ export const CAPSULE_ARCHETYPES = [
     bias: 'Luxury archival sourcing active.',
     signal: 'Collector-grade capsule integrity verified.',
     rewards: ['Lower quantity', 'Premium card weighting', 'Elite pulls'],
-    sets: ['sv8a'],
+    sets: ['sv8pt5'],
     rarityShaping: { rare: { doubleRare: 0.15, ultraRare: 0.1, secretRare: 0.05, rare: 0.7 } }
   }
 ];

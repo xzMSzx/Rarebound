@@ -15,6 +15,8 @@
  * short page arrives is the only future-proof contract with the API.
  */
 
+import { getApiId } from './setRegistry.js';
+
 const API_BASE = 'https://api.pokemontcg.io/v2/cards';
 const PAGE_SIZE = 250;
 
@@ -76,7 +78,8 @@ export async function fetchSetCards(setId) {
 
   try {
     while (true) {
-      const url = `${API_BASE}?q=set.id:${setId}&pageSize=${PAGE_SIZE}&page=${page}`;
+      const apiId = getApiId(setId);
+      const url = `${API_BASE}?q=set.id:${apiId}&pageSize=${PAGE_SIZE}&page=${page}`;
 
       const pageData = await fetchWithRetry(url);
 

@@ -49,6 +49,7 @@ import { calculateSellPayout, isSellGated, sellCard }    from './data/sellingMan
 import { lockBodyScroll, unlockBodyScroll, getLockDepth } from './ui/scrollManager.js';
 import { onEscapeKey } from './ui/overlayScrollLock.js';
 import { computeTotalCollectionValue, lineValueForCollectionEntry } from './data/collectionValuation.js';
+import { recordChronologicalCollectionSnapshot } from './data/collectionValueHistory.js';
 import {
   getDailyChase, getChaseBoost, isChaseCard,
   getBrokerInventory, removeBrokerPick,
