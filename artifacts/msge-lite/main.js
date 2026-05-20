@@ -117,9 +117,9 @@ import {
 import {
   tickVendorEvents, getVendorEvent, getVendorEventEffect, getVendorEventTimeLeft,
 } from './data/vendorEventsManager.js';
-import {
-  recordChronologicalCollectionSnapshot, getValueSummary,
-} from './data/collectionValueHistory.js';
+import { tickVendorStates, getActiveGlobalState, getVendorOperationalState } from './data/vendorStateManager.js';
+import { getDailyCapsules } from './data/capsuleManager.js';
+import { getActiveExhibition, getCuratorRank, getEligibleMuseumCards, contributeToMuseum, getCuratorReputation } from './data/museumManager.js';
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -177,8 +177,13 @@ const VENDOR_RARITY_BIAS = {
   nightMarket: { rare: { holoRare: 0.20, uncommon: 0.10, rare: 0.70 } },
 };
 
-function applyVendorRarityBias(rarity, vendorId) {
-  const bias = VENDOR_RARITY_BIAS[vendorId]?.[rarity];
+function applyVendorRarityBias(rarity, vendor) {
+  let bias;
+  if (vendor && vendor.activeCapsule && vendor.activeCapsule.rarityShaping) {
+    bias = vendor.activeCapsule.rarityShaping[rarity];
+  } else if (vendor) {
+    bias = VENDOR_RARITY_BIAS[vendor.id]?.[rarity];
+  }
   if (!bias) return rarity;
   let cum = 0;
   const roll = Math.random();
@@ -192,7 +197,7 @@ function applyVendorRarityBias(rarity, vendorId) {
 function augmentCards(engineCards, setId, vendor) {
   if (!isSetLoaded()) return engineCards;
   return engineCards.map((card) => {
-    const biasedRarity = vendor ? applyVendorRarityBias(card.rarity, vendor.id) : card.rarity;
+    const biasedRarity = applyVendorRarityBias(card.rarity, vendor);
     const poolCard = getRandomCard(biasedRarity) || getRandomCard(card.rarity);
     if (!poolCard) return card;
     return { ...card, id: poolCard.id || null, setId, name: poolCard.name,
@@ -779,6 +784,7 @@ setInterval(() => {
   // when an event slot started/ended so the hub re-renders to surface the
   // banner change.
   const vendorEventsChanged = tickVendorEvents();
+  const vendorStatesChanged = tickVendorStates();
 
   // v1.5.0 — AGS submission queue. Promotes any active submission whose
   // returnAt has elapsed into the registry, then triggers the cinematic
@@ -1479,9 +1485,11 @@ function renderVendorCard(vendor) {
   const open      = isVendorOpen(vendor.id);
   const stock     = getVendorStock(vendor.id);
   const favor     = getFavorProgress(vendor.id);
+  const opState   = getVendorOperationalState(vendor.id);
+  const glowClass = opState ? `vendor-glow-${opState.glow}` : '';
 
   const section = document.createElement('div');
-  section.className = `vendor-card vendor-${vendor.theme} ${open ? '' : 'vendor-closed'}`;
+  section.className = `vendor-card vendor-${vendor.theme} ${open ? '' : 'vendor-closed'} ${glowClass}`;
   section.setAttribute('data-vendor-id', vendor.id);
 
   // Header
@@ -1489,8 +1497,12 @@ function renderVendorCard(vendor) {
   header.className = 'vendor-header';
   header.innerHTML = `
     <div class="vendor-header-text">
-      <div class="vendor-name">${vendor.name}</div>
+      <div class="vendor-name-row" style="display:flex; align-items:center; gap:8px;">
+        <div class="vendor-name">${vendor.name}</div>
+        ${opState && opState.id !== 'active' ? `<div class="vendor-op-pill vendor-op-pill--${opState.glow}">${opState.label}</div>` : ''}
+      </div>
       <div class="vendor-tagline">${vendor.tagline}</div>
+      ${opState && opState.notice && opState.id !== 'active' ? `<div class="vendor-op-notice">${opState.notice}</div>` : ''}
     </div>
     <div class="vendor-favor-pill">Lvl ${favor.level}</div>
   `;
@@ -1659,6 +1671,8 @@ function renderCollectorNotice(title, body, meta = '') {
 function renderCapsuleCornerFoundation(vendor) {
   const wrap = document.createElement('div');
   wrap.className = 'foundation-vendor foundation-capsule';
+  const capsules = getDailyCapsules();
+  
   wrap.innerHTML = `
     <div class="foundation-status-row">
       ${renderRarityEventTag('System Online', 'cyan')}
@@ -1674,8 +1688,8 @@ function renderCapsuleCornerFoundation(vendor) {
       </div>
     </div>
     <div class="foundation-inventory-list">
-      ${CAPSULE_CORNER_DROPS.map((drop, idx) => `
-        <div class="foundation-inventory-item capsule-drop ${idx === 0 ? 'is-featured' : ''}">
+      ${capsules.map((drop, idx) => `
+        <div class="foundation-inventory-item capsule-drop ${drop.isFeatured ? 'is-featured' : ''}">
           <div class="foundation-item-head">
             <div>
               <div class="foundation-item-name">${drop.name}</div>
@@ -1687,7 +1701,7 @@ function renderCapsuleCornerFoundation(vendor) {
           <div class="foundation-reward-list">
             ${drop.rewards.map(r => `<span>${r}</span>`).join('')}
           </div>
-          <button class="foundation-action foundation-action--cyan" data-action="${drop.name}">Dispense <span>$${drop.price.toFixed(2)}</span></button>
+          <button class="foundation-action foundation-action--cyan" data-action="${drop.id}" data-price="${drop.price}">Dispense <span>$${drop.price.toFixed(2)}</span></button>
         </div>
       `).join('')}
     </div>
@@ -1697,8 +1711,42 @@ function renderCapsuleCornerFoundation(vendor) {
       FOUNDATION_OPERATIONAL_NOTICES.capsuleCorner.meta
     )}
   `;
+  
   wrap.querySelectorAll('.foundation-action').forEach(btn => {
-    attachFoundationButton(btn, vendor, btn.dataset.action || 'Dispense');
+    const action = async () => {
+      const capsuleId = btn.dataset.action;
+      const capsule = capsules.find(c => c.id === capsuleId);
+      const price = parseFloat(btn.dataset.price);
+      
+      if (!isInfiniteBalance() && getBalance() < price) {
+        const oldText = btn.innerHTML;
+        btn.innerHTML = 'Insufficient';
+        setTimeout(() => { btn.innerHTML = oldText; }, 1800);
+        return;
+      }
+      
+      haptic('medium');
+      sfx.click();
+      btn.disabled = true;
+      btn.innerHTML = 'Dispensing...';
+      
+      const chamber = wrap.querySelector('.capsule-chamber');
+      if (chamber) chamber.style.animation = 'capsuleSignalPulse 0.5s ease-in-out 3';
+      
+      await new Promise(r => setTimeout(r, 1500));
+      
+      const setIds = capsule.sets;
+      const chosenSet = setIds[Math.floor(Math.random() * setIds.length)];
+      vendor.activeCapsule = capsule;
+      
+      await runPackOpening(chosenSet, vendor, { skipSpend: false, favorBasis: price, price });
+      
+      vendor.activeCapsule = null;
+      btn.disabled = false;
+      btn.innerHTML = `Dispense <span>$${price.toFixed(2)}</span>`;
+    };
+    btn.onclick = action;
+    iosTap(btn, action);
   });
   return wrap;
 }
@@ -1706,32 +1754,38 @@ function renderCapsuleCornerFoundation(vendor) {
 function renderMuseumExchangeFoundation(vendor) {
   const wrap = document.createElement('div');
   wrap.className = 'foundation-vendor foundation-museum';
+  
+  const exhibition = getActiveExhibition();
+  const rank = getCuratorRank();
+  const rep = getCuratorReputation();
+
   wrap.innerHTML = `
     <div class="museum-exhibition-panel">
       <div class="foundation-kicker">Featured Exhibition</div>
-      <div class="museum-exhibition-title">Kanto Origins Showcase</div>
+      <div class="museum-exhibition-title">${exhibition.title}</div>
       <div class="museum-plaque-line"></div>
-      <div class="museum-exhibition-copy">Collector interest in early-generation artwork has surged.</div>
+      <div class="museum-exhibition-copy">${exhibition.flavor}</div>
       ${renderRarityEventTag('Curator Stamp', 'gold')}
     </div>
     <div class="foundation-inventory-list museum-request-list">
-      <div class="foundation-section-title">Active Curator Requests</div>
-      ${MUSEUM_EXCHANGE_REQUESTS.map(req => `
-        <div class="foundation-inventory-item museum-request">
-          <div class="foundation-item-head">
-            <div>
-              <div class="foundation-item-name">${req.title}</div>
-              <div class="foundation-item-sub">${req.meta}</div>
-            </div>
-            <span class="museum-progress">${req.progress}</span>
+      <div class="foundation-section-title">Curator Request</div>
+      <div class="foundation-inventory-item museum-request">
+        <div class="foundation-item-head">
+          <div>
+            <div class="foundation-item-name">${exhibition.requestText}</div>
+            <div class="foundation-item-sub">Reward: ${exhibition.rewardRep} Rep · ${exhibition.rewardPrestige} Prestige</div>
           </div>
+          <span class="museum-progress">${exhibition.progress} / ${exhibition.goal}</span>
         </div>
-      `).join('')}
+      </div>
+    </div>
+    <div class="museum-reputation-strip" style="margin: 10px 0; font-size: 13px; color: #aaa; text-align: center;">
+      Curator Rank: <span style="color: #d6b25c;">${rank.name}</span> (${rep} pts)
     </div>
     <div class="foundation-action-row">
-      <button class="foundation-action foundation-action--gold" data-action="Contribute">Contribute</button>
-      <button class="foundation-action foundation-action--gold" data-action="Archive">Archive</button>
-      <button class="foundation-action foundation-action--gold" data-action="Transfer">Transfer</button>
+      <button class="foundation-action foundation-action--gold" data-action="Contribute" ${exhibition.progress >= exhibition.goal ? 'disabled' : ''}>${exhibition.progress >= exhibition.goal ? 'Completed' : 'Contribute'}</button>
+      <button class="foundation-action foundation-action--gold" data-action="Archive" disabled>Archive</button>
+      <button class="foundation-action foundation-action--gold" data-action="Transfer" disabled>Transfer</button>
     </div>
     ${renderCollectorNotice(
       FOUNDATION_OPERATIONAL_NOTICES.museumExchange.title,
@@ -1739,10 +1793,101 @@ function renderMuseumExchangeFoundation(vendor) {
       FOUNDATION_OPERATIONAL_NOTICES.museumExchange.meta
     )}
   `;
-  wrap.querySelectorAll('.foundation-action').forEach(btn => {
-    attachFoundationButton(btn, vendor, btn.dataset.action || 'Archive');
-  });
+
+  const contributeBtn = wrap.querySelector('.foundation-action[data-action="Contribute"]');
+  if (contributeBtn && exhibition.progress < exhibition.goal) {
+    const action = () => {
+      haptic('soft');
+      sfx.click();
+      openMuseumContributionModal(exhibition);
+    };
+    contributeBtn.onclick = action;
+    iosTap(contributeBtn, action);
+  }
+
   return wrap;
+}
+
+function openMuseumContributionModal(exhibition) {
+  let modal = document.getElementById('museum-contribution-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'museum-contribution-modal';
+    modal.className = 'screen modal-backdrop hidden';
+    document.body.appendChild(modal);
+  }
+
+  const eligibleCards = getEligibleMuseumCards(exhibition.criteria);
+  
+  let gridHtml = '';
+  if (eligibleCards.length === 0) {
+    gridHtml = '<p class="stats-empty">No eligible cards in your collection.</p>';
+  } else {
+    gridHtml = eligibleCards.map(item => {
+      const cached = getCachedSetCards(item.setId) || [];
+      const apiCard = cached.find(c => c.id === item.cardId) || { name: item.cardId, images: {} };
+      const imgUrl = apiCard.images.small || apiCard.images.large || '';
+      return `
+        <div class="museum-contribute-card" data-set="${item.setId}" data-card="${item.cardId}">
+          ${imgUrl ? `<img src="${imgUrl}" alt="${apiCard.name}" />` : '<div class="vault-thumb-placeholder">?</div>'}
+          <div class="mcc-info">
+            <div class="mcc-name">${apiCard.name}</div>
+            <div class="mcc-qty">Available: ${item.available}</div>
+          </div>
+          <button class="mcc-btn">Archive</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  modal.innerHTML = `
+    <div class="sell-modal-content" style="max-height: 80vh; overflow-y: auto;">
+      <div class="sell-header">
+        <div class="sell-card-info">
+          <div class="sell-card-name">${exhibition.title}</div>
+          <div class="sell-card-rarity">Contribution</div>
+        </div>
+      </div>
+      <div class="sell-warning">
+        <div class="sell-warning-icon">⚠️</div>
+        <div class="sell-warning-text">
+          <div class="sell-warning-title">Permanent Archival</div>
+          <div>Cards contributed to the museum are permanently removed from your collection.</div>
+        </div>
+      </div>
+      <div class="museum-contribution-grid" style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+        ${gridHtml}
+      </div>
+      <div class="sell-actions" style="margin-top: 20px;">
+        <button class="sell-cancel-btn" id="museum-cancel">Close</button>
+      </div>
+    </div>
+  `;
+
+  modal.querySelectorAll('.mcc-btn').forEach(btn => {
+    btn.onclick = (e) => {
+      const cardEl = e.target.closest('.museum-contribute-card');
+      const setId = cardEl.dataset.set;
+      const cardId = cardEl.dataset.card;
+      
+      if (contributeToMuseum(setId, cardId)) {
+        haptic('heavy');
+        sfx.purchase();
+        showToast('Card permanently archived.', 'rep');
+        hideScreen(modal);
+        unlockBodyScroll();
+        renderVendorHub(); // refresh exhibition progress
+      }
+    };
+  });
+
+  modal.querySelector('#museum-cancel').onclick = () => {
+    hideScreen(modal);
+    unlockBodyScroll();
+  };
+
+  showScreen(modal);
+  lockBodyScroll();
 }
 
 function getAuctionPreviewCard() {
