@@ -74,38 +74,53 @@ export async function fetchSetCards(setId) {
   let page = 1;
   let allCards = [];
 
-  while (true) {
-    const url = `${API_BASE}?q=set.id:${setId}&pageSize=${PAGE_SIZE}&page=${page}`;
+  try {
+    while (true) {
+      const url = `${API_BASE}?q=set.id:${setId}&pageSize=${PAGE_SIZE}&page=${page}`;
 
-    const pageData = await fetchWithRetry(url);
+      const pageData = await fetchWithRetry(url);
 
-    if (pageData.length === 0) break;
+      if (pageData.length === 0) break;
 
-    allCards = allCards.concat(pageData);
+      allCards = allCards.concat(pageData);
 
-    // Short page — we've reached the end of the set
-    if (pageData.length < PAGE_SIZE) break;
+      // Short page — we've reached the end of the set
+      if (pageData.length < PAGE_SIZE) break;
 
-    page++;
+      page++;
+    }
+  } catch (err) {
+    console.warn(`[setLoader] Fetch failed for set ${setId}:`, err.message);
   }
 
   if (allCards.length === 0) {
-    throw new Error('API returned empty card list across all pages');
+    console.warn(`[setLoader] API returned empty card list for ${setId}. Falling back to sv3pt5.`);
+    if (setId !== 'sv3pt5') {
+      return await fetchSetCards('sv3pt5');
+    }
   }
 
   // Keep any card that has at least one image (small or large).
   // Some sets (Evolving Skies Trainer Gallery) only carry images.large.
-  const cards = allCards.filter((c) => c.images && (c.images.small || c.images.large));
+  let cards = allCards.filter((c) => c.images && (c.images.small || c.images.large));
+
+  // Widen filter safely: if filtering removes everything, use all cards but inject placeholder
+  if (cards.length === 0) {
+    console.warn(`[setLoader] No valid images for set ${setId} after filtering. Widening filter.`);
+    cards = allCards.map(c => {
+       if (!c.images) c.images = {};
+       if (!c.images.small && !c.images.large) {
+         c.images.small = 'https://images.pokemontcg.io/cardback.png';
+       }
+       return c;
+    });
+  }
 
   // Normalise: ensure every card has images.small so the renderer always has a URL.
   for (const card of cards) {
     if (!card.images.small && card.images.large) {
       card.images.small = card.images.large;
     }
-  }
-
-  if (cards.length === 0) {
-    throw new Error('No valid card images returned from API');
   }
 
   return cards;

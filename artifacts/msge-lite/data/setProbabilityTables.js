@@ -57,6 +57,51 @@ export const setProbabilities = {
     hyperRare:               0.01,
   },
 
+  sv6: {
+    holoRare:                0.60,
+    doubleRare:              0.20,
+    illustrationRare:        0.10,
+    ultraRare:               0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare:               0.01,
+  },
+
+  sv7: {
+    holoRare:                0.60,
+    doubleRare:              0.20,
+    illustrationRare:        0.10,
+    ultraRare:               0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare:               0.01,
+  },
+
+  sv8: {
+    holoRare:                0.60,
+    doubleRare:              0.20,
+    illustrationRare:        0.10,
+    ultraRare:               0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare:               0.01,
+  },
+
+  sv8pt5: {
+    holoRare:                0.60,
+    doubleRare:              0.20,
+    illustrationRare:        0.10,
+    ultraRare:               0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare:               0.01,
+  },
+
+  sv9: {
+    holoRare:                0.60,
+    doubleRare:              0.20,
+    illustrationRare:        0.10,
+    ultraRare:               0.06,
+    specialIllustrationRare: 0.03,
+    hyperRare:               0.01,
+  },
+
 };
 
 /**

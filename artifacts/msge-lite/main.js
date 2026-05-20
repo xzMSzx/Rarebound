@@ -1714,6 +1714,7 @@ function renderCapsuleCornerFoundation(vendor) {
   
   wrap.querySelectorAll('.foundation-action').forEach(btn => {
     const action = async () => {
+      if (btn.disabled) return;
       const capsuleId = btn.dataset.action;
       const capsule = capsules.find(c => c.id === capsuleId);
       const price = parseFloat(btn.dataset.price);
@@ -1738,16 +1739,22 @@ function renderCapsuleCornerFoundation(vendor) {
       const setIds = capsule.sets;
       const chosenSet = setIds[Math.floor(Math.random() * setIds.length)];
       vendor.activeCapsule = capsule;
-      
-      await runPackOpening(chosenSet, vendor, { skipSpend: false, favorBasis: price, price });
-      
-      vendor.activeCapsule = null;
-      btn.disabled = false;
-      btn.innerHTML = `Dispense <span>$${price.toFixed(2)}</span>`;
-    };
-    btn.onclick = action;
-    iosTap(btn, action);
-  });
+
+      try {
+        await runPackOpening(chosenSet, vendor, { skipSpend: false, favorBasis: price, price });
+      } catch (err) {
+        console.warn('[CapsuleCorner] Dispense failed:', err.message);
+        showToast('Capsule dispense interrupted — connection recovered', 'warn');
+      } finally {
+        vendor.activeCapsule = null;
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `Dispense <span>$${price.toFixed(2)}</span>`;
+        }
+      }
+      };
+      btn.onclick = action;
+      iosTap(btn, action);  });
   return wrap;
 }
 
@@ -2839,7 +2846,7 @@ function renderCollectionScreen() {
     card.className = 'set-card';
     const artUrl = packInfo ? `${import.meta.env.BASE_URL}${packInfo.art}` : '';
     card.innerHTML = `
-      ${artUrl ? `<img src="${artUrl}" class="set-card-art" alt="${packInfo.name}" />` : ''}
+      ${artUrl ? `<img src="${artUrl}" class="set-card-art" alt="${packInfo.name}" loading="lazy" />` : ''}
       <div class="set-card-info">
         <div class="set-card-name">${packInfo?.name || setId}</div>
         <div class="set-card-progress">${ownedCount} / ${total} · ${pct}%</div>
@@ -3852,7 +3859,7 @@ function renderStatsScreen() {
     ${mostValCard ? `
     <div class="stats-showcase" id="showcase-most-val" style="cursor:pointer">
       <div class="stats-showcase-label">Most Valuable Card</div>
-      <img src="${mostValCard.images.small || mostValCard.images.large}" alt="${mostValCard.name}" class="stats-showcase-img" />
+      <img src="${mostValCard.images.small || mostValCard.images.large}" alt="${mostValCard.name}" class="stats-showcase-img" loading="lazy" />
       <div class="stats-showcase-name">${mostValCard.name}</div>
       <div class="stats-showcase-value">$${mostValAmount.toFixed(2)}</div>
     </div>` : '<p class="stats-empty">Open some packs to see your stats!</p>'}
@@ -3860,7 +3867,7 @@ function renderStatsScreen() {
     ${rarestCard && rarestIdx !== -1 ? `
     <div class="stats-showcase" id="showcase-rarest" style="cursor:pointer">
       <div class="stats-showcase-label">Rarest Pull</div>
-      <img src="${rarestCard.images.small || rarestCard.images.large}" alt="${rarestCard.name}" class="stats-showcase-img" />
+      <img src="${rarestCard.images.small || rarestCard.images.large}" alt="${rarestCard.name}" class="stats-showcase-img" loading="lazy" />
       <div class="stats-showcase-name">${rarestCard.name}</div>
       <div class="stats-showcase-value">${RARITY_LABELS[RARITY_ORDER[rarestIdx]] || ''}</div>
     </div>` : ''}
