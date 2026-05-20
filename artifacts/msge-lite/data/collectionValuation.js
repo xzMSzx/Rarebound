@@ -21,8 +21,15 @@ import { gradedValueFromRaw } from './agsMarketIntegration.js';
  * }} ctx
  */
 export function lineValueForCollectionEntry(setId, cardId, entry, ctx) {
-  const cached = ctx.getCachedSetCards(setId) || [];
-  const apiCard = cached.find(c => c.id === cardId);
+  if (!ctx._apiCardMapCache) ctx._apiCardMapCache = new Map();
+  let byId = ctx._apiCardMapCache.get(setId);
+  if (!byId) {
+    const cached = ctx.getCachedSetCards(setId) || [];
+    byId = new Map(cached.map(c => [c.id, c]));
+    ctx._apiCardMapCache.set(setId, byId);
+  }
+
+  const apiCard = byId.get(cardId);
   const tier = apiCard ? ctx.mapPokemonRarity(apiCard.rarity) : 'common';
   const rawUnit = ctx.allValues[cardId] ?? ctx.getMarketValue(cardId, tier);
 
