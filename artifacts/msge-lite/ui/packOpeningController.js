@@ -30,6 +30,7 @@
 import {
   playPackCrinkle, playPackTear, playCardSlide,
 } from './audioManager.js';
+import { PACK_STORE } from '../data/packStore.js';
 
 // Tear threshold now scales with pack width for responsive mobile interaction.
 // Base is 40px on a 340px pack; scales down on smaller screens, up on larger screens.
@@ -48,6 +49,13 @@ function _getTearThreshold(packElement) {
   const rect = packElement.getBoundingClientRect();
   const packWidth = rect.width;
   return Math.max(30, Math.round(packWidth * TEAR_THRESHOLD_SCALE));
+}
+
+function getPublicAssetUrl(assetPath) {
+  if (!assetPath) return '';
+  const normalized = assetPath.replace(/^\/+/, '');
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+  return `${base}/${normalized}`;
 }
 
 function _ensureOverlay() {
@@ -125,7 +133,8 @@ function _loadPackArt(setId) {
   const topImg    = _overlay.querySelector('#pack-top-img');
   const front     = _overlay.querySelector('#pack-front');
   const pack      = _overlay.querySelector('#booster-pack');
-  const localUrl  = `${import.meta.env.BASE_URL}packs/${setId}.png`;
+  const localPath = PACK_STORE[setId]?.art || `packs/${setId}.png`;
+  const localUrl  = getPublicAssetUrl(localPath);
   const fallback  = `https://images.pokemontcg.io/${setId}/logo.png`;
 
   // Reset state — second-pack opens shouldn't inherit prior art classes.

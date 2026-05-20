@@ -211,7 +211,7 @@ new Image().src = CARD_BACK_URL;
 
 // ─── Background preload (Phase 10 — orchestrated by boot screen) ─────────────
 
-const SET_IDS = ['swsh7', 'sv4pt5', 'sv3pt5', 'sv2', 'swsh11'];
+const SET_IDS = ['swsh7', 'sv4pt5', 'sv3pt5', 'sv2', 'swsh11', 'sv6', 'sv7', 'sv8', 'sv8pt5', 'sv9'];
 
 function preloadAllSetsAsync() {
   // Stagger requests slightly to avoid hammering the API in one burst.
@@ -441,6 +441,13 @@ function showToast(text, kind = 'favor') {
   container.appendChild(toast);
   // Auto-remove after animation
   setTimeout(() => toast.remove(), 2600);
+}
+
+function getPublicAssetUrl(assetPath) {
+  if (!assetPath) return '';
+  const normalized = assetPath.replace(/^\/+/, '');
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+  return `${base}/${normalized}`;
 }
 
 // ─── Binder state ─────────────────────────────────────────────────────────────
@@ -2074,7 +2081,7 @@ function renderVendorPackTile(item, vendor) {
   const finalPrice = basePrice * (1 - totalPct);
   const tile = document.createElement('div');
   tile.className = 'vendor-pack-tile';
-  const artUrl = `${import.meta.env.BASE_URL}${pack.art}`;
+  const artUrl = getPublicAssetUrl(pack.art);
 
   tile.innerHTML = `
     <img src="${artUrl}" class="vendor-pack-art" alt="${pack.name}" />
@@ -2844,7 +2851,7 @@ function renderCollectionScreen() {
 
     const card = document.createElement('div');
     card.className = 'set-card';
-    const artUrl = packInfo ? `${import.meta.env.BASE_URL}${packInfo.art}` : '';
+    const artUrl = packInfo ? getPublicAssetUrl(packInfo.art) : '';
     card.innerHTML = `
       ${artUrl ? `<img src="${artUrl}" class="set-card-art" alt="${packInfo.name}" loading="lazy" />` : ''}
       <div class="set-card-info">
