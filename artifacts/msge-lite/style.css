@@ -5166,6 +5166,26 @@ body.is-mobile button      { min-height: 44px; }
   max-width: 460px;
   width: 100%;
 }
+.boot-logo {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 24px;
+  opacity: 0.85;
+  object-fit: contain;
+  animation: bootLogoEntrance 1.2s ease both;
+}
+
+@keyframes bootLogoEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+}
+
 .boot-title {
   font-size: clamp(34px, 8vw, 48px);
   font-weight: 800;
