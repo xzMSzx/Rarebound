@@ -19,7 +19,14 @@
  * Storage key: tcg_milestones → { claimed: string[] }
  */
 
-import { getCollection }     from './collectionManager.js';
+import { getCollection as _getCollection } from './collectionManager.js';
+
+// ⚡ Bolt: Scoped cache for the collection object.
+// We use this to prevent redundant localStorage parses during a single milestone sweep.
+let _sweepCollection = null;
+function getCollection() {
+  return _sweepCollection || _getCollection();
+}
 import { getCachedSetCards } from './cardPoolManager.js';
 import { mapPokemonRarity }  from './rarityMapper.js';
 import { getReputation }     from './reputationManager.js';
@@ -399,8 +406,10 @@ function getRevealedMilestones(milestones, claimedSet) {
  * Each milestone: { ...m, current, target, progressPct, complete, claimed, claimable, revealed }
  */
 export function getCategoryStatus() {
-  const claimedSet = new Set(load().claimed);
-  return CATEGORIES.map(cat => {
+  _sweepCollection = _getCollection();
+  try {
+    const claimedSet = new Set(load().claimed);
+    return CATEGORIES.map(cat => {
     const revealed = getRevealedMilestones(cat.milestones, claimedSet);
     const milestones = revealed.map(m => {
       const p    = progressFor(m.id);
@@ -417,9 +426,12 @@ export function getCategoryStatus() {
         claimable:   done && !claimedSet.has(m.id),
       };
     });
-    const completedCount = milestones.filter(m => m.claimed).length;
-    return { ...cat, milestones, completedCount, totalCount: cat.milestones.length };
-  });
+      const completedCount = milestones.filter(m => m.claimed).length;
+      return { ...cat, milestones, completedCount, totalCount: cat.milestones.length };
+    });
+  } finally {
+    _sweepCollection = null;
+  }
 }
 
 /**
@@ -427,8 +439,10 @@ export function getCategoryStatus() {
  * @deprecated Prefer getCategoryStatus() for UI display.
  */
 export function getMilestoneStatus() {
-  const claimedSet = new Set(load().claimed);
-  return MILESTONES.map(m => {
+  _sweepCollection = _getCollection();
+  try {
+    const claimedSet = new Set(load().claimed);
+    return MILESTONES.map(m => {
     const p   = progressFor(m.id);
     const pct = Math.min(100, (p.current / Math.max(p.target, 0.0001)) * 100);
     const done = pct >= 100;
@@ -436,9 +450,12 @@ export function getMilestoneStatus() {
       ...m,
       current: p.current, target: p.target,
       progressPct: pct, complete: done,
-      claimed: claimedSet.has(m.id), claimable: done && !claimedSet.has(m.id),
-    };
-  });
+        claimed: claimedSet.has(m.id), claimable: done && !claimedSet.has(m.id),
+      };
+    });
+  } finally {
+    _sweepCollection = null;
+  }
 }
 
 /**
