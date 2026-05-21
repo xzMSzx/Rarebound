@@ -121,6 +121,8 @@ import {
 import { tickVendorStates, getActiveGlobalState, getVendorOperationalState } from './data/vendorStateManager.js';
 import { getDailyCapsules } from './data/capsuleManager.js';
 import { getActiveExhibition, getCuratorRank, getEligibleMuseumCards, contributeToMuseum, getCuratorReputation } from './data/museumManager.js';
+import { checkAndPromptMigration } from './ui/migrationModal.js';
+import { triggerPreservationCheck } from './ui/cloudPreservationReminder.js';
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -283,6 +285,7 @@ window.addEventListener('load', () => {
     // any issue (e.g. bootEl null on a hot-reload).  Idempotent — classList.remove
     // on an absent class is a no-op.
     document.body.classList.remove('boot-locked');
+    checkAndPromptMigration();
 
     // Phase 10.3: GlobalClick + NavAudit — gated by navAudit sub-flag.
     if (isDebugMode() && isDiagFlag('navAudit')) {
@@ -693,6 +696,9 @@ function _drainAgsRevealQueue() {
     if (!_agsRevealActive) return;
     _agsRevealActive = false;
     _drainAgsRevealQueue();
+    if (!_agsRevealActive) {
+      triggerPreservationCheck('ags_completion');
+    }
   };
   _agsRevealSafetyTimer = setTimeout(() => {
     console.warn('[v1.5.0] ags reveal safety timeout — force-draining queue.');
@@ -2377,6 +2383,14 @@ async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
   if (!skipSpend) {
     renderVendorHub();
     updateRankStrip();
+  }
+
+  const hadSignificantPull = newCards.some(c => {
+    const tier = c.rarityType || c.rarity;
+    return PRESTIGE_PULL_TIERS.has(tier) || isWishlisted(c.id) || isChaseCard(c.id) || tier === 'doubleRare';
+  });
+  if (hadSignificantPull) {
+    triggerPreservationCheck('pack_pull');
   }
 }
 
