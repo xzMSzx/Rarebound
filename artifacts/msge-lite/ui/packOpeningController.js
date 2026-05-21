@@ -30,12 +30,33 @@
 import {
   playPackCrinkle, playPackTear, playCardSlide,
 } from './audioManager.js';
+import { PACK_STORE } from '../data/packStore.js';
 
-const TEAR_THRESHOLD_PX  = 80;
-const SWIPE_THRESHOLD_PX = 80;
-const TILT_MAX_DEG       = 6;    // subtle — pack hints at depth, not a box
+// Tear threshold now scales with pack width for responsive mobile interaction.
+// Base is 40px on a 340px pack; scales down on smaller screens, up on larger screens.
+const TEAR_THRESHOLD_SCALE = 0.12;    // 40px / 340px ≈ 0.118
+const SWIPE_THRESHOLD_PX   = 40;      // vertical swipe threshold (fixed)
+const TILT_MAX_DEG         = 6;       // subtle — pack hints at depth, not a box
 
 let _overlay = null;
+
+/**
+ * Calculate responsive tear threshold based on pack width.
+ * On a 340px pack → ~40px; on 280px (mobile) → ~34px; on 420px (tablet) → ~50px.
+ * This makes the tear gesture feel consistent across screen sizes.
+ */
+function _getTearThreshold(packElement) {
+  const rect = packElement.getBoundingClientRect();
+  const packWidth = rect.width;
+  return Math.max(30, Math.round(packWidth * TEAR_THRESHOLD_SCALE));
+}
+
+function getPublicAssetUrl(assetPath) {
+  if (!assetPath) return '';
+  const normalized = assetPath.replace(/^\/+/, '');
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+  return `${base}/${normalized}`;
+}
 
 function _ensureOverlay() {
   if (_overlay) return _overlay;
@@ -112,7 +133,8 @@ function _loadPackArt(setId) {
   const topImg    = _overlay.querySelector('#pack-top-img');
   const front     = _overlay.querySelector('#pack-front');
   const pack      = _overlay.querySelector('#booster-pack');
-  const localUrl  = `${import.meta.env.BASE_URL}packs/${setId}.png`;
+  const localPath = PACK_STORE[setId]?.art || `packs/${setId}.png`;
+  const localUrl  = getPublicAssetUrl(localPath);
   const fallback  = `https://images.pokemontcg.io/${setId}/logo.png`;
 
   // Reset state — second-pack opens shouldn't inherit prior art classes.
@@ -209,17 +231,23 @@ export function openPackInteraction(setId) {
     // ─── Tear gesture ───────────────────────────────────────────────────
     let tearStartX = null;
     let tearActive = false;
+    let maxDx = 0;
+    const tearThreshold = _getTearThreshold(pack);
 
     const onSeamDown = (e) => {
-      e.preventDefault();              // stop mobile text-selection on drag
+      // Prevent text selection only for mouse. CSS touch-action handles mobile.
+      if (e.pointerType !== 'touch') e.preventDefault();
       tearStartX = e.clientX;
+      maxDx = 0;
       tearActive = true;
-      seam.setPointerCapture?.(e.pointerId);
+      // Request pointer capture for reliable drag tracking across browsers
+      try { seam.setPointerCapture?.(e.pointerId); } catch (_) {}
     };
     const onSeamMove = (e) => {
       if (!tearActive || tearStartX === null) return;
       const dx = e.clientX - tearStartX;
-      const progress = Math.min(1, Math.abs(dx) / TEAR_THRESHOLD_PX);
+      if (Math.abs(dx) > Math.abs(maxDx)) maxDx = dx;
+      const progress = Math.min(1, Math.abs(dx) / tearThreshold);
       // Clip pack-front from the top as the user drags — more reliable than
       // pack-top on iOS Safari (preserve-3d contexts ignore overflow/clip-path
       // on child elements in many WebKit builds).
@@ -238,7 +266,7 @@ export function openPackInteraction(setId) {
       const dx = e.clientX - tearStartX;
       tearActive = false;
       tearStartX = null;
-      if (Math.abs(dx) >= TEAR_THRESHOLD_PX) {
+      if (Math.abs(dx) >= tearThreshold) {
         completeTear(dx > 0 ? 1 : -1);
       } else {
         // Snap pack-front back to fully visible (no clip) on aborted tear

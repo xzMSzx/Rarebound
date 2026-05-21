@@ -29,6 +29,11 @@ const RARITY_MAP = {
   'Rare Holo VSTAR':                 'doubleRare',
   'Double Rare':                     'doubleRare',
   'Rare ACE':                        'doubleRare',
+  // Scarlet/Violet Ace Spec cards are a modern rare sub-tier that should
+  // live inside the existing doubleRare category rather than create a
+  // new rarity hierarchy branch.
+  'Ace Spec Rare':                   'doubleRare',
+  'ACE SPEC Rare':                   'doubleRare',
 
   // ── Illustration Rare ────────────────────────────────────────────────
   'Illustration Rare':               'illustrationRare',

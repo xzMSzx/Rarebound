@@ -35,4 +35,39 @@ export const PACK_STORE = {
     totalCards: 217,
   },
 
+  sv6: {
+    name: 'Twilight Masquerade',
+    price: 19.00,
+    art: 'packs/sv6.png',
+    totalCards: 226,
+  },
+
+  sv7: {
+    name: 'Stellar Crown',
+    price: 20.00,
+    art: 'packs/sv7.png',
+    totalCards: 175,
+  },
+
+  sv8: {
+    name: 'Surging Sparks',
+    price: 21.00,
+    art: 'packs/sv8.png',
+    totalCards: 252,
+  },
+
+  sv8pt5: {
+    name: 'Prismatic Evolutions',
+    price: 25.00,
+    art: 'packs/sv8pt5.png',
+    totalCards: 175,
+  },
+
+  sv9: {
+    name: 'Journey Together',
+    price: 19.00,
+    art: 'packs/sv9.png',
+    totalCards: 185,
+  },
+
 }

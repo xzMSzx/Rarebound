@@ -86,6 +86,48 @@ const EVENT_TABLE = {
       effects: { chaseStockBoost: 0.15 },
     },
   ],
+  capsuleCorner: [
+    {
+      id: 'capsule_corner_overstock',
+      title: 'Sealed Surplus Feed',
+      flavor: 'Distributor remainder channels are feeding the chamber.',
+      effects: { capsuleVolatility: 1.2 },
+    },
+    {
+      id: 'capsule_corner_prism_bias',
+      title: 'Prism Bias Detected',
+      flavor: 'The scanner reports elevated illustration-rare pressure.',
+      effects: { capsuleRarityBias: 0.12 },
+    },
+  ],
+  museumExchange: [
+    {
+      id: 'museum_kanto_showcase',
+      title: 'Featured Exhibition',
+      flavor: 'Early-generation artwork is receiving institutional attention.',
+      effects: { archivalPrestige: 0.1 },
+    },
+    {
+      id: 'museum_curator_program',
+      title: 'Curator Program Active',
+      flavor: 'Preservation committees are reviewing collector contributions.',
+      effects: { archivalDemand: 0.15 },
+    },
+  ],
+  estateAuctions: [
+    {
+      id: 'estate_private_bidding',
+      title: 'Private Bidding Activity',
+      flavor: 'Elite collector interest is elevated around a sealed estate.',
+      effects: { auctionAttention: 0.2 },
+    },
+    {
+      id: 'estate_liquidation',
+      title: 'Estate Liquidation',
+      flavor: 'A private archive has entered preview under strict limits.',
+      effects: { auctionRarity: 0.18 },
+    },
+  ],
 };
 
 function load() {

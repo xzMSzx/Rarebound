@@ -23,6 +23,17 @@ export const VENDORS = {
     rotationCount: 3,
     sellCommissionBonus: 0,
   },
+  capsuleCorner: {
+    id: 'capsuleCorner',
+    name: 'Capsule Corner',
+    tagline: 'Automated sealed inventory sourced from surplus distribution channels.',
+    theme: 'capsuleCorner',
+    priceMultiplier: null,
+    setIds: [],
+    rotationCount: 0,
+    sellCommissionBonus: -0.01,
+    foundationOnly: true,
+  },
   retroVault: {
     id: 'retroVault',
     name: 'Retro Vault',
@@ -33,6 +44,17 @@ export const VENDORS = {
     rotationCount: 2,
     sellCommissionBonus: 0.02,         // pays 2% better commission
   },
+  museumExchange: {
+    id: 'museumExchange',
+    name: 'Museum Exchange',
+    tagline: 'Curated archival requests from preservation institutions.',
+    theme: 'museumExchange',
+    priceMultiplier: null,
+    setIds: [],
+    rotationCount: 0,
+    sellCommissionBonus: 0.03,
+    foundationOnly: true,
+  },
   nightMarket: {
     id: 'nightMarket',
     name: 'Night Market',
@@ -42,6 +64,17 @@ export const VENDORS = {
     setIds: ['swsh7','swsh11','sv4pt5','sv2','sv3pt5'],
     rotationCount: 2,
     sellCommissionBonus: -0.02,        // skims commission
+  },
+  estateAuctions: {
+    id: 'estateAuctions',
+    name: 'Estate Auctions',
+    tagline: 'Private collector auctions featuring elite archival inventory.',
+    theme: 'estateAuctions',
+    priceMultiplier: null,
+    setIds: [],
+    rotationCount: 0,
+    sellCommissionBonus: 0,
+    foundationOnly: true,
   },
   broker: {
     id: 'broker',

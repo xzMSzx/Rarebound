@@ -1,1 +1,4 @@
 ## 2026-05-14 - Add aria-label to Icon-Only Market Screen Close Button\n**Learning:** The legacy vanilla JS ui/ layer contains several icon-only buttons (like '×' for close) rendered directly via innerHTML that lack accessibility labels. This makes them difficult for screen readers to interpret correctly.\n**Action:** Proactively scan modal templates in the ui/ directory for icon-only buttons and ensure they are assigned descriptive 'aria-label' attributes.
+## 2024-05-16 - HTML Entity Arrows as Buttons
+**Learning:** Using HTML entities (like `&#9664;` and `&#9654;`) as the only content in a `<button>` causes screen readers to read out geometric shapes (e.g. "Left pointing triangle") instead of their intended actions.
+**Action:** When using geometric shapes or HTML entity symbols for navigation arrows, always explicitly define an `aria-label` attribute (e.g. `aria-label="Previous page"`) so screen readers provide meaningful context.

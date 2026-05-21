@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>RAREBOUND — Digital Trading Card Collection</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png?v=1" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1" />
+    <link rel="shortcut icon" href="/favicon.ico?v=1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1" />
+    <meta name="apple-mobile-web-app-title" content="Rarebound" />
+    <link rel="manifest" href="/site.webmanifest?v=1" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
@@ -13,6 +18,7 @@
       <div class="boot-noise"></div>
       <div class="boot-vignette"></div>
       <div class="boot-content">
+        <img class="boot-logo" src="/favicon.svg" alt="Rarebound logo" />
         <div class="boot-title">RAREBOUND</div>
         <div class="boot-subtitle">Digital Trading Card Collection</div>
         <div class="boot-bar"><div class="boot-bar-fill"></div></div>
@@ -59,9 +65,9 @@
       </div>
       <div id="binder-pages"></div>
       <div class="binder-nav">
-        <button id="binder-prev" class="binder-nav-btn">&#9664;</button>
+        <button id="binder-prev" class="binder-nav-btn" aria-label="Previous page">&#9664;</button>
         <span id="binder-page-label"></span>
-        <button id="binder-next" class="binder-nav-btn">&#9654;</button>
+        <button id="binder-next" class="binder-nav-btn" aria-label="Next page">&#9654;</button>
       </div>
     </div>
 

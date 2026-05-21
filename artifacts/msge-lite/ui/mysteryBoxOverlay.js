@@ -15,6 +15,13 @@ import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
 
 let overlayEl;
 
+function getPublicAssetUrl(assetPath) {
+  if (!assetPath) return '';
+  const normalized = assetPath.replace(/^\/+/, '');
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+  return `${base}/${normalized}`;
+}
+
 function ensureOverlay() {
   overlayEl = document.getElementById('mystery-box-overlay');
   return !!overlayEl;
@@ -31,7 +38,7 @@ export function showMysteryBoxReveal(box, setIds) {
 
     const tiles = setIds.map((id, i) => {
       const pack = PACK_STORE[id];
-      const art  = pack ? `${import.meta.env.BASE_URL}${pack.art}` : '';
+      const art  = pack ? getPublicAssetUrl(pack.art) : '';
       return `
         <div class="mystery-tile" data-i="${i}">
           <div class="mystery-tile-inner">

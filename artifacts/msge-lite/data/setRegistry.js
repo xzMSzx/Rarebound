@@ -33,6 +33,30 @@ export const SET_REGISTRY = {
     name:  'Lost Origin',
     apiId: 'swsh11',
   },
+  sv6: {
+    name:  'Twilight Masquerade',
+    apiId: 'sv6',
+  },
+  sv7: {
+    name:  'Stellar Crown',
+    apiId: 'sv7',
+  },
+  sv8: {
+    name:  'Surging Sparks',
+    apiId: 'sv8',
+  },
+  sv8a: {
+    name:  'Prismatic Evolutions',
+    apiId: 'sv8pt5',
+  },
+  sv8pt5: {
+    name:  'Prismatic Evolutions',
+    apiId: 'sv8pt5',
+  },
+  sv9: {
+    name:  'Journey Together',
+    apiId: 'sv9',
+  },
 };
 
 /**
