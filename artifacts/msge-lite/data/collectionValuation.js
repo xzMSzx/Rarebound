@@ -22,7 +22,20 @@ import { gradedValueFromRaw } from './agsMarketIntegration.js';
  */
 export function lineValueForCollectionEntry(setId, cardId, entry, ctx) {
   const cached = ctx.getCachedSetCards(setId) || [];
-  const apiCard = cached.find(c => c.id === cardId);
+
+  if (!ctx._apiCardMapCache) {
+    ctx._apiCardMapCache = new Map();
+  }
+  let setMap = ctx._apiCardMapCache.get(setId);
+  if (!setMap) {
+    setMap = new Map();
+    for (let i = 0; i < cached.length; i++) {
+      setMap.set(cached[i].id, cached[i]);
+    }
+    ctx._apiCardMapCache.set(setId, setMap);
+  }
+
+  const apiCard = setMap.get(cardId);
   const tier = apiCard ? ctx.mapPokemonRarity(apiCard.rarity) : 'common';
   const rawUnit = ctx.allValues[cardId] ?? ctx.getMarketValue(cardId, tier);
 
@@ -43,10 +56,15 @@ export function lineValueForCollectionEntry(setId, cardId, entry, ctx) {
  */
 export function computeTotalCollectionValue(collection, ctx) {
   let total = 0;
-  for (const [setId, cards] of Object.entries(collection || {})) {
-    for (const [cardId, entry] of Object.entries(cards || {})) {
-      total += lineValueForCollectionEntry(setId, cardId, entry, ctx);
+  try {
+    for (const [setId, cards] of Object.entries(collection || {})) {
+      for (const [cardId, entry] of Object.entries(cards || {})) {
+        total += lineValueForCollectionEntry(setId, cardId, entry, ctx);
+      }
     }
+  } finally {
+    // Clear operation-scoped cache to avoid state desync in tests
+    ctx._apiCardMapCache = undefined;
   }
   return Math.round(total * 100) / 100;
 }
