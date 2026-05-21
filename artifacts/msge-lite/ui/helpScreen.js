@@ -632,11 +632,11 @@ let screenEl;
 function render() {
   const sections = TOPICS.map((t, i) => `
     <div class="help-accordion" data-idx="${i}">
-      <button class="help-accordion-head" aria-expanded="false">
+      <button class="help-accordion-head" aria-expanded="false" aria-controls="help-accordion-body-${i}">
         <span class="help-accordion-title">${t.title}</span>
         <span class="help-accordion-chevron">+</span>
       </button>
-      <div class="help-accordion-body">${t.body.trim()}</div>
+      <div class="help-accordion-body" id="help-accordion-body-${i}">${t.body.trim()}</div>
     </div>
   `).join('');
 

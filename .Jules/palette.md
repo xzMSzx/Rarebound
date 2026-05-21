@@ -2,3 +2,6 @@
 ## 2024-05-16 - HTML Entity Arrows as Buttons
 **Learning:** Using HTML entities (like `&#9664;` and `&#9654;`) as the only content in a `<button>` causes screen readers to read out geometric shapes (e.g. "Left pointing triangle") instead of their intended actions.
 **Action:** When using geometric shapes or HTML entity symbols for navigation arrows, always explicitly define an `aria-label` attribute (e.g. `aria-label="Previous page"`) so screen readers provide meaningful context.
+## 2026-05-19 - Accessible Custom Accordions
+**Learning:** Custom UI accordions (like the Help Center and Diagnostics section) that use visual CSS class toggles (`is-open`) are insufficient for accessibility. Without explicitly managing the `aria-expanded` state, screen readers cannot announce when the content visibility changes.
+**Action:** Always ensure that custom accordion trigger buttons declare `aria-expanded` and dynamically toggle its value between `'true'` and `'false'` in their event listeners. Also ensure `aria-controls` is set correctly.

@@ -273,7 +273,7 @@ function diagSectionHTML() {
 
   return `
     <div class="diag-section" id="diag-section">
-      <button class="diag-section-header" id="diag-section-toggle" type="button">
+      <button class="diag-section-header" id="diag-section-toggle" type="button" aria-expanded="false" aria-controls="diag-section-body">
         <span class="diag-section-title">System Diagnostics</span>
         <span class="diag-section-chevron" id="diag-chevron">▾</span>
       </button>
@@ -753,6 +753,7 @@ function wireDiagnostics() {
   if (diagToggle && diagBody) {
     diagToggle.addEventListener('click', () => {
       const open = diagBody.classList.toggle('diag-body-open');
+      diagToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       diagChev.textContent = open ? '▴' : '▾';
       haptic('soft');
     });
