@@ -1513,10 +1513,8 @@ function renderVendorCard(vendor) {
     <div class="vendor-header-text">
       <div class="vendor-name-row" style="display:flex; align-items:center; gap:8px;">
         <div class="vendor-name">${vendor.name}</div>
-        ${opState && opState.id !== 'active' ? `<div class="vendor-op-pill vendor-op-pill--${opState.glow}">${opState.label}</div>` : ''}
       </div>
       <div class="vendor-tagline">${vendor.tagline}</div>
-      ${opState && opState.notice && opState.id !== 'active' ? `<div class="vendor-op-notice">${opState.notice}</div>` : ''}
     </div>
     <div class="vendor-favor-pill">Lvl ${favor.level}</div>
   `;

@@ -26,6 +26,10 @@
 
 html, body {
   overscroll-behavior: none;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  height: 100vh;
+  height: -webkit-fill-available;
 }
 
 body {
@@ -33,7 +37,7 @@ body {
   background-color: #111;
   color: #e6e6e6;
   min-height: 100vh;
-  padding: 14px;
+  padding: 0 14px calc(14px + env(safe-area-inset-bottom, 0px)) 14px;
 }
 
 /* ─── Typography hierarchy ───────────────────────────────────────────────── */
@@ -263,11 +267,11 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
                                     * for "lift the card upward" is the
                                     * padding-top below. */
   justify-content: flex-start;
-  padding-top: 14vh;               /* Phase 5.2.6 — nudged from 8vh so the
-                                    * counter / card / rarity / RH caption
-                                    * stack sits a bit further below the
-                                    * Skip Pack button instead of hugging
-                                    * the very top of the screen. */
+  padding-top: max(14vh, env(safe-area-inset-top, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 16px));
+  padding-right: max(16px, env(safe-area-inset-right, 16px));
+  padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  box-sizing: border-box;
   gap: 18px;
   transition: opacity 0.3s ease;
   user-select: none;
@@ -325,6 +329,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
    * inside the perspective context, so resizing belongs on the stage. */
   /* Phase 5.2.4 — final balanced sizing matching the Numel reference layout. */
   width: min(74vw, 340px);
+  max-width: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
   height: min(52vh, 460px);
   perspective: 900px;
 }
@@ -907,7 +912,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 @media (max-width: 700px) {
-  body { padding: 10px; }
+  body { padding: 10px calc(10px + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px)); }
 
   header h1 { font-size: 1.1rem; }
   .panel    { padding: 10px 12px; }
@@ -925,6 +930,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
    * sits behind the card. */
   .overlay-card-stage {
     width: 74vw;
+    max-width: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
     height: 52vh;
   }
 
@@ -1957,7 +1963,7 @@ body.is-mobile button      { min-height: 44px; }
 /* ═══ PHASE 6 — STORE SYSTEM ══════════════════════════════════════════════ */
 
 #store-screen {
-  padding: 20px;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 20px 20px;
   color: white;
 }
 
@@ -5130,6 +5136,9 @@ body.is-mobile button      { min-height: 44px; }
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
   background:
     radial-gradient(ellipse at 50% 30%, rgba(40, 38, 50, 0.55) 0%, transparent 60%),
     linear-gradient(180deg, #0b0b10 0%, #050508 100%);
@@ -7584,6 +7593,20 @@ html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::befor
 #pack-overlay,
 .pack-opening-overlay {
   overscroll-behavior: contain;
+}
+
+.pack-opening-overlay {
+  padding: env(safe-area-inset-top, 16px) max(16px, env(safe-area-inset-right, 16px)) calc(env(safe-area-inset-bottom, 16px) + 10px) max(16px, env(safe-area-inset-left, 16px));
+  box-sizing: border-box;
+}
+
+.swipe-prompt {
+  bottom: calc(12vh + env(safe-area-inset-bottom, 0px));
+}
+
+.overlay-skip-btn {
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
 }
 
 /* ============================================================

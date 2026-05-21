@@ -23,6 +23,7 @@ import { regenerateAllVendorStocks, regenerateVendorStock } from '../data/vendor
 import { runRefresh } from '../data/economyManager.js';
 import { addBalance } from '../state/playerState.js';
 import { clearHistory } from '../data/marketHistory.js';
+import { forceShowPreservationModal } from './cloudPreservationReminder.js';
 import {
   isDiagnosticsEnabled, setDiagnosticsEnabled,
   getDiagFlags, setDiagFlag,
@@ -375,6 +376,10 @@ function devToolsHTML() {
         <button class="dev-tool-btn" data-act="add1000">+ $1000</button>
       </div>
 
+      <div class="dev-tool-row" style="margin-top: 8px;">
+        <button class="dev-tool-btn" data-act="triggerPreservation" style="width: 100%;">Trigger Preservation Reminder</button>
+      </div>
+
       <div class="settings-row dev-tool-toggle-row" data-key="infinite">
         <div class="settings-row-text">
           <div class="settings-row-title">Infinite Balance</div>
@@ -704,6 +709,10 @@ function wireDevTools() {
         case 'add100':  addBalance(100);  _hooks.onBalanceChanged?.(); break;
         case 'add500':  addBalance(500);  _hooks.onBalanceChanged?.(); break;
         case 'add1000': addBalance(1000); _hooks.onBalanceChanged?.(); break;
+        case 'triggerPreservation':
+          closeSettingsScreen();
+          setTimeout(() => forceShowPreservationModal(), 300);
+          break;
         case 'refreshVendors':
           regenerateAllVendorStocks();
           _hooks.onVendorsChanged?.();

@@ -43,6 +43,12 @@ export function triggerPreservationCheck(progressionType) {
   showPreservationModal(key, now);
 }
 
+export function forceShowPreservationModal() {
+  const activeProfile = getActiveProfileId();
+  const key = `rb_profile_${activeProfile}_${COOLDOWN_KEY}`;
+  showPreservationModal(key, Date.now());
+}
+
 function showPreservationModal(flagKey, now) {
   // Prevent multiple overlapping modals
   if (document.getElementById('cloud-preservation-modal')) return;
