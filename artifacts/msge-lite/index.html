@@ -170,14 +170,14 @@
     <!-- ═══ UTILITY DOCK (Phase 10.1) ═════════════════════════════════════ -->
     <div id="utility-dock" class="utility-dock">
       <button id="utility-dock-trigger" class="utility-dock-trigger"
-              aria-label="Utilities" aria-expanded="false">
+              aria-label="Utilities" aria-expanded="false" aria-controls="utility-dock-items">
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
           <circle cx="5"  cy="12" r="2.5" fill="currentColor"/>
           <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
           <circle cx="19" cy="12" r="2.5" fill="currentColor"/>
         </svg>
       </button>
-      <div class="utility-dock-items">
+      <div id="utility-dock-items" class="utility-dock-items">
         <button id="utility-dock-help" class="utility-dock-item" aria-label="Help">
           <span class="dock-icon">?</span><span class="dock-label">Help</span>
         </button>
