@@ -1451,6 +1451,7 @@ function renderVendorHub() {
   }
 
   Object.values(VENDORS).forEach(vendor => {
+    if (vendor.id === 'museumExchange') return;
     try {
       container.appendChild(renderVendorCard(vendor));
     } catch (err) {

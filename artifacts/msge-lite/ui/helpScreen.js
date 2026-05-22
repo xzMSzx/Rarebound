@@ -7,6 +7,7 @@
 
 import { haptic } from '../data/hapticManager.js';
 import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
+import { isDevUnlocked } from '../data/devAccess.js';
 
 const TOPICS = [
   {
@@ -74,20 +75,11 @@ const TOPICS = [
       <strong>How does capsule inventory refresh?</strong><br>
       Capsule stock resets at the daily refresh — a quiet authentication process that reseeds the available dispenses. The UI shows a calm countdown to the next refresh.
       <br><br>
-      <strong>What is Museum Exchange?</strong><br>
-      The Museum Exchange accepts permanent contributions for prestige and reputation. Contributed cards are archived and removed from your active collection — a deliberate, irreversible choice for collectors.
-      <br><br>
-      <strong>Are museum contributions permanent?</strong><br>
-      Yes. Contributions become part of your permanent archive and cannot be undone. The system is designed for careful custodianship rather than churn.
-      <br><br>
       <strong>What are Estate Auctions?</strong><br>
       Estate Auctions present rare private offerings with a short timed window. They are curated, exclusive, and rotate when a lot closes.
       <br><br>
       <strong>Why do auction listings rotate?</strong><br>
       Auctions expire on a clean schedule. When a lot closes, a new offering is queued to preserve the feeling of a private, evolving sale room.
-      <br><br>
-      <strong>What is Curator Reputation?</strong><br>
-      Curator Reputation is your standing with museum systems — earned by contributing and servicing the archive. It unlocks special requests and deeper prestige rewards.
       <br><br>
       <strong>Why do vendor inventories fluctuate?</strong><br>
       Inventories and requests breathe with the world state. Rotations, events, and favor alter what vendors carry so the hub always feels alive without being noisy.
@@ -206,8 +198,7 @@ const TOPICS = [
   {
     title: 'Vendor Rotations',
     body: `
-      Vendor stock and the active market trend rotate together every refresh cycle
-      (30 minutes in dev, designed for 24h in production). The Broker's chase
+      Vendor stock and the active market trend rotate together every 24 hours. The Broker's chase
       inventory is keyed to Friday and remains stable across the entire weekend.
     `,
   },
@@ -221,6 +212,7 @@ const TOPICS = [
   },
   {
     title: 'Developer Access',
+    devOnly: true,
     body: `
       A hidden archive utility for testing and content creation, tucked at the
       bottom of Settings. Unlocks tools like balance grants, vendor refresh, and
@@ -229,6 +221,7 @@ const TOPICS = [
   },
   {
     title: 'Sandbox Mode',
+    devOnly: true,
     body: `
       When Infinite Balance is enabled inside Developer Access, the save enters
       Sandbox Mode — a small "DEV" badge appears in the corner and reputation
@@ -237,6 +230,7 @@ const TOPICS = [
   },
   {
     title: 'Infinite Balance',
+    devOnly: true,
     body: `
       A developer toggle that lets purchases bypass the balance check. While on,
       reputation is paused (see Sandbox Mode). Selling still works normally.
@@ -661,7 +655,10 @@ const TOPICS = [
 let screenEl;
 
 function render() {
-  const sections = TOPICS.map((t, i) => `
+  const devUnlocked = isDevUnlocked();
+  const visibleTopics = TOPICS.filter(t => !t.devOnly || devUnlocked);
+
+  const sections = visibleTopics.map((t, i) => `
     <div class="help-accordion" data-idx="${i}">
       <button class="help-accordion-head" aria-expanded="false" aria-controls="help-accordion-body-${i}">
         <span class="help-accordion-title">${t.title}</span>
