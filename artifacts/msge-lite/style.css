@@ -8054,74 +8054,101 @@ html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::befor
   letter-spacing: 0.04em;
 }
 
-/* Stats: Collection Value card with sparkline */
-.stats-value-card {
-  margin: 12px 0;
-  padding: 14px 16px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.015);
-  border-radius: 8px;
+/* Stats: Cinematic Collection Value Graph & Timeline */
+.stats-timeline-card {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(20,22,28,0.6), rgba(10,11,14,0.8));
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  overflow: hidden;
+  position: relative;
 }
-.stats-value-head {
+.stats-timeline-head {
   display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 12px;
+}
+.stats-timeline-label {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(212,175,55,0.8);
   margin-bottom: 4px;
 }
-.stats-value-label {
-  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: rgba(255,255,255,0.42);
+.stats-timeline-current {
+  font-size: 26px; font-weight: 500; color: #f4ead0;
+  text-shadow: 0 0 10px rgba(212,175,55,0.2);
 }
-.stats-value-meta {
+.stats-timeline-meta {
+  text-align: right;
   font-size: 11px; color: rgba(255,255,255,0.55);
 }
-.stats-value-meta.is-up   { color: rgba(140, 200, 140, 0.85); }
-.stats-value-meta.is-down { color: rgba(220, 130, 130, 0.85); }
-.stats-value-current {
-  font-size: 22px; font-weight: 500; color: #f1ead8;
-  margin-bottom: 8px;
+.stats-timeline-meta.is-up .stats-timeline-delta { color: rgba(140, 200, 140, 0.9); }
+.stats-timeline-meta.is-down .stats-timeline-delta { color: rgba(220, 130, 130, 0.9); }
+.stats-timeline-delta { margin-bottom: 4px; font-weight: 500; }
+.stats-timeline-peak { color: rgba(255,255,255,0.4); }
+
+.stats-timeline-graph-wrap {
+  width: 100%; min-height: 180px;
+  margin: 16px 0 20px;
+  position: relative;
 }
-.stats-value-spark {
-  display: block; width: 100%; height: 36px;
-  stroke: rgba(212, 175, 55, 0.7);
-  stroke-width: 1.4; fill: none;
-  opacity: 0.85;
+.stats-timeline-svg {
+  display: block; width: 100%; height: 180px;
+  overflow: visible;
 }
-.stats-value-spark--empty {
-  font-size: 11px; color: rgba(255,255,255,0.3);
-  font-style: italic; padding: 6px 0;
+.stats-timeline-line {
+  stroke: rgba(212, 175, 55, 0.85);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(212,175,55,0.4));
+  fill: none;
+}
+.stats-timeline-area {
+  fill: url(#timeline-grad);
+}
+.stats-timeline-marker {
+  fill: #0a0b0e;
+  stroke: rgba(212, 175, 55, 1);
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: r 0.2s, stroke-width 0.2s;
+}
+.stats-timeline-marker:hover {
+  r: 5; stroke-width: 2.5; stroke: #fff;
+}
+.stats-timeline-marker-pulse {
+  fill: none;
+  stroke: rgba(212, 175, 55, 0.5);
+  stroke-width: 1;
+  animation: pulse-marker 2s infinite ease-out;
+  transform-origin: center;
+}
+@keyframes pulse-marker {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+.stats-timeline-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: rgba(255,255,255,0.3); font-style: italic;
 }
 
-/* Stats: Archive History panel */
-.stats-archive-card {
-  margin: 12px 0;
-  padding: 14px 16px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.015);
-  border-radius: 8px;
+.stats-timeline-events {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 12px;
+  display: flex; flex-direction: column; gap: 8px;
 }
-.stats-archive-label {
-  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: rgba(255,255,255,0.42);
-  margin-bottom: 10px;
-}
-.stats-archive-row {
+.stats-timeline-row {
   display: flex; gap: 12px; align-items: baseline;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
   font-size: 12.5px;
 }
-.stats-archive-row:last-child { border-bottom: none; }
-.stats-archive-day {
+.stats-timeline-day {
   flex: 0 0 56px;
   font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
   color: rgba(212, 175, 55, 0.65);
 }
-.stats-archive-text {
-  flex: 1; color: rgba(241, 234, 216, 0.78);
-  line-height: 1.4;
-}
-.stats-archive-empty {
-  font-size: 12px; color: rgba(255,255,255,0.35);
-  font-style: italic; line-height: 1.5;
+.stats-timeline-text {
+  flex: 1; color: rgba(241, 234, 216, 0.78); line-height: 1.4;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

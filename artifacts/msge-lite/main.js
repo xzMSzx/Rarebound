@@ -51,7 +51,7 @@ import { calculateSellPayout, isSellGated, sellCard }    from './data/sellingMan
 import { lockBodyScroll, unlockBodyScroll, getLockDepth } from './ui/scrollManager.js';
 import { onEscapeKey } from './ui/overlayScrollLock.js';
 import { computeTotalCollectionValue, lineValueForCollectionEntry } from './data/collectionValuation.js';
-import { recordChronologicalCollectionSnapshot } from './data/collectionValueHistory.js';
+import { recordChronologicalCollectionSnapshot, getValueSummary } from './data/collectionValueHistory.js';
 import {
   getDailyChase, getChaseBoost, isChaseCard,
   getBrokerInventory, removeBrokerPick,
@@ -116,7 +116,7 @@ import { showAgsRevealOverlay } from './ui/agsRevealOverlay.js';
 import { getSettings } from './data/settingsManager.js';
 import { getPrestigeTier, addPrestigeBonus }     from './data/prestigeManager.js';
 import {
-  recordArchiveEvent, hasArchiveKey, getArchiveEntries,
+  recordArchiveEvent, hasArchiveKey, getArchiveEntries, getAllArchiveEntries,
 } from './data/archiveHistoryManager.js';
 import {
   tickVendorEvents, getVendorEvent, getVendorEventEffect, getVendorEventTimeLeft,
@@ -3913,72 +3913,95 @@ function renderStatsScreen() {
     })()}
 
     ${(() => {
-      // v1.4.0 — Collection Value summary + sparkline
+      // v1.7.0 — Cinematic Collection Value Graph + Integrated Archive Timeline
       try {
-        // Snapshot current value so the summary always reflects "now"
         recordCollectionValueSnapshot();
         const v = getValueSummary();
+        const entries = getAllArchiveEntries();
+        const recentEntries = entries.slice(-6).reverse(); // show most recent 6 at the bottom
+        
         const sign = v.delta > 0 ? '+' : (v.delta < 0 ? '' : '');
         const dColor = v.delta > 0 ? 'is-up' : (v.delta < 0 ? 'is-down' : '');
-        // Inline sparkline (last up-to-30 points)
-        let pts = v.points.slice(-30);
-        if (pts.length === 1) {
-          pts = [pts[0], { ...pts[0] }];
+        
+        let pts = v.points.slice();
+        if (pts.length === 0) {
+           pts = [{ ts: Date.now() - 1000, value: 0 }, { ts: Date.now(), value: 0 }];
+        } else if (pts.length === 1) {
+           pts = [{ ts: pts[0].ts - 86400000, value: pts[0].value }, pts[0]];
         }
-        let sparkSvg = '';
-        if (pts.length >= 2) {
-          const max = Math.max(...pts.map(p => p.value), 1);
-          const min = Math.min(...pts.map(p => p.value));
-          const span = Math.max(1, max - min);
-          const w = 220, h = 36;
-          const stepX = w / (pts.length - 1);
-          const path = pts.map((p, i) => {
-            const x = i * stepX;
-            const y = h - ((p.value - min) / span) * h;
-            return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
-          }).join(' ');
-          sparkSvg = `<svg class="stats-value-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${path}" /></svg>`;
-        } else {
-          sparkSvg = `<div class="stats-value-spark stats-value-spark--empty">More history coming…</div>`;
-        }
-        return `
-          <div class="stats-value-card">
-            <div class="stats-value-head">
-              <div class="stats-value-label">Collection Value</div>
-              <div class="stats-value-meta ${dColor}">${sign}$${Math.abs(v.delta).toFixed(2)} vs prior · peak $${v.peak.toFixed(2)}</div>
-            </div>
-            <div class="stats-value-current">$${v.today.toFixed(2)}</div>
-            ${sparkSvg}
-          </div>
-        `;
-      } catch { return ''; }
-    })()}
+        
+        const maxTs = Date.now();
+        const minTs = Math.min(...pts.map(p => p.ts), ...entries.map(e => e.ts), maxTs - 86400000);
+        const tsSpan = Math.max(1, maxTs - minTs);
+        
+        const maxV = Math.max(...pts.map(p => p.value), 1);
+        const minV = Math.min(...pts.map(p => p.value));
+        const spanV = Math.max(1, maxV - minV);
+        const padV = spanV * 0.15;
+        
+        const w = 400, h = 120;
+        const scaleX = (ts) => ((ts - minTs) / tsSpan) * w;
+        const scaleY = (val) => h - ((val - minV + padV) / (spanV + padV * 2)) * h;
+        
+        let path = '';
+        pts.forEach((p, i) => {
+          path += `${i === 0 ? 'M' : 'L'}${scaleX(p.ts).toFixed(1)},${scaleY(p.value).toFixed(1)} `;
+        });
+        const areaPath = `${path} L${w},${h} L0,${h} Z`;
+        
+        let markersSvg = '';
+        entries.forEach(e => {
+          if (e.ts < minTs) return;
+          const nearest = pts.reduce((a, b) => Math.abs(b.ts - e.ts) < Math.abs(a.ts - e.ts) ? b : a);
+          const x = scaleX(e.ts).toFixed(1);
+          const y = scaleY(nearest.value).toFixed(1);
+          markersSvg += `<circle cx="${x}" cy="${y}" r="3" class="stats-timeline-marker" title="${e.label.replace(/"/g, '&quot;')}" />`;
+          if (e === entries[entries.length - 1]) {
+             markersSvg += `<circle cx="${x}" cy="${y}" r="3" class="stats-timeline-marker-pulse" />`;
+          }
+        });
 
-    ${(() => {
-      // v1.4.0 — Archive History panel
-      try {
-        const entries = getArchiveEntries(6);
-        if (!entries.length) {
-          return `
-            <div class="stats-archive-card">
-              <div class="stats-archive-label">Archive History</div>
-              <div class="stats-archive-empty">Your collector log will fill in as you pull, complete sets, and weather the market.</div>
-            </div>
-          `;
-        }
-        const rows = entries.map(e => `
-          <div class="stats-archive-row">
-            <span class="stats-archive-day">Day ${e.day}</span>
-            <span class="stats-archive-text">${e.label}</span>
+        const rows = recentEntries.length ? recentEntries.map(e => `
+          <div class="stats-timeline-row">
+            <span class="stats-timeline-day">Day ${e.day}</span>
+            <span class="stats-timeline-text">${e.label}</span>
           </div>
-        `).join('');
+        `).join('') : '<div class="stats-timeline-empty" style="position:static; padding:12px 0;">Your collector log will fill in as you pull, complete sets, and weather the market.</div>';
+
         return `
-          <div class="stats-archive-card">
-            <div class="stats-archive-label">Archive History</div>
-            ${rows}
+          <div class="stats-timeline-card">
+            <div class="stats-timeline-head">
+              <div>
+                <div class="stats-timeline-label">Collection Archive Value</div>
+                <div class="stats-timeline-current">$${v.today.toFixed(2)}</div>
+              </div>
+              <div class="stats-timeline-meta ${dColor}">
+                <div class="stats-timeline-delta">${sign}$${Math.abs(v.delta).toFixed(2)} vs prior</div>
+                <div class="stats-timeline-peak">Peak $${v.peak.toFixed(2)}</div>
+              </div>
+            </div>
+            
+            <div class="stats-timeline-graph-wrap">
+               <svg class="stats-timeline-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+                 <defs>
+                   <linearGradient id="timeline-grad" x1="0" y1="0" x2="0" y2="1">
+                     <stop offset="0%" stop-color="rgba(212,175,55,0.3)"/>
+                     <stop offset="100%" stop-color="rgba(212,175,55,0.0)"/>
+                   </linearGradient>
+                 </defs>
+                 <path class="stats-timeline-area" d="${areaPath}" />
+                 <path class="stats-timeline-line" d="${path}" />
+                 ${markersSvg}
+               </svg>
+               ${pts.length < 3 ? '<div class="stats-timeline-empty">More history coming…</div>' : ''}
+            </div>
+            
+            <div class="stats-timeline-events">
+               ${rows}
+            </div>
           </div>
         `;
-      } catch { return ''; }
+      } catch (err) { console.error(err); return ''; }
     })()}
 
     <div class="stats-grid">
