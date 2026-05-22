@@ -13,16 +13,6 @@ import { PACK_STORE } from './packStore.js';
 // ─── Vendor configuration ─────────────────────────────────────────────────────
 
 export const VENDORS = {
-  pokemart: {
-    id: 'pokemart',
-    name: 'PokéMart',
-    tagline: 'Reliable modern stock refreshed daily.',
-    theme: 'pokemart',
-    priceMultiplier: 0.95,             // 5% off base
-    setIds: ['sv4pt5', 'sv2', 'sv3pt5'],
-    rotationCount: 3,
-    sellCommissionBonus: 0,
-  },
   capsuleCorner: {
     id: 'capsuleCorner',
     name: 'Capsule Corner',
@@ -33,6 +23,16 @@ export const VENDORS = {
     rotationCount: 0,
     sellCommissionBonus: -0.01,
     foundationOnly: true,
+  },
+  pokemart: {
+    id: 'pokemart',
+    name: 'PokéMart',
+    tagline: 'Reliable modern stock refreshed daily.',
+    theme: 'pokemart',
+    priceMultiplier: 0.95,             // 5% off base
+    setIds: ['sv4pt5', 'sv2', 'sv3pt5'],
+    rotationCount: 3,
+    sellCommissionBonus: 0,
   },
   retroVault: {
     id: 'retroVault',
