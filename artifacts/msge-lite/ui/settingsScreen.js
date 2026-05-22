@@ -94,8 +94,8 @@ function authSectionHTML() {
         <div class="settings-row-desc">Cloud archive synchronization is unavailable in guest mode.</div>
       </div>
       <div class="auth-inputs">
-        <input type="email" id="auth-settings-email" placeholder="Email" autocomplete="off" />
-        <input type="password" id="auth-settings-password" placeholder="Password" autocomplete="off" />
+        <input type="email" id="auth-settings-email" placeholder="Email" autocomplete="off" aria-label="Email address" />
+        <input type="password" id="auth-settings-password" placeholder="Password" autocomplete="off" aria-label="Password" />
       </div>
       <div class="auth-error-msg hidden" id="auth-settings-error"></div>
       <div class="button-row" style="margin-top: 8px;">

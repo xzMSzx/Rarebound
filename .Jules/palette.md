@@ -5,3 +5,6 @@
 ## 2026-05-19 - Accessible Custom Accordions
 **Learning:** Custom UI accordions (like the Help Center and Diagnostics section) that use visual CSS class toggles (`is-open`) are insufficient for accessibility. Without explicitly managing the `aria-expanded` state, screen readers cannot announce when the content visibility changes.
 **Action:** Always ensure that custom accordion trigger buttons declare `aria-expanded` and dynamically toggle its value between `'true'` and `'false'` in their event listeners. Also ensure `aria-controls` is set correctly.
+## 2026-05-21 - Accessible Placeholder-Only Inputs
+**Learning:** Using `placeholder` text on `<input>` elements without an associated `<label>` or an explicit `aria-label` attribute creates accessibility barriers, as screen readers may not read the placeholder when focusing the input. This is prevalent in simple forms like login panels or search inputs.
+**Action:** When working on inputs without visible `<label>` elements, always explicitly define an `aria-label` attribute matching the intended purpose (e.g., `aria-label="Email address"`) to ensure the field is correctly announced by screen readers.

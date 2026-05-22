@@ -151,7 +151,7 @@ function renderMarketScreen() {
 
     <div class="market-controls">
       <select id="market-set-filter" class="market-select">${setOptions}</select>
-      <input id="market-search" class="market-search" type="text" placeholder="Search cards…" value="${_state.search}" />
+      <input id="market-search" class="market-search" type="text" placeholder="Search cards…" value="${_state.search}" aria-label="Search cards" />
       <select id="market-sort" class="market-select">
         <option value="gainers"  ${_state.sort === 'gainers'  ? 'selected' : ''}>Highest gainers</option>
         <option value="drops"    ${_state.sort === 'drops'    ? 'selected' : ''}>Biggest drops</option>
