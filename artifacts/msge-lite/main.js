@@ -3982,7 +3982,7 @@ function renderStatsScreen() {
             </div>
             
             <div class="stats-timeline-graph-wrap">
-               <svg class="stats-timeline-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+               <svg xmlns="http://www.w3.org/2000/svg" class="stats-timeline-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
                  <defs>
                    <linearGradient id="timeline-grad" x1="0" y1="0" x2="0" y2="1">
                      <stop offset="0%" stop-color="rgba(212,175,55,0.3)"/>
