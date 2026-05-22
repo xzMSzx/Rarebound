@@ -3990,7 +3990,7 @@ function renderStatsScreen() {
                    </linearGradient>
                  </defs>
                  <path class="stats-timeline-area" d="${areaPath}" />
-                 <path class="stats-timeline-line" d="${path}" />
+                 <path class="stats-timeline-line" d="${path}" stroke="#D4AF37" stroke-width="2" fill="none" />
                  ${markersSvg}
                </svg>
                ${pts.length < 3 ? '<div class="stats-timeline-empty">More history coming…</div>' : ''}
