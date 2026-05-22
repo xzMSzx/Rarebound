@@ -4,3 +4,6 @@
 ## 2024-05-17 - [Array.find vs Map lookup in Evolution Chains]
 **Learning:** In `msge-lite/main.js`, `buildEvolutionChain` reconstructs a hash map of pokemon by name (`new Map(pokémon.map(c => [c.name, c]))`) *on every call*, which makes it slower (~260ms) than the previous unoptimized `Array.find` (~60ms). However, memoizing the Map globally per `setId` makes it extremely fast (~8ms).
 **Action:** When converting Array.find() to Map lookup for performance in frequently called UI builder functions, memoize the Map to avoid `O(N)` Map instantiation overhead on every call.
+## 2026-05-21 - Operation-Scoped Caching for Data Processing Bottlenecks
+**Learning:** During collection valuation, converting `cached.find()` into an `O(1)` map lookup yielded a 2.5x speedup for large user portfolios. However, storing the instantiated Map on the module scope breaks Vitest tests because the codebase heavily mocks/mutates state.
+**Action:** When performing `Array.find()` to Map lookups to resolve O(N) bottlenecks in bulk data processing like `computeTotalCollectionValue`, cache the instantiated Map on a transient context object passed down the stack (e.g., `ctx._apiCardMapCache`), and clear it in a `finally` block to avoid global side-effects.
