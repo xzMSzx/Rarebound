@@ -8088,6 +8088,9 @@ html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::befor
 .stats-timeline-peak { color: rgba(255,255,255,0.4); }
 
 .stats-timeline-graph-wrap {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
   width: 100%; min-height: 180px;
   margin: 16px 0 20px;
   position: relative;
