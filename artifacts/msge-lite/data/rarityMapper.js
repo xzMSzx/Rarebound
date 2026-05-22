@@ -76,8 +76,25 @@ const RARITY_MAP = {
  */
 export function mapPokemonRarity(apiRarity) {
   if (!apiRarity) return 'common';
-  if (!(apiRarity in RARITY_MAP)) {
-    console.warn('Unknown rarity string:', apiRarity);
-  }
-  return RARITY_MAP[apiRarity] ?? 'common';
+
+  // Exact match first
+  if (apiRarity in RARITY_MAP) return RARITY_MAP[apiRarity];
+
+  // Heuristic fallback: many modern set strings differ slightly (e.g. "Full Art",
+  // "Rainbow Rare", "Rare Holo VSTAR"). Attempt to classify by tokens
+  // before falling back to 'common'. This makes new set additions resilient
+  // to API label variations without adding one-off mappings.
+  const s = String(apiRarity).toLowerCase();
+
+  if (s.includes('hyper') || s.includes('secret') || s.includes('rainbow')) return 'hyperRare';
+  if (s.includes('special illustration') || s.includes('special-illustration') || s.includes('special illustration rare')) return 'specialIllustrationRare';
+  if (s.includes('ultra') || s === 'legend' || s.includes('legend')) return 'ultraRare';
+  if (s.includes('illustration') || s.includes('amazing') || s.includes('full art') || s.includes('full-art') || s.includes('alt art') || s.includes('alternate art')) return 'illustrationRare';
+  if (s.includes('vmax') || s.includes('vstar') || s.includes('v ') || s.includes('ace spec') || s.includes('double rare') || s.includes('double')) return 'doubleRare';
+  if (s.includes('holo') || s.includes('rare h') || s.includes('holo rare')) return 'holoRare';
+  if (s.includes('rare')) return 'rare';
+
+  // Unknown — log once for diagnostics and default to common
+  console.warn('Unknown rarity string, falling back to common:', apiRarity);
+  return 'common';
 }

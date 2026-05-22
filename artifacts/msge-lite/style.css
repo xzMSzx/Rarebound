@@ -3961,10 +3961,23 @@ body.is-mobile button      { min-height: 44px; }
 }
 
 .foundation-item-stock {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.78);
+}
+.capsule-remaining-label {
+  display: block;
+  font-size: 11px;
   text-transform: uppercase;
+  color: rgba(255,255,255,0.42);
+  letter-spacing: 0.12em;
+}
+.capsule-remaining-count {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cyan, #6ee7b7);
+  margin-top: 2px;
 }
 
 .capsule-archive-sources {
@@ -5183,11 +5196,13 @@ body.is-mobile button      { min-height: 44px; }
 .overlay-scroll-screen {
   overflow-y: auto;
   overflow-x: hidden;
-  height: 100vh;
-  max-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  min-height: 0; /* allow children flex containers to shrink correctly */
 }
 
 /* Market rows: reliable tap on mobile */
@@ -8174,12 +8189,13 @@ html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::befor
 .ags-screen-header .screen-spacer { width: 76px; }
 
 .ags-screen-body {
-  padding: 18px 16px 40px;
+  padding: 18px 16px calc(40px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 26px;
   max-width: 720px;
   margin: 0 auto;
+  min-height: 0;
 }
 
 /* ─── Hero panel ──────────────────────────────────────────────────────────── */
@@ -8943,6 +8959,16 @@ html[data-reduced-motion="true"] .ags-slab.ags-slab--prestige::before {
 /* ═══════════════════════════════════════════════════════════════════════════
  * AGS REVEAL OVERLAY — staged cinematic certification ceremony
  * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Backdrop touch-action safety: prevent passive scroll capture and tap highlight */
+.ags-reveal__backdrop,
+.slab-viewer__backdrop,
+.modal-backdrop,
+.fullscreen-overlay,
+.ag-overlay-backdrop {
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
 
 .ags-reveal-overlay {
   position: fixed;

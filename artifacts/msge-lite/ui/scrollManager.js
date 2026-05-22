@@ -86,6 +86,23 @@ export function unlockBodyScroll(source) {
   window.scrollTo(0, y);
 }
 
+/**
+ * Scoped helper: run an async or sync function while the body scroll is locked.
+ * Ensures unlock happens in a finally block so exceptions cannot leave the
+ * document permanently fixed (common iOS failure mode).
+ * @param {() => any|Promise<any>} fn
+ * @param {string} [source]
+ * @returns {Promise<any>}
+ */
+export async function withBodyScrollLocked(fn, source) {
+  lockBodyScroll(source);
+  try {
+    return await Promise.resolve(fn());
+  } finally {
+    try { unlockBodyScroll(source); } catch (e) { console.warn('[ScrollMgr] unlock failed in withBodyScrollLocked', e); }
+  }
+}
+
 // Emergency recovery protection
 function emergencyRecoverScroll() {
   if (getLockDepth() === 0) return;

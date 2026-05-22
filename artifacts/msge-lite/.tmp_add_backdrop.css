@@ -1,0 +1,9 @@
+/* Backdrop touch-action safety: prevent passive scroll capture and tap highlight */
+.ags-reveal__backdrop,
+.slab-viewer__backdrop,
+.modal-backdrop,
+.fullscreen-overlay,
+.ag-overlay-backdrop {
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}

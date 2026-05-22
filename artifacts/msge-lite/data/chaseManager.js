@@ -27,7 +27,7 @@ const BROKER_KEY = 'tcg_broker_inv';
 
 const CHASE_DURATION_MS = 24 * 60 * 60 * 1000;
 
-const ALL_SET_IDS    = ['swsh7','swsh11','sv4pt5','sv2','sv3pt5'];
+const ALL_SET_IDS    = ['swsh7','swsh11','sv4pt5','sv2','sv3pt5','sv6','sv7','sv8','sv8pt5','sv9'];
 const CHASE_TIERS    = ['ultraRare','specialIllustrationRare','hyperRare','illustrationRare'];
 const BROKER_TIERS   = ['hyperRare','specialIllustrationRare','ultraRare'];
 

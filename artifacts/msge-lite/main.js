@@ -79,7 +79,7 @@ import { DEBUG_FLAGS, isDebugMode, isDebugFromUrl, logActiveFlags, mountDebugTap
 import { isDiagFlag, initDiagnosticsFromStorage } from './data/diagnosticsManager.js';
 import {
   getRequestsForVendor, getRefreshLabel as getRequestRefreshLabel,
-  getRequestProgress, anyVendorRequestsStale,
+  getRequestProgress, anyVendorRequestsStale, remainingFulfillmentsFor,
 } from './data/requestManager.js';
 import { fulfillVendorRequest } from './data/requestFulfillmentManager.js';
 import { getReadyMilestoneRewards, markMilestonesClaimed, getCategoryStatus } from './data/milestoneManager.js';
@@ -1739,7 +1739,10 @@ function renderCapsuleCornerFoundation(vendor) {
             ${renderRarityEventTag(drop.tag, 'cyan')}
           </div>
           <div class="foundation-signal">${drop.signal}</div>
-          <div class="foundation-item-stock" data-capsule-id="${drop.id}">ARCHIVE STOCK · ${getCapsuleStock(drop.id)} remaining</div>
+          <div class="foundation-item-stock" data-capsule-id="${drop.id}">
+            <span class="capsule-remaining-label">Remaining</span>
+            <span class="capsule-remaining-count">${getCapsuleStock(drop.id)}</span>
+          </div>
           <div class="capsule-archive-sources">
             <span class="capsule-archive-data">Possible archives</span>
             ${drop.sets.map(id => PACK_STORE[id]?.name || id).map(name => `<span class="capsule-archive-chip">${name}</span>`).join('')}
@@ -2537,16 +2540,30 @@ function renderRequestsPanel(vendor, requests, emergencyReq = null) {
   }
 
   if (!emergencyReq && requests.length === 0) {
-    const emptyCard = document.createElement('div');
-    emptyCard.className = 'vendor-request vendor-request--empty';
-    emptyCard.innerHTML = `
-      <div class="vendor-request-title">No active requests right now.</div>
-      <div class="vendor-request-note">The collector board will refresh on schedule to preserve demand.</div>
-      <div class="vendor-request-meta">
-        <span class="vendor-request-demand">${refreshLabel}</span>
-      </div>
-    `;
-    list.appendChild(emptyCard);
+    const remaining = remainingFulfillmentsFor(vendor.id);
+    if (remaining <= 0) {
+      const exhaustedCard = document.createElement('div');
+      exhaustedCard.className = 'vendor-request vendor-request--exhausted';
+      exhaustedCard.innerHTML = `
+        <div class="vendor-request-title">Collector board exhausted</div>
+        <div class="vendor-request-note">This rotation's short fulfillment chain has completed — the board will refresh on schedule with new contracts.</div>
+        <div class="vendor-request-meta">
+          <span class="vendor-request-demand">${refreshLabel}</span>
+        </div>
+      `;
+      list.appendChild(exhaustedCard);
+    } else {
+      const emptyCard = document.createElement('div');
+      emptyCard.className = 'vendor-request vendor-request--empty';
+      emptyCard.innerHTML = `
+        <div class="vendor-request-title">No active requests right now.</div>
+        <div class="vendor-request-note">The collector board will refresh on schedule to preserve demand.</div>
+        <div class="vendor-request-meta">
+          <span class="vendor-request-demand">${refreshLabel}</span>
+        </div>
+      `;
+      list.appendChild(emptyCard);
+    }
   }
 
   requests.forEach(req => {

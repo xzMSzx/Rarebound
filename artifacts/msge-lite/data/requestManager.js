@@ -129,6 +129,7 @@ const VENDOR_CONFIG = {
     rarityPool:       ['rare', 'holoRare', 'doubleRare'],
     quantityRange:    [1, 2],
     perCardReward:    16,
+    fulfillmentsRange: [3, 4],
   },
   nightMarket: {
     refreshMs:        3 * 3_600_000,
@@ -139,6 +140,7 @@ const VENDOR_CONFIG = {
     rarityPool:       ['common', 'uncommon', 'rare', 'holoRare'],
     quantityRange:    [2, 3],
     perCardReward:    7,
+    fulfillmentsRange: [3, 4],
   },
   broker: {
     // Phase 10.5 — acquisition-focused, premium-paying, rare to refresh.
@@ -154,6 +156,7 @@ const VENDOR_CONFIG = {
     brokerPremiumMult:  1.5,            // baseline lift so even modest contracts hit the $120 floor
     rewardCap:          1000,
     prestigeFlavors:  ['Museum Acquisition', 'Private Buyer', 'Collector Bounty', 'Archive Commission'],
+    fulfillmentsRange: [1, 1],
   },
 };
 
@@ -285,6 +288,15 @@ function generateRequest(vendorId, knownSetIds, rankName) {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
+ * Returns the remaining per-rotation fulfillments budget for a vendor.
+ * If the vendor has no active slot, returns 0.
+ */
+export function remainingFulfillmentsFor(vendorId) {
+  const slot = loadAll()[vendorId];
+  return slot?.remainingFulfillments || 0;
+}
+
+/**
  * Get this vendor's active requests, lazily refreshing if their cohort has
  * expired or never been generated. Pass any setIds you want eligible for
  * "set" criteria (typically the vendor's current pack stock setIds).
@@ -314,10 +326,38 @@ export function getRequestsForVendor(vendorId, knownSetIds = [], rankName = 'Col
       attempts++;
     }
     slot.requests    = fresh;
+    // Initialize a small per-rotation fulfillments budget so vendors can
+    // serve short chains before showing an immersive "exhausted" state.
+    slot.remainingFulfillments = randInt(
+      (cfg.fulfillmentsRange && cfg.fulfillmentsRange[0]) || 1,
+      (cfg.fulfillmentsRange && cfg.fulfillmentsRange[1]) || 3
+    );
     slot.lastRefresh = now;
     all[vendorId]    = slot;
     saveAll(all);
   } else if (slot.requests.length === 0) {
+    // If we still have remaining fulfillments in this rotation, generate
+    // a small refill cohort sized by remainingFulfillments (but not
+    // exceeding the vendor's countRange). This allows short chains (3-4)
+    // without leaving the vendor empty immediately after the first
+    // completion.
+    const remaining = slot.remainingFulfillments || 0;
+    if (remaining > 0) {
+      const target = Math.min(randInt(cfg.countRange[0], cfg.countRange[1]), remaining);
+      const fresh  = [];
+      let attempts = 0;
+      while (fresh.length < target && attempts < 8) {
+        const r = generateRequest(vendorId, knownSetIds, rankName);
+        if (r) fresh.push(r);
+        attempts++;
+      }
+      if (fresh.length) {
+        slot.requests = fresh;
+        all[vendorId] = slot;
+        saveAll(all);
+        return slot.requests;
+      }
+    }
     return [];
   }
   return slot.requests;
@@ -452,6 +492,8 @@ export function completeRequest(requestId) {
   }
   if (!request) return { ok: false, reason: 'not-found' };
 
+  const cfg = VENDOR_CONFIG[vendorId];
+
   const eligible = findEligibleCards(request);
   let total = 0;
   for (const e of eligible) total += e.available;
@@ -471,6 +513,11 @@ export function completeRequest(requestId) {
   }
 
   all[vendorId].requests = all[vendorId].requests.filter(x => x.id !== requestId);
+  // Decrement the per-rotation fulfillments budget when a request completes.
+  if (all[vendorId]) {
+    const prev = all[vendorId].remainingFulfillments || ((cfg && cfg.fulfillmentsRange && cfg.fulfillmentsRange[1]) || 0);
+    all[vendorId].remainingFulfillments = Math.max(0, prev - 1);
+  }
   saveAll(all);
 
   return {

@@ -24,7 +24,7 @@ import { PACK_STORE } from '../data/packStore.js';
 import { getCurrentTrend } from '../data/economyManager.js';
 import { isChaseCard, getChaseBoost } from '../data/chaseManager.js';
 
-const SET_IDS = ['swsh7', 'sv4pt5', 'sv3pt5', 'sv2', 'swsh11'];
+const SET_IDS = ['swsh7', 'sv4pt5', 'sv3pt5', 'sv2', 'swsh11', 'sv6', 'sv7', 'sv8', 'sv8pt5', 'sv9'];
 
 const RARITY_LABELS = {
   common:'Common', uncommon:'Uncommon', rare:'Rare', holoRare:'Holo Rare',
