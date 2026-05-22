@@ -333,8 +333,10 @@ const TOPICS = [
       between vendors every 45 minutes.
       <br><br>
       <strong>Vendor Relief Stipend</strong> — a $15-25 failsafe payment built
-      into the banner itself. It can be claimed once every 24 hours while you're
-      in Recovery, and grants no reputation or favor — pure survival support.
+      into the banner itself. It grants no reputation or favor — pure survival
+      support. Claim limits are based on your rank:
+      <br>• Rookie Collector & Collector: 4 claims per month.
+      <br>• Advanced Collector & above: 2 claims per month.
       <br><br>
       <strong>Vendor personality</strong> — not every vendor will help. PokéMart
       always extends a hand. Retro Vault only helps trusted collectors (level 3
@@ -390,6 +392,8 @@ const TOPICS = [
       they may rarely surface a Prestige Liquidation contract — single
       hyper-rare acquisition for $250-1000 — but only on a roughly 30% chance
       per rotation. Never something to count on.
+      <br><br>
+      For information on specialized vendors (Capsule Corner and Estate Auctions), press <a href="#" id="specialized-vendors-link" style="color: #d6bc75; text-decoration: underline;">here</a>.
     `,
   },
   {
@@ -697,6 +701,25 @@ function render() {
       haptic('soft');
     });
   });
+
+  const specializedLink = screenEl.querySelector('#specialized-vendors-link');
+  if (specializedLink) {
+    specializedLink.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const specializedIndex = visibleTopics.findIndex(t => t.title === 'Specialized Vendors & Archive Systems');
+      if (specializedIndex !== -1) {
+        const specializedAccordion = screenEl.querySelector(`.help-accordion[data-idx="${specializedIndex}"]`);
+        if (specializedAccordion) {
+          const head = specializedAccordion.querySelector('.help-accordion-head');
+          if (!specializedAccordion.classList.contains('is-open')) {
+            head.click();
+          }
+          specializedAccordion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    });
+  }
 }
 
 export function openHelpScreen() {
