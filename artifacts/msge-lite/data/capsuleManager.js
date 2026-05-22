@@ -65,3 +65,74 @@ export function getDailyCapsules() {
     return item;
   });
 }
+
+// ---------------------- Stock management (local-first, per-day) ----------------
+const CAPSULE_STOCK_KEY = 'rarebound_capsule_stock_v1';
+
+function _hashString(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+
+function _seedStocksForDay(day) {
+  // Deterministic seeds per day for variety without server dependency
+  const archive = 20; // stable moderate inventory
+  const distortion = 5 + (_hashString(day + 'distortion') % 21); // 5..25
+  const prism = 2 + (_hashString(day + 'prism') % 3); // 2..4 scarce
+  return { archive, distortion, prism };
+}
+
+function _loadStockState() {
+  try {
+    const raw = localStorage.getItem(CAPSULE_STOCK_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) { return null; }
+}
+
+function _saveStockState(state) {
+  try { localStorage.setItem(CAPSULE_STOCK_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+}
+
+export function getCapsuleStocks() {
+  const day = Math.floor(Date.now() / 86400000);
+  let state = _loadStockState();
+  if (!state || state.day !== day) {
+    const seeds = _seedStocksForDay(day);
+    state = { day, stocks: { archive: seeds.archive, distortion: seeds.distortion, prism: seeds.prism } };
+    _saveStockState(state);
+  }
+  return state.stocks;
+}
+
+export function getCapsuleStock(id) {
+  const stocks = getCapsuleStocks();
+  return stocks[id] ?? 0;
+}
+
+export function tryDispenseCapsule(id) {
+  const day = Math.floor(Date.now() / 86400000);
+  let state = _loadStockState();
+  if (!state || state.day !== day) {
+    const seeds = _seedStocksForDay(day);
+    state = { day, stocks: { archive: seeds.archive, distortion: seeds.distortion, prism: seeds.prism } };
+  }
+  const cur = state.stocks[id] ?? 0;
+  if (cur <= 0) return false;
+  state.stocks[id] = Math.max(0, cur - 1);
+  _saveStockState(state);
+  return true;
+}
+
+export function refreshCapsuleStocks() {
+  const day = Math.floor(Date.now() / 86400000);
+  const seeds = _seedStocksForDay(day);
+  const state = { day, stocks: { archive: seeds.archive, distortion: seeds.distortion, prism: seeds.prism } };
+  _saveStockState(state);
+  return state.stocks;
+}
+

@@ -63,6 +63,37 @@ const TOPICS = [
     `,
   },
   {
+    title: 'Specialized Vendors & Archive Systems',
+    body: `
+      <strong>What is Capsule Corner?</strong><br>
+      Capsule Corner offers limited, curated capsules sourced from small archive pools. Each capsule is seeded daily and intentionally scarce — they are a way to sample themed archive pulls without flooding the market.
+      <br><br>
+      <strong>Why are capsules limited?</strong><br>
+      Limits preserve collector value and atmosphere. Capsules refresh on a deterministic daily cycle so every day brings a clean, fair set of offerings.
+      <br><br>
+      <strong>How does capsule inventory refresh?</strong><br>
+      Capsule stock resets at the daily refresh — a quiet authentication process that reseeds the available dispenses. The UI shows a calm countdown to the next refresh.
+      <br><br>
+      <strong>What is Museum Exchange?</strong><br>
+      The Museum Exchange accepts permanent contributions for prestige and reputation. Contributed cards are archived and removed from your active collection — a deliberate, irreversible choice for collectors.
+      <br><br>
+      <strong>Are museum contributions permanent?</strong><br>
+      Yes. Contributions become part of your permanent archive and cannot be undone. The system is designed for careful custodianship rather than churn.
+      <br><br>
+      <strong>What are Estate Auctions?</strong><br>
+      Estate Auctions present rare private offerings with a short timed window. They are curated, exclusive, and rotate when a lot closes.
+      <br><br>
+      <strong>Why do auction listings rotate?</strong><br>
+      Auctions expire on a clean schedule. When a lot closes, a new offering is queued to preserve the feeling of a private, evolving sale room.
+      <br><br>
+      <strong>What is Curator Reputation?</strong><br>
+      Curator Reputation is your standing with museum systems — earned by contributing and servicing the archive. It unlocks special requests and deeper prestige rewards.
+      <br><br>
+      <strong>Why do vendor inventories fluctuate?</strong><br>
+      Inventories and requests breathe with the world state. Rotations, events, and favor alter what vendors carry so the hub always feels alive without being noisy.
+    `,
+  },
+  {
     title: 'Vendor Favor',
     body: `
       Every purchase and sale builds favor with that vendor. Higher favor unlocks

@@ -59,6 +59,21 @@
   will-change: transform, opacity !important;
 }
 
+/* Safe-area breathing for key scroll containers so final items are not
+   clipped behind home indicators / gesture bars on small phones. */
+#set-list, #binder-pages, #card-grid, #vendor-list, #collector-archive-screen,
+.foundation-inventory-list, #recent-hits-strip {
+  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Modal centering helper for ephemeral modals (keep .screen behavior intact) */
+.modal-backdrop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top, 12px)) max(12px, env(safe-area-inset-right, 12px)) calc(12px + env(safe-area-inset-bottom, 12px)) max(12px, env(safe-area-inset-left, 12px));
+}
+
 
 * {
   box-sizing: border-box;
@@ -3945,6 +3960,52 @@ body.is-mobile button      { min-height: 44px; }
   line-height: 1.2;
 }
 
+.foundation-item-stock {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.capsule-archive-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 10px;
+}
+
+.capsule-archive-data {
+  color: rgba(255, 255, 255, 0.36);
+  font-size: 9px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.capsule-archive-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.vendor-request--empty {
+  padding: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.vendor-request--empty .vendor-request-note {
+  color: rgba(255, 255, 255, 0.56);
+  margin-top: 6px;
+}
+
 .foundation-action {
   min-height: 32px;
   padding: 8px 10px;
@@ -7171,6 +7232,13 @@ html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::befor
 .distress-banner-sub {
   font-size: 12px;
   color: rgba(255,255,255,0.55);
+  line-height: 1.4;
+}
+.distress-banner-meta {
+  margin-top: 8px;
+  color: rgba(255,255,255,0.38);
+  font-size: 11px;
+  letter-spacing: 0.04em;
   line-height: 1.4;
 }
 

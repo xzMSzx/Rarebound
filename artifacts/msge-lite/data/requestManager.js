@@ -302,9 +302,9 @@ export function getRequestsForVendor(vendorId, knownSetIds = [], rankName = 'Col
   const all  = loadAll();
   const slot = all[vendorId] || { requests: [], lastRefresh: 0 };
   const now  = Date.now();
-  const stale = now - slot.lastRefresh >= cfg.refreshMs;
+  const stale = !slot.lastRefresh || now - slot.lastRefresh >= cfg.refreshMs;
 
-  if (stale || slot.requests.length === 0) {
+  if (stale) {
     const target = randInt(cfg.countRange[0], cfg.countRange[1]);
     const fresh  = [];
     let attempts = 0;
@@ -317,6 +317,8 @@ export function getRequestsForVendor(vendorId, knownSetIds = [], rankName = 'Col
     slot.lastRefresh = now;
     all[vendorId]    = slot;
     saveAll(all);
+  } else if (slot.requests.length === 0) {
+    return [];
   }
   return slot.requests;
 }

@@ -32,6 +32,16 @@ const FOCUS_ROTATION_MS    = 45 * 60 * 1000;
 const RELIEF_COOLDOWN_MS   = 24 * 60 * 60 * 1000;
 const RELIEF_RANGE         = [15, 25];
 
+const RELIEF_MONTHLY_LIMITS = {
+  'Rookie Collector': 4,
+  'Collector': 4,
+  'Advanced Collector': 2,
+  'Elite Collector': 2,
+  'Master Collector': 2,
+  'Archive Curator': 2,
+  'Legendary Collector': 2,
+};
+
 // All vendors are eligible to hold the focus; vendorAcceptsRecovery() is the
 // per-vendor gate.
 const FOCUS_CANDIDATES = ['pokemart', 'retroVault', 'nightMarket', 'broker'];
@@ -78,11 +88,38 @@ function rankIndex(name) {
   return i < 0 ? 0 : i;
 }
 
-function load() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
-  catch { return {}; }
+function _currentReliefMonthKey() {
+  const now = new Date();
+  return now.getFullYear() * 100 + now.getMonth();
 }
-function save(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
+
+function _normalizeReliefCounts(state) {
+  const currentMonth = _currentReliefMonthKey();
+  if (state.reliefMonthKey !== currentMonth) {
+    state.reliefMonthKey = currentMonth;
+    state.reliefCount = 0;
+  }
+  return state;
+}
+
+function load() {
+  try { return _normalizeReliefCounts(JSON.parse(localStorage.getItem(KEY)) || {}); }
+  catch { return _normalizeReliefCounts({}); }
+}
+function save(s) { localStorage.setItem(KEY, JSON.stringify(_normalizeReliefCounts(s))); }
+
+function getMonthlyReliefCount() {
+  return load().reliefCount || 0;
+}
+
+function getMonthlyReliefLimit() {
+  const rank = getRank().name;
+  return RELIEF_MONTHLY_LIMITS[rank] ?? 2;
+}
+
+export function getRemainingReliefCredits() {
+  return Math.max(0, getMonthlyReliefLimit() - getMonthlyReliefCount());
+}
 
 /** True iff the player is in financial recovery territory. */
 export function isInRecovery() {
@@ -179,10 +216,15 @@ export function timeUntilReliefMs() {
 }
 
 export function canClaimRelief() {
-  return isInRecovery() && timeUntilReliefMs() === 0;
+  if (!isInRecovery()) return false;
+  if (getRemainingReliefCredits() <= 0) return false;
+  return timeUntilReliefMs() === 0;
 }
 
 export function getReliefCountdownLabel() {
+  if (getRemainingReliefCredits() <= 0) {
+    return 'Monthly limit reached';
+  }
   const ms = timeUntilReliefMs();
   if (ms === 0) return 'Available';
   const totalM = Math.ceil(ms / 60000);
@@ -209,6 +251,8 @@ export function claimReliefStipend() {
   addBalance(amt);
   const s = load();
   s.lastReliefTs = Date.now();
+  s.reliefMonthKey = _currentReliefMonthKey();
+  s.reliefCount = (s.reliefCount || 0) + 1;
   save(s);
   return amt;
 }

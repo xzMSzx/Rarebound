@@ -22,6 +22,8 @@ import { initMobileLayoutManager } from './ui/mobileLayoutManager.js';
 import {
   loadSet, getRandomCard, isSetLoaded, getCurrentSetId, getCachedSetCards,
 } from './data/cardPoolManager.js';
+import { getDailyCapsules, getCapsuleStocks, getCapsuleStock, tryDispenseCapsule, refreshCapsuleStocks } from './data/capsuleManager.js';
+import { ensureTimer, subscribe, formatMs, nextDailyRefreshTimestamp } from './data/vendorTimers.js';
 import { mapPokemonRarity }        from './data/rarityMapper.js';
 import { openPackInteraction }     from './ui/packOpeningController.js';
 import { setCurrentSet }           from './data/setProbabilityTables.js';
@@ -93,6 +95,7 @@ import {
   isInRecovery, getRecoveryFocusVendor, getRecoveryFocusName,
   getRecoveryBannerMessage, canClaimRelief, getReliefCountdownLabel,
   getReliefAmount, claimReliefStipend, tickRecovery,
+  getRemainingReliefCredits,
 } from './data/recoveryManager.js';
 import {
   getEmergencyRequestForVendor, getRotationLabel as getEmergencyRotationLabel,
@@ -119,7 +122,6 @@ import {
   tickVendorEvents, getVendorEvent, getVendorEventEffect, getVendorEventTimeLeft,
 } from './data/vendorEventsManager.js';
 import { tickVendorStates, getActiveGlobalState, getVendorOperationalState } from './data/vendorStateManager.js';
-import { getDailyCapsules } from './data/capsuleManager.js';
 import { getActiveExhibition, getCuratorRank, getEligibleMuseumCards, contributeToMuseum, getCuratorReputation } from './data/museumManager.js';
 import { checkAndPromptMigration } from './ui/migrationModal.js';
 import { triggerPreservationCheck } from './ui/cloudPreservationReminder.js';
@@ -602,6 +604,7 @@ const ESTATE_AUCTION_LOTS = [
     estimate: '$4,250 - $6,100',
     attention: 7,
     ends: '02h 41m',
+    endsAt: Date.now() + (2 * 60 + 41) * 60 * 1000,
   },
 ];
 
@@ -1421,6 +1424,7 @@ function renderVendorHub() {
       <div class="distress-banner-body">
         <div class="distress-banner-title">Recovery Mode${focusName ? ` · ${focusName}` : ''}</div>
         <div class="distress-banner-sub">${message}</div>
+        <div class="distress-banner-meta">Archive assistance remaining this cycle: ${getRemainingReliefCredits()}</div>
       </div>
       <button class="distress-relief-btn ${reliefReady ? 'is-ready' : ''}" ${reliefReady ? '' : 'disabled'}>
         ${reliefLabel}
@@ -1485,6 +1489,20 @@ function renderVendorHub() {
     }, { threshold: [0.5, 0.75] });
     container.querySelectorAll('.vendor-card').forEach(el => _vendorObserver.observe(el));
   }
+
+  // Register Capsule Corner daily refresh timer (deterministic at UTC midnight)
+  try {
+    const capsuleRefreshAt = nextDailyRefreshTimestamp();
+    ensureTimer('capsule-refresh', capsuleRefreshAt, { label: 'Capsule Refresh', onExpire: () => {
+      try { refreshCapsuleStocks(); showToast('New archival capsules authenticated.', 'rep'); } catch (e) { console.warn(e); }
+      renderVendorHub();
+    } });
+    // subscribe to update the pill element
+    subscribe('capsule-refresh', (remain) => {
+      const el = document.getElementById('capsule-refresh-pill');
+      if (el) el.querySelectorAll('span')[1].textContent = formatMs(remain);
+    });
+  } catch (err) { console.warn('[VendorTimers] capsule timer failed:', err); }
 
   // v1.2.1 — World Activity feed anchored below vendor cards
   // v1.3.0 — per-event glyph icon for visual scanning
@@ -1673,8 +1691,8 @@ function attachFoundationButton(btn, vendor, label) {
   iosTap(btn, action);
 }
 
-function renderCountdownPill(label, value) {
-  return `<span class="foundation-countdown"><span>${label}</span>${value}</span>`;
+function renderCountdownPill(label, value, id) {
+  return `<span class="foundation-countdown" ${id ? `id="${id}"` : ''}><span>${label}</span>${value}</span>`;
 }
 
 function renderRarityEventTag(text, tone = '') {
@@ -1699,16 +1717,16 @@ function renderCapsuleCornerFoundation(vendor) {
   wrap.innerHTML = `
     <div class="foundation-status-row">
       ${renderRarityEventTag('System Online', 'cyan')}
-      ${renderCountdownPill('Refresh', '18:42:17')}
+      ${renderCountdownPill('Refresh', formatMs(nextDailyRefreshTimestamp() - Date.now()), 'capsule-refresh-pill')}
     </div>
     <div class="capsule-chamber">
       <div class="capsule-chamber-core">
         <span></span><span></span><span></span>
       </div>
       <div class="capsule-chamber-copy">
-        <div class="foundation-kicker">Limited Dispenses Remaining</div>
-        <div class="capsule-dispense-count">17</div>
-      </div>
+          <div class="foundation-kicker">Limited Dispenses Remaining</div>
+          <div class="capsule-dispense-count" id="capsule-dispense-count">${Object.values(getCapsuleStocks()).reduce((s,v)=>s+v,0)}</div>
+        </div>
     </div>
     <div class="foundation-inventory-list">
       ${capsules.map((drop, idx) => `
@@ -1721,6 +1739,11 @@ function renderCapsuleCornerFoundation(vendor) {
             ${renderRarityEventTag(drop.tag, 'cyan')}
           </div>
           <div class="foundation-signal">${drop.signal}</div>
+          <div class="foundation-item-stock" data-capsule-id="${drop.id}">ARCHIVE STOCK · ${getCapsuleStock(drop.id)} remaining</div>
+          <div class="capsule-archive-sources">
+            <span class="capsule-archive-data">Possible archives</span>
+            ${drop.sets.map(id => PACK_STORE[id]?.name || id).map(name => `<span class="capsule-archive-chip">${name}</span>`).join('')}
+          </div>
           <div class="foundation-reward-list">
             ${drop.rewards.map(r => `<span>${r}</span>`).join('')}
           </div>
@@ -1749,6 +1772,19 @@ function renderCapsuleCornerFoundation(vendor) {
         return;
       }
       
+      // Attempt to claim a dispense slot from local inventory
+      if (!tryDispenseCapsule(capsuleId)) {
+        showToast('Distribution queue exhausted.', 'warn');
+        btn.disabled = true;
+        btn.innerHTML = 'Unavailable';
+        // refresh visible counts
+        const totalEl = wrap.querySelector('#capsule-dispense-count');
+        if (totalEl) totalEl.textContent = Object.values(getCapsuleStocks()).reduce((s,v)=>s+v,0);
+        const stockEl = wrap.querySelector(`.foundation-item-stock[data-capsule-id="${capsuleId}"]`);
+        if (stockEl) stockEl.textContent = `Remaining: ${getCapsuleStock(capsuleId)}`;
+        return;
+      }
+
       haptic('medium');
       sfx.click();
       btn.disabled = true;
@@ -1770,9 +1806,23 @@ function renderCapsuleCornerFoundation(vendor) {
         showToast('Capsule dispense interrupted — connection recovered', 'warn');
       } finally {
         vendor.activeCapsule = null;
+        // refresh UI counts and button state
+        const totalEl = wrap.querySelector('#capsule-dispense-count');
+        if (totalEl) totalEl.textContent = Object.values(getCapsuleStocks()).reduce((s,v)=>s+v,0);
+        const stockEl = wrap.querySelector(`.foundation-item-stock[data-capsule-id="${capsuleId}"]`);
+        if (stockEl) stockEl.textContent = `Remaining: ${getCapsuleStock(capsuleId)}`;
         if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = `Dispense <span>$${price.toFixed(2)}</span>`;
+          const remaining = getCapsuleStock(capsuleId);
+          if (remaining <= 0) {
+            btn.disabled = true;
+            btn.innerHTML = 'Unavailable';
+          } else {
+            btn.disabled = false;
+            btn.innerHTML = `Dispense <span>$${price.toFixed(2)}</span>`;
+          }
+          if (remaining > 0 && remaining <= 3) {
+            showToast('Distribution pressure increasing.', 'warn');
+          }
         }
       }
       };
@@ -1978,7 +2028,7 @@ function renderEstateAuctionsFoundation(vendor) {
   wrap.innerHTML = `
     <div class="foundation-status-row">
       ${renderRarityEventTag('Private bidding activity detected.', 'crimson')}
-      ${renderCountdownPill('Ends In', lot.ends)}
+      ${renderCountdownPill('Ends In', formatMs((lot.endsAt || Date.now()) - Date.now()), `estate-lot-${lot.lot.replace(/[^a-z0-9]/ig,'')}-pill`)}
     </div>
     <div class="estate-lot-card">
       <button class="estate-card-preview" type="button" aria-label="Inspect auction slab">
@@ -2020,6 +2070,34 @@ function renderEstateAuctionsFoundation(vendor) {
     previewBtn.onclick = openPreview;
     iosTap(previewBtn, openPreview);
   }
+
+  // Register auction timer for this lot
+  try {
+    const lotId = `estate-lot-${lot.lot.replace(/[^a-z0-9]/ig,'')}`;
+    if (lot.endsAt && lot.endsAt > Date.now()) {
+      ensureTimer(lotId, lot.endsAt, { label: 'Auction ends', onExpire: () => {
+        // mark expired and rotate: remove first lot and push a new seeded lot
+        ESTATE_AUCTION_LOTS.shift();
+        ESTATE_AUCTION_LOTS.push({
+          lot: `Lot #${Math.floor(Math.random()*9000)+1000}`,
+          title: 'New Estate Offering',
+          cardName: 'Prestige Archive Item',
+          rarity: 'Ultra Rare',
+          note: 'Rotated lot — new private offering.',
+          estimate: '$1,200 - $3,600',
+          attention: 3,
+          ends: '03h 12m',
+          endsAt: Date.now() + (1 + Math.floor(Math.random() * 5)) * 60 * 60 * 1000,
+        });
+        showToast('Estate lot closed — next offering queued.', 'rep');
+        renderVendorHub();
+      } });
+      subscribe(lotId, (remain) => {
+        const el = document.getElementById(`${lotId}-pill`);
+        if (el) el.querySelectorAll('span')[1].textContent = formatMs(remain);
+      });
+    }
+  } catch (err) { console.warn('[VendorTimers] estate timer failed:', err); }
   wrap.querySelectorAll('.foundation-action').forEach(btn => {
     attachFoundationButton(btn, vendor, btn.dataset.action || 'Observe');
   });
@@ -2456,6 +2534,19 @@ function renderRequestsPanel(vendor, requests, emergencyReq = null) {
       iosTap(btn, doFill);
     }
     list.appendChild(card);
+  }
+
+  if (!emergencyReq && requests.length === 0) {
+    const emptyCard = document.createElement('div');
+    emptyCard.className = 'vendor-request vendor-request--empty';
+    emptyCard.innerHTML = `
+      <div class="vendor-request-title">No active requests right now.</div>
+      <div class="vendor-request-note">The collector board will refresh on schedule to preserve demand.</div>
+      <div class="vendor-request-meta">
+        <span class="vendor-request-demand">${refreshLabel}</span>
+      </div>
+    `;
+    list.appendChild(emptyCard);
   }
 
   requests.forEach(req => {

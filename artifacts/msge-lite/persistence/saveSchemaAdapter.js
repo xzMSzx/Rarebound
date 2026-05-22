@@ -127,6 +127,8 @@ export function deserializeCanonicalSave(payload) {
                 safeWrite('tcg_vendor_events', payload.economy.vendors.events);
                 safeWrite('tcg_broker_inv', payload.economy.vendors.broker);
                 safeWrite('tcg_chase', payload.economy.vendors.chase);
+                safeWrite('rarebound_capsule_stock_v1', payload.economy.vendors.capsules);
+                safeWrite('rarebound_vendor_timers_v1', payload.economy.vendors.timers);
             }
         }
 
@@ -204,7 +206,9 @@ export function serializeToCanonicalSave() {
                 stocks: safeRead('tcg_vendor_stocks', {}),
                 events: safeRead('tcg_vendor_events', {}),
                 broker: safeRead('tcg_broker_inv', {}),
-                chase: safeRead('tcg_chase', {})
+                chase: safeRead('tcg_chase', {}),
+                capsules: safeRead('rarebound_capsule_stock_v1', {}),
+                timers: safeRead('rarebound_vendor_timers_v1', {})
             }
         },
         activities: {
