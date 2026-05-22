@@ -195,6 +195,38 @@ export function openPackOverlay(cards, packNumber) {
 
     const hasSuspense = cards.some((c) => HIGH_RARITY.has(c.rarity));
 
+    // Targeted preload: ensure pack reveal images are warmed and decoded
+    // to avoid Safari PWA hydration failures on the flip moment.
+    (async function preloadRevealImages() {
+      if (!cards || cards.length === 0) return;
+      const toPreload = cards
+        .map(c => c.imageUrl)
+        .filter(Boolean)
+        .slice(0, 20); // defensive cap
+
+      const promises = toPreload.map((src) => new Promise((res) => {
+        try {
+          const img = new Image();
+          let settled = false;
+          const finish = () => { if (!settled) { settled = true; res(); } };
+          img.onload = async () => {
+            if (img.decode) {
+              try { await img.decode(); } catch (e) { /* ignore decode errors */ }
+            }
+            finish();
+          };
+          img.onerror = finish;
+          // small timeout so a hung request doesn't block the overlay
+          setTimeout(finish, 1500);
+          img.src = src;
+        } catch (e) { res(); }
+      }));
+
+      // Start animator immediately but let preloads run; awaiting here keeps
+      // the code path resilient while biasing for readiness before reveals.
+      Promise.all(promises).catch(() => {});
+    })();
+
     initAnimator(stage);
 
     let state = 'revealing';

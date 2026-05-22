@@ -122,7 +122,35 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
   backFace.className = `overlay-card-face overlay-card-back-face rarity-reveal-${rarity}`;
 
   if (imageUrl) {
-    backFace.innerHTML = `<img class="card-reveal-img" src="${imageUrl}" alt="${RARITY_LABEL[rarity] ?? rarity}" loading="eager" />`;
+    // Defensive image load: append only after onload/decode; onerror -> fallback
+    backFace.innerHTML = '';
+    const img = document.createElement('img');
+    img.className = 'card-reveal-img';
+    img.loading = 'eager';
+    img.alt = (RARITY_LABEL[rarity] ?? rarity);
+    let settled = false;
+    img.onload = async () => {
+      if (settled) return;
+      settled = true;
+      if (img.decode) {
+        try { await img.decode(); } catch (e) { /* ignore decode errors */ }
+      }
+      // Ensure the backFace is still in the DOM before writing
+      if (backFace && backFace.parentNode) {
+        backFace.innerHTML = '';
+        backFace.appendChild(img);
+      }
+    };
+    img.onerror = () => {
+      if (settled) return; settled = true;
+      if (backFace && backFace.parentNode) {
+        backFace.innerHTML = `\n          <div class="card-reveal-art">\n            <span class="card-reveal-symbol">${RARITY_SYMBOL[rarity] ?? '?'}</span>\n            <span class="card-reveal-rarity">${RARITY_LABEL[rarity] ?? rarity}</span>\n          </div>`;
+      }
+    };
+    // Non-blocking timeout: if the image doesn't load quickly, fall back to symbol
+    const t = setTimeout(() => { if (!settled) img.onerror(); }, 1800);
+    img.addEventListener('loadend' in img ? 'loadend' : 'load', () => clearTimeout(t));
+    img.src = imageUrl;
   } else {
     backFace.innerHTML = `
       <div class="card-reveal-art">

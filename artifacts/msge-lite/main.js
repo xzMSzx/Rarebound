@@ -212,6 +212,17 @@ function augmentCards(engineCards, setId, vendor) {
 const CARD_BACK_URL = 'https://images.pokemontcg.io/cardback.png';
 new Image().src = CARD_BACK_URL;
 
+// Lightweight iOS PWA detection: add a class so CSS can reduce heavy
+// backdrop/filter/will-change rules only in installed iOS PWAs where
+// Safari rendering and image hydration have historically been fragile.
+try {
+  const _ua = navigator.userAgent || '';
+  const _isIos = /iP(hone|ad|od)/.test(_ua);
+  const _isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+    || (window.navigator && 'standalone' in window.navigator && window.navigator.standalone);
+  if (_isIos && _isStandalone) document.documentElement.classList.add('rb-pwa-ios');
+} catch (e) { /* defensive - don't block bootstrap on UA access */ }
+
 // ─── Background preload (Phase 10 — orchestrated by boot screen) ─────────────
 
 const SET_IDS = ['swsh7', 'sv4pt5', 'sv3pt5', 'sv2', 'swsh11', 'sv6', 'sv7', 'sv8', 'sv8pt5', 'sv9'];
@@ -1366,7 +1377,7 @@ function renderRecentHits() {
     else if (ULTRA_RARITIES.has(hit.rarity))  tile.classList.add('recent-hit--ultra');
     const rarityLabel = RARITY_LABELS[hit.rarity] || hit.rarity;
     tile.innerHTML = `
-      <img src="${hit.imageUrl}" alt="${hit.name}" class="recent-hit-img" loading="lazy" />
+      <img src="${hit.imageUrl}" alt="${hit.name}" class="recent-hit-img" loading="eager" />
       <div class="recent-hit-name">${hit.name}</div>
       <div class="recent-hit-rarity">${rarityLabel}</div>
     `;
@@ -3879,7 +3890,7 @@ function renderStatsScreen() {
     ${mostValCard ? `
     <div class="stats-showcase" id="showcase-most-val" style="cursor:pointer">
       <div class="stats-showcase-label">Most Valuable Card</div>
-      <img src="${mostValCard.images.small || mostValCard.images.large}" alt="${mostValCard.name}" class="stats-showcase-img" loading="lazy" />
+      <img src="${mostValCard.images.small || mostValCard.images.large}" alt="${mostValCard.name}" class="stats-showcase-img" loading="eager" />
       <div class="stats-showcase-name">${mostValCard.name}</div>
       <div class="stats-showcase-value">$${mostValAmount.toFixed(2)}</div>
     </div>` : '<p class="stats-empty">Open some packs to see your stats!</p>'}
@@ -3887,7 +3898,7 @@ function renderStatsScreen() {
     ${rarestCard && rarestIdx !== -1 ? `
     <div class="stats-showcase" id="showcase-rarest" style="cursor:pointer">
       <div class="stats-showcase-label">Rarest Pull</div>
-      <img src="${rarestCard.images.small || rarestCard.images.large}" alt="${rarestCard.name}" class="stats-showcase-img" loading="lazy" />
+      <img src="${rarestCard.images.small || rarestCard.images.large}" alt="${rarestCard.name}" class="stats-showcase-img" loading="eager" />
       <div class="stats-showcase-name">${rarestCard.name}</div>
       <div class="stats-showcase-value">${RARITY_LABELS[RARITY_ORDER[rarestIdx]] || ''}</div>
     </div>` : ''}

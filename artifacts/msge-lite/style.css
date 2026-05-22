@@ -17,6 +17,49 @@
   --radius-lg: 18px;
 }
 
+/* =========================================
+   iOS PWA / Safari compatibility overrides
+   Applied only when runtime detects an installed iOS PWA and
+   adds the `rb-pwa-ios` class to the <html> element.
+   These rules reduce large backdrop-filter usage and relax
+   persistent `will-change` hints to avoid compositor/GPU pressure
+   and image hydration fragility in WebKit PWAs.
+   ========================================= */
+
+.rb-pwa-ios .slab-viewer__backdrop,
+.rb-pwa-ios .ags-reveal__backdrop,
+.rb-pwa-ios .estate-lightbox__backdrop,
+.rb-pwa-ios .pack-opening-overlay .pack-stage,
+.rb-pwa-ios #pack-overlay .overlay-backdrop,
+.rb-pwa-ios .modal-backdrop,
+.rb-pwa-ios .confirm-backdrop,
+.rb-pwa-ios .liq-overlay-bg,
+.rb-pwa-ios .cloud-preserve-backdrop,
+.rb-pwa-ios .overlay-summary-mode .overlay-backdrop {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  /* keep a darkened translucent fallback for atmosphere */
+  background: rgba(0,0,0,0.55) !important;
+}
+
+/* Reduce always-on will-change on long-lived containers in PWA mode */
+.rb-pwa-ios .vendor-card,
+.rb-pwa-ios .binder-page,
+.rb-pwa-ios .ags-slab,
+.rb-pwa-ios .slab-viewer,
+.rb-pwa-ios .pack-opening-overlay,
+.rb-pwa-ios .overlay-card-wrapper,
+.rb-pwa-ios .recent-hit {
+  will-change: auto !important;
+}
+
+/* Keep will-change when explicit animation classes are present */
+.rb-pwa-ios .overlay-card-wrapper.overlay-animating,
+.rb-pwa-ios .vendor-card.animating {
+  will-change: transform, opacity !important;
+}
+
+
 * {
   box-sizing: border-box;
   margin: 0;

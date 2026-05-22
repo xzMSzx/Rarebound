@@ -218,7 +218,7 @@ export function renderPremiumSlab(slab, apiCard) {
     .map(w => `<span style="width:${w}px"></span>`).join('');
 
   const cardImgHTML = imgUrl
-    ? `<img class="premium-slab__card" src="${safeText(imgUrl)}" alt="${safeText(apiCard?.name || 'card')}" loading="lazy" />`
+    ? `<img class="premium-slab__card" src="${safeText(imgUrl)}" alt="${safeText(apiCard?.name || 'card')}" loading="eager" />`
     : `<div class="premium-slab__card premium-slab__card--fallback">
          ${safeText(cardName)}<br/>${safeText(rarity)}<br/>${safeText(setName)}
        </div>`;
