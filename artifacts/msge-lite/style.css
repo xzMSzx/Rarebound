@@ -275,10 +275,11 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 
 /* ─── SHARED GLOW EFFECTS ────────────────────────────────────────────── */
 
-.glow-common    { box-shadow: 0 0 10px rgba(255, 255, 255, 0.15) !important; filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1)); }
-.glow-rare      { box-shadow: 0 0 20px rgba(90, 171, 255, 0.5) !important; filter: drop-shadow(0 0 8px rgba(90, 171, 255, 0.3)); }
-.glow-epic      { box-shadow: 0 0 35px rgba(196, 122, 255, 0.7) !important; filter: drop-shadow(0 0 12px rgba(196, 122, 255, 0.5)); }
-.glow-legendary { box-shadow: 0 0 50px rgba(255, 207, 64, 0.9) !important; filter: drop-shadow(0 0 20px rgba(255, 207, 64, 0.6)); }
+/* Phase 4.4.2 — glow effects removed; classes kept so animator cleanup runs cleanly */
+.glow-common    { box-shadow: none !important; filter: none !important; }
+.glow-rare      { box-shadow: none !important; filter: none !important; }
+.glow-epic      { box-shadow: none !important; filter: none !important; }
+.glow-legendary { box-shadow: none !important; filter: none !important; }
 
 .suspense-glow .reveal-card-mystery {
   border-color: #3a2a1a;
@@ -298,12 +299,12 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 
 .suspense-shake { animation: shake 0.4s ease; }
 
+/* Phase 4.4.2 — legendary-pulse disabled; keyframe kept for parser safety */
 @keyframes legendary-pulse {
-  0%, 100% { box-shadow: 0 0 40px rgba(255, 207, 64, 0.7); }
-  50%      { box-shadow: 0 0 70px rgba(255, 207, 64, 1); }
+  0%, 100% { box-shadow: none; }
 }
 
-.legendary-pulse { animation: legendary-pulse 2s infinite !important; box-shadow: 0 0 40px rgba(255, 207, 64, 0.7) !important; }
+.legendary-pulse { animation: none !important; box-shadow: none !important; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    PHASE 3 — FULLSCREEN OVERLAY
@@ -549,11 +550,12 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 
 /* ─── Overlay glow (larger scale) ───────────────────────────────────── */
 
-.suspense-glow-large                   { box-shadow: 0 0 30px 5px rgba(255,180,50,0.35) !important; }
-.overlay-card-wrapper.glow-common      { box-shadow: 0 0 20px rgba(255,255,255,0.15) !important; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)) !important; }
-.overlay-card-wrapper.glow-rare        { box-shadow: 0 0 40px rgba(90,171,255,0.6) !important; filter: drop-shadow(0 0 20px rgba(90,171,255,0.4)) !important; }
-.overlay-card-wrapper.glow-epic        { box-shadow: 0 0 60px rgba(196,122,255,0.8) !important; filter: drop-shadow(0 0 30px rgba(196,122,255,0.6)) !important; }
-.overlay-card-wrapper.glow-legendary   { box-shadow: 0 0 80px rgba(255,207,64,1) !important; filter: drop-shadow(0 0 40px rgba(255,207,64,0.8)) !important; }
+/* Phase 4.4.2 — all overlay glows removed; classes kept for animator compatibility */
+.suspense-glow-large                   { box-shadow: none !important; filter: none !important; }
+.overlay-card-wrapper.glow-common      { box-shadow: none !important; filter: none !important; }
+.overlay-card-wrapper.glow-rare        { box-shadow: none !important; filter: none !important; }
+.overlay-card-wrapper.glow-epic        { box-shadow: none !important; filter: none !important; }
+.overlay-card-wrapper.glow-legendary   { box-shadow: none !important; filter: none !important; }
 
 /* ─── Overlay shake ──────────────────────────────────────────────────── */
 
@@ -1325,7 +1327,7 @@ body.is-mobile button      { min-height: 44px; }
     transparent 2px,
     transparent 6px
   );
-  animation: none;
+  animation: none;            /* Phase 5.2.1 — gated by .reverse-holo-active */
   z-index: 2;
   /* Phase 5.2.2 — force GPU compositing so iOS Safari runs the keyframes. */
   transform: translateZ(0);
@@ -1352,7 +1354,7 @@ body.is-mobile button      { min-height: 44px; }
     rgba(255, 255, 255, 0.35) 50%,
     transparent 70%
   );
-  animation: none;
+  animation: none;            /* Phase 5.2.1 — gated by .reverse-holo-active */
   mix-blend-mode: screen;
   z-index: 3;
   /* Phase 5.2.2 — force GPU compositing so iOS Safari runs the keyframes. */
@@ -1371,8 +1373,8 @@ body.is-mobile button      { min-height: 44px; }
  * Added to the wrapper after the reveal flip completes (overlay) or on
  * thumbnail creation (collection grid). Without this class the foil layers
  * are mounted but static, so the reveal moment "lights up" the card. */
-.reverse-holo-active .reverse-holo-overlay { animation: reverseHoloShift 3s linear infinite !important; }
-.reverse-holo-active .reverse-holo-sweep   { animation: holoSweep 4s infinite !important; }
+.reverse-holo-active .reverse-holo-overlay { animation: reverseHoloShift 3s linear infinite; }
+.reverse-holo-active .reverse-holo-sweep   { animation: holoSweep 4s infinite; }
 
 .reverse-holo-highlight {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.25),

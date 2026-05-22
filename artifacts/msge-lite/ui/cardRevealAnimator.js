@@ -137,14 +137,25 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
       }
       // Ensure the backFace is still in the DOM before writing
       if (backFace && backFace.parentNode) {
-        backFace.innerHTML = '';
-        backFace.appendChild(img);
+        // Fix: Do not destroy holo layers that were appended synchronously.
+        // Instead of clearing backFace.innerHTML, prepend the image so it sits under the overlays.
+        const existingArt = backFace.querySelector('.card-reveal-art');
+        if (existingArt) existingArt.remove();
+        backFace.insertBefore(img, backFace.firstChild);
       }
     };
     img.onerror = () => {
       if (settled) return; settled = true;
       if (backFace && backFace.parentNode) {
-        backFace.innerHTML = `\n          <div class="card-reveal-art">\n            <span class="card-reveal-symbol">${RARITY_SYMBOL[rarity] ?? '?'}</span>\n            <span class="card-reveal-rarity">${RARITY_LABEL[rarity] ?? rarity}</span>\n          </div>`;
+        const existingImg = backFace.querySelector('.card-reveal-img');
+        if (existingImg) existingImg.remove();
+        let existingArt = backFace.querySelector('.card-reveal-art');
+        if (!existingArt) {
+          existingArt = document.createElement('div');
+          existingArt.className = 'card-reveal-art';
+          existingArt.innerHTML = `<span class="card-reveal-symbol">${RARITY_SYMBOL[rarity] ?? '?'}</span><span class="card-reveal-rarity">${RARITY_LABEL[rarity] ?? rarity}</span>`;
+          backFace.insertBefore(existingArt, backFace.firstChild);
+        }
       }
     };
     // Non-blocking timeout: if the image doesn't load quickly, fall back to symbol
