@@ -7,3 +7,6 @@
 ## 2026-05-21 - Operation-Scoped Caching for Data Processing Bottlenecks
 **Learning:** During collection valuation, converting `cached.find()` into an `O(1)` map lookup yielded a 2.5x speedup for large user portfolios. However, storing the instantiated Map on the module scope breaks Vitest tests because the codebase heavily mocks/mutates state.
 **Action:** When performing `Array.find()` to Map lookups to resolve O(N) bottlenecks in bulk data processing like `computeTotalCollectionValue`, cache the instantiated Map on a transient context object passed down the stack (e.g., `ctx._apiCardMapCache`), and clear it in a `finally` block to avoid global side-effects.
+## 2024-05-25 - [Test Context Limitations for Scripts]
+**Learning:** When creating standalone Node scripts (`test_*.js`) to debug or benchmark modules that rely on DOM APIs like `localStorage` in `artifacts/msge-lite`, they will instantly fail with `ReferenceError: localStorage is not defined`.
+**Action:** Instead of ad-hoc Node scripts, rely exclusively on Vitest (`pnpm test`) which runs in a configured `jsdom` environment and provides Native `localStorage` mocking. Also, ALWAYS clean up ad-hoc script files before committing.
