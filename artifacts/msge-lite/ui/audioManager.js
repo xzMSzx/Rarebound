@@ -71,6 +71,20 @@ export function isSoundEnabled()     { return _enabled; }
  * Reads as paper whisking through air. Fires on every flip regardless of
  * rarity, so it has to be subtle — peak gain capped at 0.18.
  */
+export function suspendSFXAudio() {
+  const ctx = _getCtx();
+  if (ctx && ctx.state === 'running') {
+    ctx.suspend().catch(() => {});
+  }
+}
+
+export function resumeSFXAudio() {
+  const ctx = _getCtx();
+  if (ctx && ctx.state === 'suspended' && isSoundEnabled()) {
+    ctx.resume().catch(() => {});
+  }
+}
+
 export function playCardFlip() {
   if (!_enabled) return;
   const ctx = _getCtx();
@@ -297,4 +311,19 @@ export function playCardSlide() {
   src.connect(filter).connect(gain).connect(ctx.destination);
   src.start(t);
   src.stop(t + 0.45);
+}
+
+
+export function suspendSFXAudio() {
+  const ctx = _getCtx();
+  if (ctx && ctx.state === 'running') {
+    ctx.suspend().catch(() => {});
+  }
+}
+
+export function resumeSFXAudio() {
+  const ctx = _getCtx();
+  if (ctx && ctx.state === 'suspended' && isSoundEnabled()) {
+    ctx.resume().catch(() => {});
+  }
 }

@@ -3,6 +3,19 @@ const TIMER_STORE_KEY = 'rarebound_vendor_timers_v1';
 
 let _timers = {}; // id -> { endsAt, label }
 let _subs = {}; // id -> [cb]
+let _isBackgrounded = false;
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      _isBackgrounded = true;
+    } else {
+      _isBackgrounded = false;
+      // Immediately calculate delta on return
+      if (_tickHandle) _tick();
+    }
+  });
+}
 let _tickHandle = null;
 
 function _load() {
@@ -21,7 +34,8 @@ function _now() { return Date.now(); }
 
 function _ensureTicker() {
   if (_tickHandle) return;
-  _tickHandle = setInterval(() => {
+  function _tick() {
+    if (_isBackgrounded) return;
     const now = _now();
     for (const id of Object.keys(_timers)) {
       const t = _timers[id];
@@ -42,7 +56,8 @@ function _ensureTicker() {
     if (Object.keys(_timers).length === 0) {
       clearInterval(_tickHandle); _tickHandle = null;
     }
-  }, 1000);
+}
+_tickHandle = setInterval(_tick, 1000);
 }
 
 function ensureTimer(id, endsAt, opts = {}) {

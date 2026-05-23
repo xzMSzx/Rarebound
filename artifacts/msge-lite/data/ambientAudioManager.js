@@ -249,6 +249,18 @@ export function getAudioContextState() {
   return ctx?.state ?? 'none';
 }
 
+export function suspendAmbientAudio() {
+  if (ctx && ctx.state === 'running') {
+    ctx.suspend().catch(() => {});
+  }
+}
+
+export function resumeAmbientAudio() {
+  if (ctx && ctx.state === 'suspended' && audioEnabled()) {
+    ctx.resume().catch(() => {});
+  }
+}
+
 export function refreshAmbientFromSettings() {
   if (!initialized) return;
   if (audioEnabled()) {
@@ -306,3 +318,16 @@ export const sfx = {
   graphSweep:   () => playTone({ freq: 220, type: 'sine',    durMs: 380, gain: 0.05, slideTo: 880 }),
   boxSeal:      () => playChord([196, 247, 330], { type: 'triangle', durMs: 240, gain: 0.06 }),
 };
+
+
+export function suspendAmbientAudio() {
+  if (ctx && ctx.state === 'running') {
+    ctx.suspend().catch(() => {});
+  }
+}
+
+export function resumeAmbientAudio() {
+  if (ctx && ctx.state === 'suspended' && audioEnabled()) {
+    ctx.resume().catch(() => {});
+  }
+}
