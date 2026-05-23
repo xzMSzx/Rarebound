@@ -496,3 +496,4 @@ function _applyCardTilt(wrapper) {
   wrapper.addEventListener('touchend',   resetTilt);
   wrapper.addEventListener('touchcancel', resetTilt);
 }
+// Restoring cinematic effects explicitly for manual PR review
