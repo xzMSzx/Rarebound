@@ -24,11 +24,15 @@ function _ensureTicker() {
   _tickHandle = setInterval(() => {
     const now = _now();
     for (const id of Object.keys(_timers)) {
-      const t = _timers[id];
-      const remain = Math.max(0, t.endsAt - now);
-      if (_subs[id]) {
-        for (const cb of _subs[id]) cb(remain);
-      }
+        const t = _timers[id];
+        const remain = Math.max(0, t.endsAt - now);
+        if (_subs[id]) {
+          // iterate over a shallow copy so subscribers can unsubscribe safely
+          const subs = (_subs[id] || []).slice();
+          for (const cb of subs) {
+            try { cb(remain); } catch (err) { console.error('[vendorTimers] subscriber error', err); }
+          }
+        }
       if (remain <= 0) {
         // expire
         try { if (typeof t.onExpire === 'string') { /* noop */ } } catch(e){}

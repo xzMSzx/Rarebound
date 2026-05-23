@@ -27,12 +27,12 @@ const STORAGE_KEY = 'tcg_value_history';
 const MAX_POINTS  = 200;
 
 /** Minimum time between stored samples unless value jumps materially. */
-const MIN_SAMPLE_GAP_MS = 90_000;
+const MIN_SAMPLE_GAP_MS = 6 * 3600 * 1000;
 
 /** $ or relative move that always creates a new sample. */
 function materialMove(prevVal, nextVal) {
-  const a = Math.abs(nextVal - prevVal);
-  return a >= 0.02 || a >= Math.max(1, prevVal * 0.0005);
+  const diff = Math.abs(nextVal - prevVal);
+  return diff >= 25 || diff >= Math.max(1, prevVal * 0.01);
 }
 
 function todayKey() {
@@ -98,7 +98,7 @@ export function recordValueSnapshot(value) {
     append = true;
   } else if (ts - last.ts >= 6 * 3600 * 1000) {
     append = true;
-  } else if (ts - last.ts >= MIN_SAMPLE_GAP_MS && Math.abs(value - last.value) >= 0.005) {
+  } else if (ts - last.ts >= MIN_SAMPLE_GAP_MS && Math.abs(value - last.value) >= 1) {
     append = true;
   }
 
@@ -113,7 +113,8 @@ export function recordValueSnapshot(value) {
     last.day   = day;
   }
 
-  if (value > state.lifetimePeak) {
+  const isNewPeak = value > state.lifetimePeak;
+  if (isNewPeak) {
     state.lifetimePeak   = value;
     state.lifetimePeakAt = ts;
   }
@@ -125,7 +126,7 @@ export function recordValueSnapshot(value) {
   const prevPt  = points.length >= 2 ? points[points.length - 2] : null;
   const prevDay = prevPt ? prevPt.value : null;
   const delta   = prevDay === null ? today : today - prevDay;
-  return { today, peak: state.lifetimePeak, prevDay, delta };
+  return { today, peak: state.lifetimePeak, prevDay, delta, isNewPeak };
 }
 
 /**

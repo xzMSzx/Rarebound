@@ -8105,26 +8105,63 @@ html[data-reduced-motion] .mystery-box-tile--broker      .mystery-box-art::befor
 .stats-timeline-area {
   fill: url(#timeline-grad);
 }
+.stats-timeline-marker-group {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.stats-timeline-marker-group:focus .stats-timeline-marker,
+.stats-timeline-marker-group.is-active .stats-timeline-marker {
+  r: 5;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 10px rgba(212,175,55,0.45));
+}
+.stats-timeline-marker-hitarea {
+  fill: transparent;
+  pointer-events: all;
+}
 .stats-timeline-marker {
   fill: #0a0b0e;
   stroke: rgba(212, 175, 55, 1);
   stroke-width: 1.5;
-  cursor: pointer;
-  transition: r 0.2s, stroke-width 0.2s;
+  transition: r 0.2s, stroke-width 0.2s, filter 0.2s;
 }
 .stats-timeline-marker:hover {
-  r: 5; stroke-width: 2.5; stroke: #fff;
+  r: 5; stroke-width: 2.2; stroke: #fff;
 }
-.stats-timeline-marker-pulse {
-  fill: none;
-  stroke: rgba(212, 175, 55, 0.5);
-  stroke-width: 1;
-  animation: pulse-marker 2s infinite ease-out;
-  transform-origin: center;
+.stats-timeline-detail {
+  margin: 14px 0 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,175,55,0.12);
 }
-@keyframes pulse-marker {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(2.5); opacity: 0; }
+.stats-timeline-detail-head {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,0.75);
+  margin-bottom: 6px;
+}
+.stats-timeline-detail-copy {
+  font-size: 12px;
+  color: #f1ead8;
+  line-height: 1.5;
+}
+.stats-timeline-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+.stats-timeline-row:hover {
+  background: rgba(255,255,255,0.04);
+  transform: translateX(1px);
+}
+.stats-timeline-row.is-active {
+  background: rgba(212,175,55,0.12);
+  border-radius: 10px;
 }
 .stats-timeline-empty {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;

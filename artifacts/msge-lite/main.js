@@ -454,7 +454,7 @@ function showToast(text, kind = 'favor') {
   if (!container) return;
   const toast = document.createElement('div');
   toast.className = `toast toast--${kind}`;
-  toast.textContent = text;
+  if (toast) toast.textContent = text;
   container.appendChild(toast);
   // Auto-remove after animation
   setTimeout(() => toast.remove(), 2600);
@@ -1060,7 +1060,8 @@ function renderCollectorArchive(el) {
     head.addEventListener('click', () => {
       const cat  = head.closest('.archive-category');
       const open = cat.classList.toggle('is-open');
-      head.querySelector('.archive-cat-chevron').textContent = open ? '−' : '+';
+      const _chev = head.querySelector('.archive-cat-chevron');
+      if (_chev) _chev.textContent = open ? '−' : '+';
       haptic('soft');
     });
   });
@@ -1501,7 +1502,8 @@ function renderVendorHub() {
     // subscribe to update the pill element
     subscribe('capsule-refresh', (remain) => {
       const el = document.getElementById('capsule-refresh-pill');
-      if (el) el.querySelectorAll('span')[1].textContent = formatMs(remain);
+      const span = el?.querySelectorAll('span')?.[1];
+      if (span) span.textContent = formatMs(remain);
     });
   } catch (err) { console.warn('[VendorTimers] capsule timer failed:', err); }
 
@@ -1677,7 +1679,7 @@ function renderFoundationVendorBody(vendor) {
   if (vendor.id === 'estateAuctions') return renderEstateAuctionsFoundation(vendor);
   const fallback = document.createElement('div');
   fallback.className = 'vendor-empty';
-  fallback.textContent = 'Foundation initializing...';
+  if (fallback) fallback.textContent = 'Foundation initializing...';
   return fallback;
 }
 
@@ -2098,7 +2100,8 @@ function renderEstateAuctionsFoundation(vendor) {
       } });
       subscribe(lotId, (remain) => {
         const el = document.getElementById(`${lotId}-pill`);
-        if (el) el.querySelectorAll('span')[1].textContent = formatMs(remain);
+        const span = el?.querySelectorAll('span')?.[1];
+        if (span) span.textContent = formatMs(remain);
       });
     }
   } catch (err) { console.warn('[VendorTimers] estate timer failed:', err); }
@@ -2230,7 +2233,7 @@ function renderBrokerChaseTile(pick, vendor) {
   // ── Acquire button: purchase handler only, sibling NOT child of preview ─────
   const btn = document.createElement('button');
   btn.className = 'vendor-buy-btn vendor-buy-btn--lux broker-acquire-btn';
-  btn.textContent = 'Acquire';
+  if (btn) btn.textContent = 'Acquire';
 
   const doPurchase = () => {
     buyChaseCard(
@@ -2282,15 +2285,15 @@ function renderMysteryBoxTile(box, vendor) {
 
 async function purchaseMysteryBox(box, vendor, btn) {
   if (!spendBalance(box.price)) {
-    btn.textContent = 'Insufficient';
-    setTimeout(() => { btn.textContent = 'Acquire'; }, 1800);
+    if (btn) btn.textContent = 'Insufficient';
+    setTimeout(() => { if (btn) btn.textContent = 'Acquire'; }, 1800);
     return;
   }
   updateBalanceUI();
   haptic('medium');
   sfx.purchase();
-  btn.disabled = true;
-  btn.textContent = 'Opening…';
+  if (btn) btn.disabled = true;
+  if (btn) btn.textContent = 'Opening…';
 
   // Roll contents and reveal — the modal resolves once the user either
   // confirms the reveal or dismisses it. Either way the box was paid
@@ -2317,8 +2320,8 @@ async function buyPackFromVendor(setId, price, vendor, btn) {
   // Pre-check (so we can show "Insufficient Funds" without engaging the
   // full pack-opening flow that the helper below would otherwise start).
   if (!isInfiniteBalance() && getBalance() < price) {
-    btn.textContent = 'Insufficient Funds';
-    setTimeout(() => { btn.textContent = 'Buy Pack'; }, 2000);
+    if (btn) btn.textContent = 'Insufficient Funds';
+    setTimeout(() => { if (btn) btn.textContent = 'Buy Pack'; }, 2000);
     return;
   }
   btn.disabled = true;
@@ -2754,28 +2757,37 @@ function maybeFirstArchive(key, label) {
  * snapshot. Called from runPackOpening, buyChaseCard, and post-sell.
  * Lifetime-peak transitions are recorded as archive events.
  */
+const VALUE_MILESTONES = [500, 1000, 2000, 5000, 10000, 20000, 50000];
+
 function recordCollectionValueSnapshot() {
   const summary = recordChronologicalCollectionSnapshot();
-  // Lifetime peak — archive once per peak (key includes rounded value to dedupe)
-  if (summary.today === summary.peak && summary.today > 0) {
-    const key = `value_peak:${Math.floor(summary.peak / 50) * 50}`;
-    try { recordArchiveEvent('value_peak', `New collection-value peak · $${summary.peak.toFixed(2)}`, { key }); } catch {}
+  if (summary.isNewPeak) {
+    const milestone = VALUE_MILESTONES.slice().reverse().find(t => summary.today >= t);
+    if (milestone) {
+      try {
+        recordArchiveEvent('value_milestone',
+          `Collection value surpassed $${milestone.toLocaleString()}`,
+          { key: `collection_value_milestone:${milestone}` });
+      } catch (err) {
+        console.error('[archive] value milestone failed', err);
+      }
+    }
   }
   return summary;
 }
 
 async function buyChaseCard(apiCard, setId, price, vendor, btn) {
   if (!spendBalance(price)) {
-    btn.textContent = 'Insufficient Funds';
-    setTimeout(() => { btn.textContent = 'Acquire'; }, 2000);
+    if (btn) btn.textContent = 'Insufficient Funds';
+    setTimeout(() => { if (btn) btn.textContent = 'Acquire'; }, 2000);
     return;
   }
   // v1.2.0 — track broker purchase + distress transition after spending
   incrementBrokerPurchases();
   checkDistressTransition();
   updateBalanceUI();
-  btn.disabled = true;
-  btn.textContent = 'Acquired ✓';
+  if (btn) btn.disabled = true;
+  if (btn) btn.textContent = 'Acquired ✓';
 
   addCardToCollection({ setId, id: apiCard.id });
   removeBrokerPick(apiCard.id);
@@ -3169,7 +3181,8 @@ async function openBinderScreen(setId, highlightCardId) {
   }
 
   const packInfo = PACK_STORE[setId];
-  document.getElementById('binder-set-name').textContent = packInfo?.name || setId;
+  const binderSetNameEl = document.getElementById('binder-set-name');
+  if (binderSetNameEl) binderSetNameEl.textContent = packInfo?.name || setId;
 
   // v1.2.2d/e — save scroll position and record whether collection was already
   // visible so closeBinderScreen can balance the lock count correctly.
@@ -3183,7 +3196,8 @@ async function openBinderScreen(setId, highlightCardId) {
   lockBodyScroll();
 
   if (!getCachedSetCards(setId)) {
-    document.getElementById('binder-pages').innerHTML = '<p class="binder-loading">Loading cards...</p>';
+    const _binderPagesEl = document.getElementById('binder-pages');
+    if (_binderPagesEl) _binderPagesEl.innerHTML = '<p class="binder-loading">Loading cards...</p>';
     await loadSet(setId);
   }
   renderBinderPage();
@@ -3225,8 +3239,10 @@ function renderBinderPage() {
   _binderPage = Math.max(0, Math.min(_binderPage, totalPages - 1));
   _binderPageMemory[_binderSetId] = _binderPage;
 
-  document.getElementById('binder-progress').textContent = `${ownedCount} / ${totalCount}`;
-  document.getElementById('binder-page-label').textContent = `Page ${_binderPage + 1} / ${totalPages}`;
+  const binderProgressEl = document.getElementById('binder-progress');
+  if (binderProgressEl) binderProgressEl.textContent = `${ownedCount} / ${totalCount}`;
+  const binderPageLabelEl = document.getElementById('binder-page-label');
+  if (binderPageLabelEl) binderPageLabelEl.textContent = `Page ${_binderPage + 1} / ${totalPages}`;
   document.getElementById('binder-prev').disabled = _binderPage === 0;
   document.getElementById('binder-next').disabled = _binderPage >= totalPages - 1;
 
@@ -3264,7 +3280,7 @@ function renderBinderPage() {
       if (ownedEntry.count > 1) {
         const badge = document.createElement('div');
         badge.className   = 'duplicate-badge';
-        badge.textContent = 'DP ×' + ownedEntry.count;
+        if (badge) badge.textContent = 'DP ×' + ownedEntry.count;
         slot.appendChild(badge);
       }
 
@@ -3272,7 +3288,7 @@ function renderBinderPage() {
       if (ownedEntry.count === 1 && (ownedEntry.locked !== false)) {
         const lock = document.createElement('div');
         lock.className   = 'lock-corner';
-        lock.textContent = '🔒';
+        if (lock) lock.textContent = '🔒';
         slot.appendChild(lock);
       }
 
@@ -3280,7 +3296,7 @@ function renderBinderPage() {
       if (ownedEntry.reverseHolo > 0) {
         const rhBadge = document.createElement('div');
         rhBadge.className   = 'rh-badge';
-        rhBadge.textContent = 'RH';
+        if (rhBadge) rhBadge.textContent = 'RH';
         slot.appendChild(rhBadge);
       }
 
@@ -3293,7 +3309,7 @@ function renderBinderPage() {
         slot.classList.add('has-archived', `archived-tier-${tierClass}`);
         const medallion = document.createElement('div');
         medallion.className   = `binder-grade-badge binder-grade-badge--${tierClass}`;
-        medallion.textContent = _topSlab.grade?.tier?.label || 'AGS';
+        if (medallion) medallion.textContent = _topSlab.grade?.tier?.label || 'AGS';
         medallion.title       = `Archived · ${_topSlab.grade?.label || ''}`;
         slot.appendChild(medallion);
       }
@@ -3319,7 +3335,7 @@ function renderBinderPage() {
     if (wishlisted) {
       const star = document.createElement('div');
       star.className   = 'wishlist-corner';
-      star.textContent = '★';
+      if (star) star.textContent = '★';
       slot.appendChild(star);
     }
     grid.appendChild(slot);
@@ -3514,8 +3530,8 @@ function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, va
     haptic('soft');
     const btn = modal.querySelector('#cdp-wishlist-btn');
     const nowListed = toggleWishlist(apiCard.id);
-    btn.classList.toggle('active', nowListed);
-    btn.textContent = nowListed ? '★ On Wishlist' : '☆ Add to Wishlist';
+    if (btn) btn.classList.toggle('active', nowListed);
+    if (btn) btn.textContent = nowListed ? '★ On Wishlist' : '☆ Add to Wishlist';
     if (_binderSetId) renderBinderPage();
   };
 
@@ -3528,7 +3544,7 @@ function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, va
       favBtn.classList.toggle('is-favorited', nowFav);
       favBtn.setAttribute('aria-pressed', nowFav ? 'true' : 'false');
       favBtn.setAttribute('aria-label', nowFav ? 'Remove from favorites' : 'Add to favorites');
-      favBtn.textContent = nowFav ? '♥' : '♡';
+      if (favBtn) favBtn.textContent = nowFav ? '♥' : '♡';
       logActivity(
         nowFav ? 'favorited' : 'unfavorited',
         nowFav ? `Added ${apiCard.name} to Favorites` : `Removed ${apiCard.name} from Favorites`
@@ -3936,41 +3952,62 @@ function renderStatsScreen() {
         const tsSpan = Math.max(1, maxTs - minTs);
         
         const maxV = Math.max(...pts.map(p => p.value), 1);
-        const minV = Math.min(...pts.map(p => p.value));
-        const spanV = Math.max(1, maxV - minV);
-        const padV = spanV * 0.15;
+        const minV = 0;
+        const paddedMaxV = Math.max(maxV * 1.2, 1);
         
         const w = 400, h = 120;
-        const scaleX = (ts) => ((ts - minTs) / tsSpan) * w;
-        const scaleY = (val) => h - ((val - minV + padV) / (spanV + padV * 2)) * h;
+        const xForIndex = (index, length) => length < 2 ? (w / 2) : (index / (length - 1)) * w;
+        const yForValue = (val) => h - ((val - minV) / (paddedMaxV - minV)) * h;
+        
+        const points = pts.map((p, i) => ({
+          x: xForIndex(i, pts.length),
+          y: yForValue(p.value),
+          value: p.value,
+          day: p.day ?? i + 1,
+          ts: p.ts,
+        }));
         
         let path = '';
-        pts.forEach((p, i) => {
-          path += `${i === 0 ? 'M' : 'L'}${scaleX(p.ts).toFixed(1)},${scaleY(p.value).toFixed(1)} `;
+        points.forEach((pt, i) => {
+          path += `${i === 0 ? 'M' : 'L'}${pt.x.toFixed(1)},${pt.y.toFixed(1)} `;
         });
         const areaPath = `${path} L${w},${h} L0,${h} Z`;
         
-        let markersSvg = '';
-        entries.forEach(e => {
-          if (e.ts < minTs) return;
-          const nearest = pts.reduce((a, b) => Math.abs(b.ts - e.ts) < Math.abs(a.ts - e.ts) ? b : a);
-          const x = scaleX(e.ts).toFixed(1);
-          const y = scaleY(nearest.value).toFixed(1);
-          markersSvg += `<circle cx="${x}" cy="${y}" r="3" class="stats-timeline-marker" title="${e.label.replace(/"/g, '&quot;')}" />`;
-          if (e === entries[entries.length - 1]) {
-             markersSvg += `<circle cx="${x}" cy="${y}" r="3" class="stats-timeline-marker-pulse" />`;
-          }
-        });
+        const markersSvg = recentEntries.map((entry, index) => {
+          const nearest = points.reduce((best, pt) => {
+            const diff = Math.abs(pt.ts - entry.ts);
+            return !best || diff < best.diff ? { pt, diff } : best;
+          }, null);
+          if (!nearest || !nearest.pt) return '';
+          const x = nearest.pt.x.toFixed(1);
+          const y = nearest.pt.y.toFixed(1);
+          const labelSafe = String(entry.label || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+          return `
+            <g class="stats-timeline-marker-group" data-archive-index="${index}" tabindex="0" role="button" aria-label="${labelSafe}">
+              <circle class="stats-timeline-marker-hitarea" cx="${x}" cy="${y}" r="14" />
+              <circle class="stats-timeline-marker" cx="${x}" cy="${y}" r="3.5" />
+            </g>`;
+        }).join('');
 
-        const rows = recentEntries.length ? recentEntries.map(e => `
-          <div class="stats-timeline-row">
+        const timelineDetail = recentEntries.length ? `
+          <div class="stats-timeline-detail">
+            <div class="stats-timeline-detail-head">Archive memory</div>
+            <div class="stats-timeline-detail-copy">Tap a point to reveal the collector moment.</div>
+          </div>` : '';
+
+        const rows = recentEntries.length ? recentEntries.map((e, index) => `
+          <div class="stats-timeline-row" data-archive-index="${index}" tabindex="0" role="button">
             <span class="stats-timeline-day">Day ${e.day}</span>
             <span class="stats-timeline-text">${e.label}</span>
           </div>
         `).join('') : '<div class="stats-timeline-empty" style="position:static; padding:12px 0;">Your collector log will fill in as you pull, complete sets, and weather the market.</div>';
 
         return `
-          <div class="stats-timeline-card">
+          <div class="stats-timeline-card" style="height: auto; min-height: max-content; overflow: visible; display: flex; flex-direction: column; flex-shrink: 0;">
             <div class="stats-timeline-head">
               <div>
                 <div class="stats-timeline-label">Collection Archive Value</div>
@@ -3982,8 +4019,8 @@ function renderStatsScreen() {
               </div>
             </div>
             
-            <div class="stats-timeline-graph-wrap">
-               <svg xmlns="http://www.w3.org/2000/svg" class="stats-timeline-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+            <div class="stats-timeline-graph-wrap" style="display: block; width: 100%; min-height: 200px; flex-shrink: 0;">
+               <svg xmlns="http://www.w3.org/2000/svg" class="stats-timeline-svg" style="width: 100%; height: 100%; display: block;" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
                  <defs>
                    <linearGradient id="timeline-grad" x1="0" y1="0" x2="0" y2="1">
                      <stop offset="0%" stop-color="rgba(212,175,55,0.3)"/>
@@ -3991,12 +4028,14 @@ function renderStatsScreen() {
                    </linearGradient>
                  </defs>
                  <path class="stats-timeline-area" d="${areaPath}" />
-                 <path class="stats-timeline-line" d="${path}" />
+                 <path d="${path}" stroke="#D4AF37" stroke-width="2" fill="none" />
                  ${markersSvg}
                </svg>
                ${pts.length < 3 ? '<div class="stats-timeline-empty">More history coming…</div>' : ''}
             </div>
             
+            ${timelineDetail}
+
             <div class="stats-timeline-events">
                ${rows}
             </div>
@@ -4040,6 +4079,61 @@ function renderStatsScreen() {
   if (dupCard) {
     dupCard.addEventListener('click', () => openDuplicateVault());
     iosTap(dupCard, () => openDuplicateVault());
+  }
+
+  const timelineCard = container.querySelector('.stats-timeline-card');
+  if (timelineCard) {
+    const markerGroups = Array.from(timelineCard.querySelectorAll('.stats-timeline-marker-group'));
+    const rowEls = Array.from(timelineCard.querySelectorAll('.stats-timeline-row'));
+    const detailCopy = timelineCard.querySelector('.stats-timeline-detail-copy');
+
+    const setActiveArchive = (index) => {
+      markerGroups.forEach((group) => {
+        group.classList.toggle('is-active', Number(group.dataset.archiveIndex) === index);
+      });
+      rowEls.forEach((row) => {
+        row.classList.toggle('is-active', Number(row.dataset.archiveIndex) === index);
+      });
+      if (detailCopy && rowEls[index]) {
+        detailCopy.textContent = rowEls[index].querySelector('.stats-timeline-text')?.textContent || detailCopy.textContent;
+      }
+    };
+
+    const activateArchiveIndex = (index) => {
+      if (!rowEls.length) return;
+      const bounded = Math.max(0, Math.min(index, rowEls.length - 1));
+      setActiveArchive(bounded);
+    };
+
+    markerGroups.forEach((group) => {
+      const index = Number(group.dataset.archiveIndex);
+      const handler = () => activateArchiveIndex(index);
+      group.addEventListener('click', handler);
+      group.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handler();
+        }
+      });
+      iosTap(group, handler);
+    });
+
+    rowEls.forEach((row) => {
+      const index = Number(row.dataset.archiveIndex);
+      const handler = () => activateArchiveIndex(index);
+      row.addEventListener('click', handler);
+      row.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handler();
+        }
+      });
+      iosTap(row, handler);
+    });
+
+    if (markerGroups.length) {
+      activateArchiveIndex(0);
+    }
   }
 
   // v1.5.1 — Stats AGS entry tap → openAgsScreen.

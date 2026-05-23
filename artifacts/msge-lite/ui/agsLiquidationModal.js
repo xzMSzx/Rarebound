@@ -286,12 +286,15 @@ export function openAgsLiquidationModal(slab, apiCard, hooks, opts = {}) {
         logTitle = `Collector consortium acquisition • ${cardName} • $${quote.finalTransfer.toFixed(0)}`;
       }
 
-      recordArchiveEvent(evtType, logTitle, {
-        meta: {
-          cardId: slab.cardId,
-          price: quote.finalTransfer
-        }
-      });
+      const shouldRecordArchiveSale = quote.finalTransfer >= 1000 || quote.isPrivateCollector || isPrestige;
+      if (shouldRecordArchiveSale) {
+        recordArchiveEvent(evtType, logTitle, {
+          meta: {
+            cardId: slab.cardId,
+            price: quote.finalTransfer
+          }
+        });
+      }
 
       hooks.logActivity?.(
         'ags_complete',

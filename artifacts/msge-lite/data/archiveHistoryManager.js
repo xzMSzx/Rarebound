@@ -51,7 +51,7 @@ function dayCount(day0, ts) {
  * @param {string}  type  One of: prestige_pull | wishlist_hit |
  *                        set_completed | recovery_survived |
  *                        broker_acquisition | reverse_holo_complete |
- *                        value_peak | milestone_major.
+ *                        value_milestone | milestone_major | archive_record.
  * @param {string}  label Human-readable line (kept short, factual).
  * @param {object}  [opts]
  * @param {string}  [opts.key]  Optional first-of-a-kind key — duplicate
