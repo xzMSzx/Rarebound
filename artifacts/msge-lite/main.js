@@ -782,6 +782,26 @@ const PRESTIGE_RANKS = new Set([
 // _vendorObserver: same rule — keep above the call site.
 let _vendorObserver = null;
 
+// Phase 10.5 — Visibility API to pause audio & heavy background logic when tab is hidden
+let _isBackgrounded = false;
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      _isBackgrounded = true;
+      suspendAmbientAudio();
+      suspendSFXAudio();
+    } else {
+      _isBackgrounded = false;
+      resumeAmbientAudio();
+      resumeSFXAudio();
+      // Re-trigger live tick manually on return to catch up instantly
+      if (typeof _liveTick === 'function') {
+        _liveTick();
+      }
+    }
+  });
+}
+
 renderVendorHub();
 updateBalanceUI();
 updateMarketStrip();
@@ -791,7 +811,8 @@ renderChaseStrip();
 renderRecentHits();
 
 // Live tick — refresh strip every 30s; check for cycle rollover, advance chase timer
-setInterval(() => {
+function _liveTick() {
+  if (_isBackgrounded) return; // Skip work while tab is suspended
   // v1.3.0a — recovery tick first: handles 45-min focus rotation while in
   // recovery AND post-recovery cleanup of leftover emergency/state storage.
   // Returns true when a hub re-render is needed.
@@ -847,7 +868,8 @@ setInterval(() => {
   updateMarketStrip();
   renderStipendStrip();
   renderChaseStrip();
-}, 30 * 1000);
+}
+setInterval(_liveTick, 30 * 1000);
 
 // v1.4.0 — initial event tick on boot so the first render reflects active state.
 try { tickVendorEvents(); } catch (err) { console.error('[v1.4.0] vendor events tick failed:', err); }
