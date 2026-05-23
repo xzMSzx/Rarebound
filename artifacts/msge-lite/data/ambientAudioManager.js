@@ -306,3 +306,29 @@ export const sfx = {
   graphSweep:   () => playTone({ freq: 220, type: 'sine',    durMs: 380, gain: 0.05, slideTo: 880 }),
   boxSeal:      () => playChord([196, 247, 330], { type: 'triangle', durMs: 240, gain: 0.06 }),
 };
+
+// ─── Background Battery & Audio Management ───────────────────────────────────
+
+export function suspendAmbientAudio() {
+  if (ctx && ctx.state === 'running') {
+    ctx.suspend().catch(() => {});
+  }
+}
+
+export function resumeAmbientAudio() {
+  // Only resume if the user has already unlocked audio and it is enabled
+  if (ctx && ctx.state === 'suspended' && _audioUnlocked && audioEnabled()) {
+    ctx.resume().catch(() => {});
+  }
+}
+
+// Automatically catch Safari tab switching / minimizing
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      suspendAmbientAudio();
+    } else {
+      resumeAmbientAudio();
+    }
+  });
+}
