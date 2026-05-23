@@ -1021,14 +1021,14 @@ function renderCollectorArchive(el) {
     const completedPct = cat.totalCount > 0 ? Math.round(cat.completedCount / cat.totalCount * 100) : 0;
     return `
       <div class="archive-category" data-cat="${cat.id}">
-        <button class="archive-cat-head">
+        <button class="archive-cat-head" aria-expanded="false" aria-controls="archive-cat-body-${cat.id}">
           <span class="archive-cat-icon">${cat.icon}</span>
           <span class="archive-cat-label">${cat.label}</span>
           <span class="archive-cat-count">${cat.completedCount} / ${cat.totalCount}</span>
           <span class="archive-cat-pct">${completedPct}%</span>
           <span class="archive-cat-chevron">+</span>
         </button>
-        <div class="archive-cat-body">${milestoneCards}</div>
+        <div class="archive-cat-body" id="archive-cat-body-${cat.id}">${milestoneCards}</div>
       </div>`;
   }).join('');
 
@@ -1060,6 +1060,7 @@ function renderCollectorArchive(el) {
     head.addEventListener('click', () => {
       const cat  = head.closest('.archive-category');
       const open = cat.classList.toggle('is-open');
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
       const _chev = head.querySelector('.archive-cat-chevron');
       if (_chev) _chev.textContent = open ? '−' : '+';
       haptic('soft');
