@@ -122,7 +122,7 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
   backFace.className = `overlay-card-face overlay-card-back-face rarity-reveal-${rarity}`;
 
   if (imageUrl) {
-    // Defensive image load: append only after onload/decode; onerror -> fallback
+    // Append immediately so foil layers mounted below survive image load/decode.
     backFace.innerHTML = '';
     const img = document.createElement('img');
     img.className = 'card-reveal-img';
@@ -137,19 +137,20 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
       }
       // Ensure the backFace is still in the DOM before writing
       if (backFace && backFace.parentNode) {
-        backFace.innerHTML = '';
-        backFace.appendChild(img);
+        // Image already lives under backFace; do not clear foil layers.
       }
     };
     img.onerror = () => {
       if (settled) return; settled = true;
       if (backFace && backFace.parentNode) {
         backFace.innerHTML = `\n          <div class="card-reveal-art">\n            <span class="card-reveal-symbol">${RARITY_SYMBOL[rarity] ?? '?'}</span>\n            <span class="card-reveal-rarity">${RARITY_LABEL[rarity] ?? rarity}</span>\n          </div>`;
+        renderBack(backFace, rarity, null, isReverseHolo, realRarity);
       }
     };
     // Non-blocking timeout: if the image doesn't load quickly, fall back to symbol
     const t = setTimeout(() => { if (!settled) img.onerror(); }, 1800);
     img.addEventListener('loadend' in img ? 'loadend' : 'load', () => clearTimeout(t));
+    backFace.appendChild(img);
     img.src = imageUrl;
   } else {
     backFace.innerHTML = `
@@ -193,23 +194,6 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
     backFace.appendChild(rainbow);
     backFace.appendChild(reflection);
 
-    // Phase 5.4.4 — tier-scaled edge halo. Adds a class on the back face so a
-    // user catching the card from the corner of their eye can tell it's a
-    // higher-tier pull just from the surrounding glow color/intensity.
-    //   silver  → rare, holoRare           (subtle white-blue rim)
-    //   gold    → doubleRare, illustration (warm gold rim)
-    //   rainbow → ultraRare, special, hyper (intense chromatic rim + pulse)
-    const TIER = {
-      rare:                   'silver',
-      holoRare:               'silver',
-      doubleRare:             'gold',
-      illustrationRare:       'gold',
-      ultraRare:              'rainbow',
-      specialIllustrationRare:'rainbow',
-      hyperRare:              'rainbow',
-    };
-    const tier = TIER[rarityForHolo];
-    if (tier) backFace.classList.add(`holo-tier-${tier}`);
   }
 }
 
@@ -293,19 +277,15 @@ export async function revealCard(rarity, isSuspense = false, imageUrl = null, is
   // ── State guard after flip await ────────────────────────────────────
   if (_overlayState !== 'revealing') return;
 
-  // Apply post-flip glow/pulse only while still in reveal mode
+  // Activate post-flip card-surface effects only while still in reveal mode.
   wrapper.classList.remove(
     'glow-common', 'glow-rare', 'glow-epic', 'glow-legendary', 'legendary-pulse',
     'reverse-holo-highlight', 'reverse-holo-active'
   );
-  wrapper.classList.add(`glow-${rarity}`);
-  if (rarity === 'legendary') wrapper.classList.add('legendary-pulse');
 
-  // Phase 5.2 — reverse-holo wrapper glow (subtle; weaker than legendary pulse).
-  // Phase 5.2.1 — also flip on .reverse-holo-active so the foil layers begin
+  // Phase 5.2.1 — flip on .reverse-holo-active so the foil layers begin
   // animating now (post-flip) instead of from card-back time.
   if (isReverseHolo) {
-    wrapper.classList.add('reverse-holo-highlight');
     wrapper.classList.add('reverse-holo-active');
   }
 
@@ -318,7 +298,7 @@ export async function revealCard(rarity, isSuspense = false, imageUrl = null, is
   // All elements append to the wrapper and self-clean via setTimeout so we
   // never leak DOM nodes if the user opens many packs in a row. Effects skip
   // entirely on reverse-holos (they have their own foil-sweep celebration)
-  // and on commons / uncommons / plain rares (those keep the edge-halo only).
+  // and on commons / uncommons / plain rares.
   if (!isReverseHolo) {
     const BURST_TIERS = new Set([
       'doubleRare', 'illustrationRare',

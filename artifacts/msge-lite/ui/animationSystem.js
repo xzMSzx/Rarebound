@@ -1,6 +1,6 @@
 /**
  * ui/animationSystem.js
- * Low-level animation primitives: card flips, glow effects, suspense, legendary pulse.
+ * Low-level animation primitives: card flips and suspense timing.
  *
  * This module has no knowledge of the simulation engine.
  * It only operates on DOM elements passed in from outside.
@@ -16,13 +16,12 @@ export function delay(ms) {
 }
 
 /**
- * Apply a rarity-appropriate glow class to a card wrapper.
+ * Legacy no-op retained for older callers.
  * @param {HTMLElement} element
  * @param {string} rarity - 'common' | 'rare' | 'epic' | 'legendary'
  */
 export function applyRarityGlow(element, rarity) {
   element.classList.remove('glow-common', 'glow-rare', 'glow-epic', 'glow-legendary');
-  element.classList.add('glow-' + rarity);
 }
 
 /**
@@ -94,9 +93,9 @@ export async function animateCardReveal(cardInner, rarity, isSuspenseCard = fals
 }
 
 /**
- * Apply the legendary golden pulse to a card wrapper.
+ * Legacy no-op retained for older callers.
  * @param {HTMLElement} element
  */
 export function applyLegendaryEffect(element) {
-  element.classList.add('legendary-pulse');
+  element.classList.remove('legendary-pulse');
 }
