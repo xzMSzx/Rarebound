@@ -1502,8 +1502,14 @@ function renderVendorHub() {
     // subscribe to update the pill element
     subscribe('capsule-refresh', (remain) => {
       const el = document.getElementById('capsule-refresh-pill');
-      const span = el?.querySelectorAll('span')?.[1];
-      if (span) span.textContent = formatMs(remain);
+      if (!el) {
+        console.warn('[VendorTimers] capsule-refresh-pill missing from DOM, skipping update');
+        return;
+      }
+      const spans = el.querySelectorAll('span');
+      if (spans && spans.length > 1) {
+        spans[1].textContent = formatMs(remain);
+      }
     });
   } catch (err) { console.warn('[VendorTimers] capsule timer failed:', err); }
 
@@ -2100,8 +2106,14 @@ function renderEstateAuctionsFoundation(vendor) {
       } });
       subscribe(lotId, (remain) => {
         const el = document.getElementById(`${lotId}-pill`);
-        const span = el?.querySelectorAll('span')?.[1];
-        if (span) span.textContent = formatMs(remain);
+        if (!el) {
+          console.warn(`[VendorTimers] ${lotId}-pill missing from DOM, skipping update`);
+          return;
+        }
+        const spans = el.querySelectorAll('span');
+        if (spans && spans.length > 1) {
+          spans[1].textContent = formatMs(remain);
+        }
       });
     }
   } catch (err) { console.warn('[VendorTimers] estate timer failed:', err); }

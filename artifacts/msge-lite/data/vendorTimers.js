@@ -2,7 +2,9 @@
 const TIMER_STORE_KEY = 'rarebound_vendor_timers_v1';
 
 let _timers = {}; // id -> { endsAt, label }
-let _subs = {}; // id -> [cb]
+// REFACTOR: Store only one active subscriber per id to prevent zombie stacking.
+// If multiple views need the same timer, they should re-subscribe on render.
+let _subs = {}; // id -> cb
 let _tickHandle = null;
 
 function _load() {
@@ -26,25 +28,29 @@ function _ensureTicker() {
     for (const id of Object.keys(_timers)) {
         const t = _timers[id];
         const remain = Math.max(0, t.endsAt - now);
-        if (_subs[id]) {
-          // iterate over a shallow copy so subscribers can unsubscribe safely
-          const subs = (_subs[id] || []).slice();
-          for (const cb of subs) {
-            try { cb(remain); } catch (err) { console.error('[vendorTimers] subscriber error', err); }
+        
+        // Execute the single active subscriber
+        if (_subs[id] && typeof _subs[id] === 'function') {
+          try { 
+            _subs[id](remain); 
+          } catch (err) { 
+            console.warn('[vendorTimers] Safe-caught subscriber error:', err.message);
           }
         }
+
       if (remain <= 0) {
         // expire
-        try { if (typeof t.onExpire === 'string') { /* noop */ } } catch(e){}
         if (t.callback && typeof t.callback === 'function') {
           try { t.callback(); } catch (err) { console.error('[vendorTimers] callback error', err); }
         }
         delete _timers[id];
+        delete _subs[id]; // Cleanup subscriber
         _save();
       }
     }
     if (Object.keys(_timers).length === 0) {
-      clearInterval(_tickHandle); _tickHandle = null;
+      clearInterval(_tickHandle); 
+      _tickHandle = null;
     }
   }, 1000);
 }
@@ -66,11 +72,24 @@ function getRemainingMs(id) {
 
 function subscribe(id, cb) {
   if (!id || typeof cb !== 'function') return () => {};
-  _subs[id] = _subs[id] || [];
-  _subs[id].push(cb);
+  
+  // PREVENT ZOMBIES: Overwrite existing subscriber for this ID.
+  // In our UI, only the most recently rendered view should control the timer DOM.
+  if (_subs[id]) {
+    console.warn(`[vendorTimers] Overwriting duplicate timer subscription for: ${id}`);
+  }
+  _subs[id] = cb;
+  
   _ensureTicker();
-  return () => { _subs[id] = (_subs[id] || []).filter(x => x !== cb); };
+  
+  return () => { 
+    if (_subs[id] === cb) {
+      delete _subs[id]; 
+    }
+  };
 }
+
+// ... rest remains same
 
 function formatMs(ms) {
   ms = Math.max(0, ms);
