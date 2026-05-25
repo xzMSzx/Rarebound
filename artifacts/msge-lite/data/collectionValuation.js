@@ -6,7 +6,7 @@
  * double-count locked/raw with slabs — uses lockedCopiesFor from AGS state.
  */
 
-import { lockedCopiesFor, getSlabsForCard } from './agsSubmissionManager.js';
+import { loadAgsStore } from './agsSubmissionManager.js';
 import { gradedValueFromRaw } from './agsMarketIntegration.js';
 
 /**
@@ -40,12 +40,29 @@ export function lineValueForCollectionEntry(setId, cardId, entry, ctx) {
   const rawUnit = ctx.allValues[cardId] ?? ctx.getMarketValue(cardId, tier);
 
   const count = Math.max(0, Number(entry?.count) || 0);
-  const locked = lockedCopiesFor(setId, cardId);
+
+  if (!ctx._agsStoreCache) {
+    ctx._agsStoreCache = loadAgsStore();
+  }
+  const s = ctx._agsStoreCache;
+
+  let locked = 0;
+  for (let i = 0; i < s.active.length; i++) {
+    if (s.active[i].setId === setId && s.active[i].cardId === cardId) locked++;
+  }
+  for (let i = 0; i < s.completed.length; i++) {
+    if (s.completed[i].setId === setId && s.completed[i].cardId === cardId) locked++;
+  }
+
   const rawCopies = Math.max(0, count - locked);
 
   let sum = rawCopies * rawUnit;
-  for (const slab of getSlabsForCard(setId, cardId)) {
-    sum += gradedValueFromRaw(rawUnit, slab.grade);
+
+  for (let i = 0; i < s.completed.length; i++) {
+    const slab = s.completed[i];
+    if (slab.setId === setId && slab.cardId === cardId) {
+      sum += gradedValueFromRaw(rawUnit, slab.grade);
+    }
   }
   return Math.round(sum * 100) / 100;
 }
@@ -65,6 +82,7 @@ export function computeTotalCollectionValue(collection, ctx) {
   } finally {
     // Clear operation-scoped cache to avoid state desync in tests
     ctx._apiCardMapCache = undefined;
+    ctx._agsStoreCache = undefined;
   }
   return Math.round(total * 100) / 100;
 }
