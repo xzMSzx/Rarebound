@@ -243,6 +243,109 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 .reveal-card-inner.flipped       { transform: rotateY(180deg); }
 .reveal-card-inner.flip-slow     { transition-duration: 0.6s; }
 
+/* ─── PHASE 2B — Modular card tilt rig ────────────────────────────────── */
+.card {
+  position: relative;
+  width: min(340px, 100%);
+  max-width: 340px;
+  aspect-ratio: 2 / 3;
+  contain: layout paint style;
+  perspective: 900px;
+  --rb-pointer-x: 50%;
+  --rb-pointer-y: 50%;
+  --rb-rotate-x: 0deg;
+  --rb-rotate-y: 0deg;
+  --rb-rotate-max: 12deg;
+  --rb-glare-opacity: 0;
+  --rb-shine-opacity: 0;
+  touch-action: auto;
+}
+
+.card[data-quality-tier="low"] {
+  --rb-rotate-max: 8deg;
+  --rb-glare-opacity: 0;
+  --rb-shine-opacity: 0;
+}
+
+.card[data-card-state="idle"] {
+  pointer-events: none;
+  --rb-pointer-x: 50%;
+  --rb-pointer-y: 50%;
+  --rb-rotate-x: 0deg;
+  --rb-rotate-y: 0deg;
+}
+
+.card[data-card-state="fullscreen"] {
+  --rb-rotate-max: 10deg;
+}
+
+.card[data-card-state="binder"] {
+  --rb-rotate-max: 8deg;
+}
+
+.card[data-rb-interactive="false"] {
+  pointer-events: none;
+}
+
+.card__animator {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  transition: transform 0.32s ease, opacity 0.25s ease;
+}
+
+.card__translater {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rb-rotate-x, 0deg)) rotateY(var(--rb-rotate-y, 0deg));
+  will-change: transform;
+}
+
+.card__image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 18px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.card__glare,
+.card__shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateZ(0);
+  will-change: opacity, transform;
+  background: transparent;
+}
+
+.card__glare {
+  opacity: var(--rb-glare-opacity, 0);
+}
+
+.card__shine {
+  opacity: var(--rb-shine-opacity, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    --rb-rotate-x: 0deg;
+    --rb-rotate-y: 0deg;
+    --rb-glare-opacity: 0;
+    --rb-shine-opacity: 0;
+  }
+
+  .card__animator {
+    transition: none;
+  }
+}
+
 .reveal-card-face {
   position: absolute;
   inset: 0;
@@ -275,10 +378,13 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 
 /* ─── SHARED GLOW EFFECTS ────────────────────────────────────────────── */
 
-.glow-common    { box-shadow: 0 0 10px rgba(255, 255, 255, 0.15) !important; filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1)); }
-.glow-rare      { box-shadow: 0 0 20px rgba(90, 171, 255, 0.5) !important; filter: drop-shadow(0 0 8px rgba(90, 171, 255, 0.3)); }
-.glow-epic      { box-shadow: 0 0 35px rgba(196, 122, 255, 0.7) !important; filter: drop-shadow(0 0 12px rgba(196, 122, 255, 0.5)); }
-.glow-legendary { box-shadow: 0 0 50px rgba(255, 207, 64, 0.9) !important; filter: drop-shadow(0 0 20px rgba(255, 207, 64, 0.6)); }
+.glow-common,
+.glow-rare,
+.glow-epic,
+.glow-legendary {
+  box-shadow: none !important;
+  filter: none !important;
+}
 
 .suspense-glow .reveal-card-mystery {
   border-color: #3a2a1a;
@@ -303,7 +409,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   50%      { box-shadow: 0 0 70px rgba(255, 207, 64, 1); }
 }
 
-.legendary-pulse { animation: legendary-pulse 2s infinite !important; box-shadow: 0 0 40px rgba(255, 207, 64, 0.7) !important; }
+.legendary-pulse { animation: none !important; box-shadow: none !important; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    PHASE 3 — FULLSCREEN OVERLAY
@@ -550,10 +656,6 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 /* ─── Overlay glow (larger scale) ───────────────────────────────────── */
 
 .suspense-glow-large                   { box-shadow: 0 0 30px 5px rgba(255,180,50,0.35) !important; }
-.overlay-card-wrapper.glow-common      { box-shadow: 0 0 20px rgba(255,255,255,0.15) !important; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)) !important; }
-.overlay-card-wrapper.glow-rare        { box-shadow: 0 0 40px rgba(90,171,255,0.6) !important; filter: drop-shadow(0 0 20px rgba(90,171,255,0.4)) !important; }
-.overlay-card-wrapper.glow-epic        { box-shadow: 0 0 60px rgba(196,122,255,0.8) !important; filter: drop-shadow(0 0 30px rgba(196,122,255,0.6)) !important; }
-.overlay-card-wrapper.glow-legendary   { box-shadow: 0 0 80px rgba(255,207,64,1) !important; filter: drop-shadow(0 0 40px rgba(255,207,64,0.8)) !important; }
 
 /* ─── Overlay shake ──────────────────────────────────────────────────── */
 
@@ -1296,188 +1398,29 @@ body.is-mobile button      { min-height: 44px; }
   color: #aaa;
 }
 
-/* ─── Phase 5.2 — Reverse-holo foil shimmer ─────────────────────────────────
- *
- * Applied to slot-8 reverse-holo cards via the engine's `isReverseHolo` flag.
- * Two stacked layers create the effect:
- *   .reverse-holo-overlay — repeating diagonal foil pattern (subtle, constant)
- *   .reverse-holo-sweep   — single bright light bar that traverses the card
- *
- * Plus an optional .reverse-holo-highlight class on the reveal wrapper for a
- * mild outer glow during the fullscreen reveal moment. Glow intentionally
- * weaker than the gold pulse used on ultra/special-illustration/hyper rares
- * (see .rarity-gold-poly) so reverse-holos never compete with true hits.
- * ────────────────────────────────────────────────────────────────────────── */
+/* Legacy reverse-holo styles removed for the new material tilt rig. */
 
-.reverse-holo-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  mix-blend-mode: overlay;
-  opacity: 0.35;
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.05) 0px,
-    rgba(255, 255, 255, 0.05) 2px,
-    transparent 2px,
-    transparent 6px
-  );
-  animation: none;
-  z-index: 2;
-  /* Phase 5.2.2 — force GPU compositing so iOS Safari runs the keyframes. */
-  transform: translateZ(0);
-  will-change: transform, opacity, background-position;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
+/* Legacy direct holo overlay styles removed for the new material tilt rig. */
 
-@keyframes reverseHoloShift {
-  0%   { background-position: 0px 0px; }
-  100% { background-position: 200px 200px; }
-}
-
-.reverse-holo-sweep {
-  position: absolute;
-  top: -40%;
-  left: -60%;
-  width: 200%;
-  height: 200%;
-  pointer-events: none;
-  background: linear-gradient(
-    120deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.35) 50%,
-    transparent 70%
-  );
-  animation: none;
-  mix-blend-mode: screen;
-  z-index: 3;
-  /* Phase 5.2.2 — force GPU compositing so iOS Safari runs the keyframes. */
-  transform: translateZ(0);
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-@keyframes holoSweep {
-  0%   { transform: translateX(-100%) rotate(25deg); }
-  100% { transform: translateX(100%)  rotate(25deg); }
-}
-
-/* Phase 5.2.1 — shimmer trigger.
- * Added to the wrapper after the reveal flip completes (overlay) or on
- * thumbnail creation (collection grid). Without this class the foil layers
- * are mounted but static, so the reveal moment "lights up" the card. */
-.reverse-holo-active .reverse-holo-overlay { animation: reverseHoloShift 3s linear infinite !important; }
-.reverse-holo-active .reverse-holo-sweep   { animation: holoSweep 4s infinite !important; }
-
-.reverse-holo-highlight {
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.25),
-    0 0 25px rgba(200, 200, 255, 0.15);
-}
-
-/* ─── Phase 5.4 — interactive holographic layers ─────────────────────────────
- * Both layers are appended on top of every revealed card image. They tilt
- * naturally with the wrapper because they live inside .overlay-card-back-face.
- * The card-back-face has overflow:hidden so the layers clip to the card area.
- * ----------------------------------------------------------------------- */
-/* ─── Phase 5.4.3 — TCGP-style holographic effect ────────────────────────────
- * Two stacked layers driven by --holo-x / --holo-y CSS vars set on the
- * .overlay-card-wrapper from _applyCardTilt() in cardRevealAnimator.js:
- *
- *   .holo-rainbow    — dense iridescent bands (color-dodge) that shift their
- *                      position as the pointer moves. This is the constant
- *                      "shimmer" you see across the whole card.
- *   .holo-reflection — radial spotlight (hard-light) anchored under the
- *                      pointer. This is the bright reflection that physically
- *                      tracks your finger like real foil under a light.
- *
- * Both layers use color-dodge / hard-light so they remain visible on bright
- * AND dark card art (the previous overlay/screen pair washed out on either
- * extreme). Defaults of 50% / 50% ensure the effect renders at rest before
- * the first pointer event fires.
- * ----------------------------------------------------------------------- */
-.holo-rainbow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-  background:
-    repeating-linear-gradient(
-      115deg,
-      rgba(255,  0,100, 0.30)  0%,
-      rgba(255,200,  0, 0.30)  8%,
-      rgba( 80,255,180, 0.30) 16%,
-      rgba( 80,140,255, 0.30) 24%,
-      rgba(220, 80,255, 0.30) 32%,
-      rgba(255,  0,100, 0.30) 40%
-    );
-  background-size: 220% 220%;
-  background-position: var(--holo-x, 50%) var(--holo-y, 50%);
-  mix-blend-mode: overlay;
-  opacity: 0.45;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-.holo-reflection {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 4;
-  background:
-    radial-gradient(
-      ellipse 55% 55% at var(--holo-x, 50%) var(--holo-y, 50%),
-      rgba(255,255,255, 0.45)  0%,
-      rgba(255,255,255, 0.20) 18%,
-      rgba(255,255,255, 0.05) 38%,
-      rgba(255,255,255, 0.00) 60%
-    );
-  mix-blend-mode: soft-light;
-  opacity: 0.65;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-/* ─── Phase 5.4.4 — tier-scaled edge halo ────────────────────────────────────
- * Painted on the back face itself via box-shadow so the glow extends OUTSIDE
- * the card's overflow:hidden clip. An inset shadow adds a subtle inner rim
- * so the card's own edge looks polished, not just surrounded by light.
- *
- * Three tiers (assigned in cardRevealAnimator.js renderBack):
- *   .holo-tier-silver  — rare / holoRare           (calm silver-white)
- *   .holo-tier-gold    — doubleRare / illustration (warm gold)
- *   .holo-tier-rainbow — ultraRare / special / hyper (chromatic + pulse)
- *
- * Box-shadow stack: tight inner rim, mid halo, wide ambient bloom.
- * ----------------------------------------------------------------------- */
+/* Legacy tier halo selectors are kept inert for stale markup. New holo depth
+ * is rendered by surface laminate layers, not outer bloom. */
 .overlay-card-back-face.holo-tier-silver {
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,0.55),
-    inset 0 0 14px rgba(200,225,255,0.35),
-    0 0 14px  rgba(220,235,255,0.55),
-    0 0 32px  rgba(180,210,255,0.40);
+    inset 0 0 14px rgba(200,225,255,0.35);
 }
 
 .overlay-card-back-face.holo-tier-gold {
   box-shadow:
     inset 0 0 0 1px rgba(255,225,140,0.70),
-    inset 0 0 18px rgba(255,200, 90,0.45),
-    0 0 18px  rgba(255,210,110,0.70),
-    0 0 42px  rgba(255,180, 70,0.50);
+    inset 0 0 18px rgba(255,200, 90,0.45);
 }
 
 .overlay-card-back-face.holo-tier-rainbow {
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,0.70),
-    inset 0 0 22px rgba(255,180,255,0.45),
-    0 0 18px  rgba(255,120,200,0.75),
-    0 0 36px  rgba(120,180,255,0.60),
-    0 0 58px  rgba(255,200,100,0.45);
-  animation: holo-rainbow-pulse 2.4s ease-in-out infinite;
+    inset 0 0 22px rgba(255,180,255,0.45);
+  animation: none;
 }
 
 @keyframes holo-rainbow-pulse {
