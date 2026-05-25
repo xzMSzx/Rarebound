@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Rarebound Holo Tilt Rig Test</title>
+    <link rel="stylesheet" href="./style.css" />
+    <style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #060608;
+        padding: 24px;
+      }
+
+      .page-shell {
+        width: min(360px, 100%);
+      }
+
+      .card {
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="card" data-card-state="interactive" data-quality-tier="high" data-rb-interactive="true">
+        <div class="card__animator">
+          <div class="card__translater">
+            <img class="card__image" src="https://via.placeholder.com/340x510.png?text=Card+Placeholder" alt="Card placeholder" />
+            <div class="card__glare"></div>
+            <div class="card__shine"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { HoloController } from './ui/HoloController.js';
+      new HoloController();
+    </script>
+  </body>
+</html>
