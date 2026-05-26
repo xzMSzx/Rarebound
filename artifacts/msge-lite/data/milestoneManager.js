@@ -219,8 +219,10 @@ function countByTiers(tiers) {
   let n = 0;
   for (const setId of Object.keys(c)) {
     const cached = getCachedSetCards(setId) || [];
+    // ⚡ Bolt: Convert O(N*M) array find to O(N+M) Map lookup
+    const byId = new Map(cached.map(x => [x.id, x]));
     for (const cardId of Object.keys(c[setId])) {
-      const api = cached.find(x => x.id === cardId);
+      const api = byId.get(cardId);
       if (api && tiers.has(mapPokemonRarity(api.rarity))) n++;
     }
   }
@@ -232,9 +234,11 @@ function countByTiersOwning(tiers, minCount = 1) {
   let n = 0;
   for (const setId of Object.keys(c)) {
     const cached = getCachedSetCards(setId) || [];
+    // ⚡ Bolt: Convert O(N*M) array find to O(N+M) Map lookup
+    const byId = new Map(cached.map(x => [x.id, x]));
     for (const [cardId, entry] of Object.entries(c[setId])) {
       if (entry.count < minCount) continue;
-      const api = cached.find(x => x.id === cardId);
+      const api = byId.get(cardId);
       if (api && tiers.has(mapPokemonRarity(api.rarity))) n++;
     }
   }
@@ -279,8 +283,10 @@ function countDistinctRarities() {
   const seen = new Set();
   for (const setId of Object.keys(c)) {
     const cached = getCachedSetCards(setId) || [];
+    // ⚡ Bolt: Convert O(N*M) array find to O(N+M) Map lookup
+    const byId = new Map(cached.map(x => [x.id, x]));
     for (const cardId of Object.keys(c[setId])) {
-      const api = cached.find(x => x.id === cardId);
+      const api = byId.get(cardId);
       if (api) seen.add(mapPokemonRarity(api.rarity));
     }
   }
