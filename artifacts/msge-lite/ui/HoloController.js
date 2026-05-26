@@ -34,14 +34,14 @@ export class HoloController {
       dirty: true,
       // DEBUG: temporarily amplify rotation range for visual verification
       // Set to 22 during tuning; revert to original logic after verification
-      qualityMax: 22,
+      qualityMax: window.matchMedia('(max-width: 700px)').matches ? 12 : 22,
       rotationSpring: new SpringValue(
         { x: 0, y: 0 },
-        { stiffness: 0.38, damping: 0.72, precision: 0.001 }
+        { stiffness: 0.38, damping: 0.78, precision: 0.001 }
       ),
       interactionSpring: new SpringValue(
         { tiltX: 0.5, tiltY: 0.5, angle: 0, fromCenter: 0, atEdge: 0 },
-        { stiffness: 0.32, damping: 0.8, precision: 0.001 }
+        { stiffness: 0.38, damping: 0.78, precision: 0.001 }
       ),
     };
 
@@ -52,10 +52,29 @@ export class HoloController {
     this.cards.set(card, state);
     this._updateBounds(state);
 
+    let disengageTimer = null;
+
+    const cancelDisengage = () => {
+      if (disengageTimer) {
+        clearTimeout(disengageTimer);
+        disengageTimer = null;
+      }
+    };
+
+    const scheduleDisengage = () => {
+      cancelDisengage();
+      disengageTimer = setTimeout(() => {
+        state.lastPointer = null;
+        state.dirty = true;
+        this._requestFlush();
+      }, 120);
+    };
+
     card.addEventListener('pointerdown', (event) => {
       if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false') return;
       event.preventDefault();
       card.setPointerCapture?.(event.pointerId);
+      cancelDisengage();
       state.lastPointer = { x: event.clientX, y: event.clientY };
       state.dirty = true;
       this._requestFlush();
@@ -64,6 +83,7 @@ export class HoloController {
     card.addEventListener('pointermove', (event) => {
       if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false') return;
       event.preventDefault();
+      cancelDisengage();
       state.lastPointer = { x: event.clientX, y: event.clientY };
       state.dirty = true;
       this._requestFlush();
@@ -71,35 +91,23 @@ export class HoloController {
 
     card.addEventListener('pointerup', (event) => {
       card.releasePointerCapture?.(event.pointerId);
-      state.lastPointer = null;
-      state.dirty = true;
-      this._requestFlush();
+      scheduleDisengage();
     }, { passive: true });
 
     card.addEventListener('pointercancel', () => {
-      state.lastPointer = null;
-      state.dirty = true;
-      this._requestFlush();
+      scheduleDisengage();
     }, { passive: true });
 
     card.addEventListener('lostpointercapture', () => {
-      state.lastPointer = null;
-      state.dirty = true;
-      this._requestFlush();
+      scheduleDisengage();
     }, { passive: true });
 
     card.addEventListener('dragstart', (event) => {
       event.preventDefault();
     });
 
-    const reset = () => {
-      state.lastPointer = null;
-      state.dirty = true;
-      this._requestFlush();
-    };
-
-    card.addEventListener('pointerleave', reset, { passive: true });
-    card.addEventListener('pointerout', reset, { passive: true });
+    card.addEventListener('pointerleave', scheduleDisengage, { passive: true });
+    card.addEventListener('pointerout', scheduleDisengage, { passive: true });
   }
 
   _updateBounds(state) {
@@ -146,6 +154,16 @@ export class HoloController {
         let targetNormX = 0;
         let targetNormY = 0;
         if (state.lastPointer) {
+          // ACTIVE INTERACTION: Pure smoothing, zero velocity accumulation
+          // Prevents aggressive rebound/whip on fast direction changes
+          state.rotationSpring.velocity = { x: 0, y: 0 };
+          state.interactionSpring.velocity = { tiltX: 0, tiltY: 0, angle: 0, fromCenter: 0, atEdge: 0 };
+
+          state.rotationSpring.stiffness = 0.35;
+          state.rotationSpring.damping = 1.0;
+          state.interactionSpring.stiffness = 0.35;
+          state.interactionSpring.damping = 1.0;
+
           pointerX = pointerPercent(state.lastPointer.x - state.bounds.left, state.bounds.width);
           pointerY = pointerPercent(state.lastPointer.y - state.bounds.top, state.bounds.height);
 
@@ -175,6 +193,24 @@ export class HoloController {
             fromCenter: normalizedDistance,
             atEdge: edgeProximity,
           };
+        } else {
+          // DISENGAGE / RELEASE: Calm, distance-aware ease-out (lerp)
+          state.rotationSpring.velocity = { x: 0, y: 0 };
+          state.interactionSpring.velocity = { tiltX: 0, tiltY: 0, angle: 0, fromCenter: 0, atEdge: 0 };
+          
+          const rotX = state.rotationSpring.current.x || 0;
+          const rotY = state.rotationSpring.current.y || 0;
+          const tiltMag = clamp(Math.hypot(rotX, rotY), 0, 1);
+          
+          // Distance-scaled stiffness: 
+          // Small tilt -> ~0.14 stiffness (faster return)
+          // Large tilt -> ~0.04 stiffness (longer, graceful glide)
+          const releaseStiffness = 0.04 + ((1 - tiltMag) * 0.10);
+          
+          state.rotationSpring.stiffness = releaseStiffness;
+          state.rotationSpring.damping = 1.0;
+          state.interactionSpring.stiffness = releaseStiffness;
+          state.interactionSpring.damping = 1.0;
         }
 
         state.rotationSpring.setTarget({ x: targetNormX, y: targetNormY });
@@ -185,11 +221,15 @@ export class HoloController {
         const rotation = state.rotationSpring.current;
         const interaction = state.interactionSpring.current;
 
-        state.translater.style.setProperty('--rb-tilt-x', `${interaction.tiltX}`);
-        state.translater.style.setProperty('--rb-tilt-y', `${interaction.tiltY}`);
-        state.translater.style.setProperty('--rb-angle', `${interaction.angle.toFixed(2)}deg`);
-        state.translater.style.setProperty('--rb-from-center', `${interaction.fromCenter}`);
-        state.translater.style.setProperty('--rb-at-edge', `${interaction.atEdge}`);
+        // 4. Dispatch to the DOM (Simey-Compatible Format)
+        state.translater.style.setProperty('--rb-tilt-x', `${rbTiltX * 100}%`);
+        state.translater.style.setProperty('--rb-tilt-y', `${rbTiltY * 100}%`);
+
+        state.translater.style.setProperty('--rb-from-left', rbTiltX); // Raw decimal
+        state.translater.style.setProperty('--rb-from-top', rbTiltY); // Raw decimal
+
+        state.translater.style.setProperty('--rb-from-center', rbFromCenter);
+        state.translater.style.setProperty('--rb-at-edge', rbAtEdge);
         // rotation.x/y are normalized (-1..1) from the spring — scale to degrees
         const degX = clamp(rotation.x, -1, 1) * state.qualityMax;
         const degY = clamp(rotation.y, -1, 1) * state.qualityMax;

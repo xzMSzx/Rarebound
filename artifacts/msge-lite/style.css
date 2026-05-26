@@ -249,7 +249,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   width: min(340px, 100%);
   max-width: 340px;
   aspect-ratio: 2 / 3;
-  contain: layout paint style;
+  overflow: visible;
   perspective: 900px;
   --rb-pointer-x: 50%;
   --rb-pointer-y: 50%;
@@ -509,6 +509,8 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   max-width: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
   height: min(52vh, 460px);
   perspective: 900px;
+  padding: 40px;
+  overflow: visible;
 }
 
 /* ─── Large card wrapper (glow target + shake target) ────────────────── */
@@ -11555,6 +11557,75 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
 /* 8. MOBILE TUNING */
 @media (hover: none) {
   .card:hover .card__translater {
-    --rb-scale: 1.01;
+    --rb-scale: 1.005;
   }
+}
+
+/* =========================================
+   RARITY: SPECIAL ILLUSTRATION RARE (SIR)
+   ========================================= */
+
+/* The Primary Glare (Light Source & Edge Shadow) */
+.card[data-rarity="sir"] .card__glare {
+  mix-blend-mode: hard-light;
+  opacity: calc(var(--rb-at-edge, 0) * 0.7);
+  background-image: radial-gradient(
+    farthest-corner circle at calc(var(--rb-tilt-x, 0.5) * 100%) calc(var(--rb-tilt-y, 0.5) * 100%),
+    hsla(0, 0%, 100%, 0.9) 10%,
+    hsla(0, 0%, 100%, 0.6) 25%,
+    hsla(0, 0%, 0%, 0.6) 90% /* Deep shadow at the edges, no gray rings */
+  );
+}
+
+/* =========================================
+   RARITY: SPECIAL ILLUSTRATION RARE (SIR)
+   (Simey's Exact Organic Wavy-Line Shader)
+   ========================================= */
+
+.card[data-rarity="sir"] .card__shine {
+  /* 1. The distance between the repeating ridges */
+  --space: 5%;
+  /* 2. Simey uses a static 133deg angle; the position shifts the waves, not the angle */
+  --rb-sweep-angle: 133deg;
+
+  mix-blend-mode: color-dodge;
+  opacity: calc(var(--rb-from-center, 0) * 0.8 + 0.2);
+
+  background-image: 
+    /* Layer 1: Spotlight Glare (Top) */
+    radial-gradient(
+      farthest-corner circle at calc(var(--rb-tilt-x, 0.5) * 100%) calc(var(--rb-tilt-y, 0.5) * 100%),
+      hsla(0, 0%, 100%, 1) 10%,
+      hsla(0, 0%, 100%, 0.6) 40%,
+      hsla(0, 0%, 0%, 0) 80%
+    ),
+    /* Layer 2: The Organic Wave Distortion Map (Middle) */
+    url('./assets/foils/wave.png'),
+    /* Layer 3: The Repeating Rainbow Ridges (Bottom) */
+    repeating-linear-gradient(
+      var(--rb-sweep-angle),
+      hsla(14, 100%, 55%, 0.5) calc(var(--space) * 1),
+      hsla(44, 100%, 55%, 0.5) calc(var(--space) * 2),
+      hsla(134, 100%, 55%, 0.5) calc(var(--space) * 3),
+      hsla(194, 100%, 55%, 0.5) calc(var(--space) * 4),
+      hsla(274, 100%, 55%, 0.5) calc(var(--space) * 5),
+      hsla(314, 100%, 55%, 0.5) calc(var(--space) * 6),
+      hsla(14, 100%, 55%, 0.5) calc(var(--space) * 7)
+    );
+
+  /* Sizing: The wave is locked at 200% so the curves are large and fluid */
+  background-size: 
+    150% 150%, 
+    200% 200%, 
+    200% 200%;
+
+  /* Parallax Movement: The glare and rainbow track the pointer exactly. 
+     The wave texture stays static (center) to force the rainbow to wash *over* the curves. */
+  background-position: 
+    calc(var(--rb-tilt-x, 0.5) * 100%) calc(var(--rb-tilt-y, 0.5) * 100%),
+    center center,
+    calc(var(--rb-tilt-x, 0.5) * 100%) calc(var(--rb-tilt-y, 0.5) * 100%);
+
+  /* THE MAGIC: Layer 1 soft-lights into Layer 2. Layer 2 color-dodges Layer 3. */
+  background-blend-mode: soft-light, color-dodge;
 }
