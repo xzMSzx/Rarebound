@@ -258,7 +258,11 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   --rb-rotate-max: 12deg;
   --rb-glare-opacity: 0;
   --rb-shine-opacity: 0;
-  touch-action: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .card[data-quality-tier="low"] {
@@ -292,7 +296,8 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   height: 100%;
   transform-style: preserve-3d;
   will-change: transform, opacity;
-  transition: transform 0.32s ease, opacity 0.25s ease;
+  /* Springs handle transform interpolation; keep opacity transition only */
+  transition: opacity 0.25s ease;
 }
 
 .card__translater {
@@ -313,6 +318,15 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.card, .card__animator, .card__translater, .card__image, .card__glare, .card__shine {
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .card__glare,
@@ -11378,3 +11392,169 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
 .mcc-btn { background: rgba(214, 178, 92, 0.15); color: #d6b25c; border: 1px solid rgba(214, 178, 92, 0.4); padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .mcc-btn:hover { background: rgba(214, 178, 92, 0.25); }
 /* trigger vercel deployment */
+ 
+/* =========================
+   RAREBOUND HOLOGRAPHIC RENDERER
+   (Simey-Style Integration Layer)
+========================= */
+
+/* 1. PERSPECTIVE CONTAINER */
+.card__animator {
+  perspective: 800px;
+  transform-style: preserve-3d;
+}
+
+/* 2. MAIN CARD TRANSFORM LAYER */
+.card__translater {
+  position: relative;
+
+  transform:
+    rotateX(var(--rb-rotate-x, 0deg))
+    rotateY(var(--rb-rotate-y, 0deg))
+    scale(var(--rb-scale, 1));
+
+  transform-style: preserve-3d;
+
+  /* Springs already handle interpolation */
+  will-change: transform;
+
+  border-radius: inherit;
+}
+
+/* 3. SUBTLE ACTIVE SCALE */
+.card:hover .card__translater {
+  --rb-scale: 1.015;
+}
+
+/* 4. BASE IMAGE */
+.card__image {
+  display: block;
+  width: 100%;
+  height: auto;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+
+  position: relative;
+  z-index: 1;
+
+  transform: translateZ(0);
+}
+
+/* 5. PRIMARY GLARE LAYER */
+.card__glare {
+  position: absolute;
+  inset: 0;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+
+  z-index: 2;
+
+  mix-blend-mode: hard-light;
+
+  /* Edge-sensitive intensity */
+  opacity: calc(
+    0.08 +
+    (var(--rb-at-edge, 0) * 0.42)
+  );
+
+  background:
+    radial-gradient(
+      farthest-corner circle
+      at calc(var(--rb-tilt-x, 0.5) * 100%)
+         calc(var(--rb-tilt-y, 0.5) * 100%),
+
+      rgba(255,255,255,0.95) 0%,
+      rgba(255,255,255,0.45) 12%,
+      rgba(255,255,255,0.16) 26%,
+      rgba(255,255,255,0.08) 40%,
+      transparent 72%
+    );
+
+  filter:
+    brightness(
+      calc(
+        0.92 +
+        (var(--rb-from-center, 0) * 0.18)
+      )
+    );
+
+  transform:
+    translateZ(1px);
+
+  will-change:
+    opacity,
+    background-position,
+    filter;
+}
+
+/* 6. SECONDARY SHINE / FOIL LAYER */
+.card__shine {
+  position: absolute;
+  inset: 0;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+
+  z-index: 3;
+
+  mix-blend-mode: color-dodge;
+
+  /* Slightly softer than glare */
+  opacity: calc(
+    0.04 +
+    (var(--rb-from-center, 0) * 0.22)
+  );
+
+  /* Opposing parallax feel */
+  background:
+    radial-gradient(
+      farthest-corner circle
+      at calc((1 - var(--rb-tilt-x, 0.5)) * 100%)
+         calc((1 - var(--rb-tilt-y, 0.5)) * 100%),
+
+      rgba(255,255,255,0.34) 0%,
+      rgba(255,255,255,0.12) 20%,
+      transparent 56%
+    );
+
+  filter:
+    brightness(
+      calc(
+        0.88 +
+        (var(--rb-at-edge, 0) * 0.28)
+      )
+    );
+
+  transform:
+    translateZ(2px);
+
+  will-change:
+    opacity,
+    background-position,
+    filter;
+}
+
+/* 7. INTERACTION SAFETY */
+.card,
+.card * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card {
+  touch-action: none;
+  user-select: none;
+}
+
+/* 8. MOBILE TUNING */
+@media (hover: none) {
+  .card:hover .card__translater {
+    --rb-scale: 1.01;
+  }
+}
