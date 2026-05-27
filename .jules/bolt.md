@@ -7,3 +7,7 @@
 ## 2026-05-21 - Operation-Scoped Caching for Data Processing Bottlenecks
 **Learning:** During collection valuation, converting `cached.find()` into an `O(1)` map lookup yielded a 2.5x speedup for large user portfolios. However, storing the instantiated Map on the module scope breaks Vitest tests because the codebase heavily mocks/mutates state.
 **Action:** When performing `Array.find()` to Map lookups to resolve O(N) bottlenecks in bulk data processing like `computeTotalCollectionValue`, cache the instantiated Map on a transient context object passed down the stack (e.g., `ctx._apiCardMapCache`), and clear it in a `finally` block to avoid global side-effects.
+
+## 2024-05-27 - Operation-Scoped Caching for `localStorage` loops
+**Learning:** Calling `JSON.parse` continuously inside loop constructs reading from `localStorage` (like `getCollection()`) produces an O(N) performance bottleneck.
+**Action:** Always wrap tight loops that repeatedly fetch and modify the entire JSON store in an operation-scoped cache using `try...finally` wrappers. This enables safe multi-read/write performance isolation while satisfying functional Vitest requirements.
