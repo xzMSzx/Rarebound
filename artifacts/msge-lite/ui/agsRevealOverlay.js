@@ -76,7 +76,7 @@ export function showAgsRevealOverlay(slab, apiCard, opts = {}) {
       <div class="ags-reveal__art-wrap">
         <div class="ags-reveal__silhouette">
           ${imgUrl
-            ? `<img class="ags-reveal__art" src="${imgUrl}" alt="${cardName}" />`
+            ? `<img class="ags-reveal__art" src="${imgUrl}" alt="${cardName}" loading="eager" decoding="async" />`
             : `<div class="ags-reveal__art ags-reveal__art--missing">${cardName}</div>`
           }
         </div>

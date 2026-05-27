@@ -44,7 +44,7 @@ export function showAgsSubmissionModal(apiCard, args) {
 
       <div class="ags-modal__card-row">
         ${apiCard?.images?.large || apiCard?.images?.small
-          ? `<img class="ags-modal__card-art" src="${apiCard.images.large || apiCard.images.small}" alt="${apiCard?.name || ''}" />`
+          ? `<img class="ags-modal__card-art" src="${apiCard.images.large || apiCard.images.small}" alt="${apiCard?.name || ''}" loading="eager" decoding="async" />`
           : `<div class="ags-modal__card-art ags-modal__card-art--missing">${apiCard?.name || ''}</div>`
         }
         <div class="ags-modal__card-meta">

@@ -3289,6 +3289,7 @@ function renderBinderPage() {
       img.src = apiCard.images.large || apiCard.images.small;
       img.alt = apiCard.name;
       img.loading = 'lazy';
+      img.decoding = 'async';
       img.className = 'binder-slot-img';
       slot.appendChild(img);
 
@@ -3336,6 +3337,7 @@ function renderBinderPage() {
       img.src = apiCard.images.large || apiCard.images.small;
       img.alt = '';
       img.loading = 'lazy';
+      img.decoding = 'async';
       img.className = 'binder-slot-img binder-slot-img--unowned';
       slot.appendChild(img);
 
@@ -3497,7 +3499,7 @@ function buildCardDetailHTML(apiCard, ownedEntry, resolvedSetId, value, rarityTi
   const html = `
     <div class="card-detail-content" id="cdp-panel">
       <div class="cdp-image-wrap">
-        <img src="${imgSrc}" alt="${apiCard.name}" class="${imgClass}" />
+        <img src="${imgSrc}" alt="${apiCard.name}" class="${imgClass}" loading="eager" decoding="async" />
         ${!isOwned ? `<div class="cdp-preview-badge">${rarityLbl}</div>` : ''}
       </div>
       <div class="card-detail-info">
@@ -3703,7 +3705,7 @@ function openSellModal(apiCard, ownedEntry, setId) {
   modal.innerHTML = `
     <div class="sell-modal-content" id="sell-panel">
       <div class="sell-header">
-        <img src="${apiCard.images.large || apiCard.images.small}" alt="${apiCard.name}" class="sell-card-img" />
+        <img src="${apiCard.images.large || apiCard.images.small}" alt="${apiCard.name}" class="sell-card-img" loading="eager" decoding="async" />
         <div class="sell-card-info">
           <div class="sell-card-name">${apiCard.name}</div>
           <div class="sell-card-rarity">${RARITY_LABELS[rarityTier]}</div>
@@ -4076,7 +4078,7 @@ function renderStatsScreen() {
     ${mostValCard ? `
     <div class="stats-showcase" id="showcase-most-val" style="cursor:pointer">
       <div class="stats-showcase-label">Most Valuable Card</div>
-      <img src="${mostValCard.images.large || mostValCard.images.small}" alt="${mostValCard.name}" class="stats-showcase-img" loading="eager" />
+      <img src="${mostValCard.images.large || mostValCard.images.small}" alt="${mostValCard.name}" class="stats-showcase-img" loading="eager" decoding="async" />
       <div class="stats-showcase-name">${mostValCard.name}</div>
       <div class="stats-showcase-value">$${mostValAmount.toFixed(2)}</div>
     </div>` : '<p class="stats-empty">Open some packs to see your stats!</p>'}
@@ -4084,7 +4086,7 @@ function renderStatsScreen() {
     ${rarestCard && rarestIdx !== -1 ? `
     <div class="stats-showcase" id="showcase-rarest" style="cursor:pointer">
       <div class="stats-showcase-label">Rarest Pull</div>
-      <img src="${rarestCard.images.large || rarestCard.images.small}" alt="${rarestCard.name}" class="stats-showcase-img" loading="eager" />
+      <img src="${rarestCard.images.large || rarestCard.images.small}" alt="${rarestCard.name}" class="stats-showcase-img" loading="eager" decoding="async" />
       <div class="stats-showcase-name">${rarestCard.name}</div>
       <div class="stats-showcase-value">${RARITY_LABELS[RARITY_ORDER[rarestIdx]] || ''}</div>
     </div>` : ''}
@@ -4236,7 +4238,7 @@ function renderWishlistScreen() {
       const imgClass = ownedEntry ? '' : 'binder-slot-img--unowned';
       tile.innerHTML = `
         <div class="wishlist-tile-img-wrap">
-          <img src="${apiCard.images.large || apiCard.images.small}" alt="${apiCard.name}" class="wishlist-tile-img ${imgClass}" loading="lazy" />
+          <img src="${apiCard.images.large || apiCard.images.small}" alt="${apiCard.name}" class="wishlist-tile-img ${imgClass}" loading="lazy" decoding="async" />
           ${ownedEntry ? '<div class="wishlist-owned-badge">Owned</div>' : ''}
         </div>
         <div class="wishlist-tile-name">${apiCard.name}</div>

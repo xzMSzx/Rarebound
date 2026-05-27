@@ -159,7 +159,7 @@ function renderFavoriteTile(row) {
     <button class="favorite-tile" data-fav-card="${cardId}" data-fav-set="${setId}" type="button">
       <div class="favorite-tile__art-wrap">
         ${img
-          ? `<img class="favorite-tile__art" src="${img}" alt="${apiCard.name}" loading="lazy" />`
+          ? `<img class="favorite-tile__art" src="${img}" alt="${apiCard.name}" loading="lazy" decoding="async" />`
           : `<div class="favorite-tile__art favorite-tile__art--missing">${apiCard.name}</div>`}
         ${slabBadge}
       </div>

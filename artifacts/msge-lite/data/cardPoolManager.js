@@ -7,7 +7,8 @@
  * This module only supplies artwork + name to attach to engine-generated cards.
  */
 
-import { fetchSetCards }    from './setLoader.js';
+import { fetchSetCards } from './setLoader.js';
+import { normalizeCardData } from './cardDataNormalizer.js';
 import { mapPokemonRarity } from './rarityMapper.js';
 
 /** @type {string|null} */
@@ -22,6 +23,8 @@ let currentSetId = null;
  * }|null}
  */
 let cachedCards = null;
+const poolCache = {};
+const inFlightLoads = {};
 
 /**
  * Full raw API card list, keyed by setId — used by the binder to display
@@ -29,6 +32,9 @@ let cachedCards = null;
  * @type {Object.<string, Object[]>}
  */
 const rawSetCache = {};
+
+const CACHE_PREFIX = 'rb_set_hd_v2_';
+const LEGACY_CACHE_PREFIXES = ['rb_set_', 'rb_set_hd_'];
 
 /** All rarity tiers in the new system, ordered from lowest to highest. */
 const ALL_TIERS = [
@@ -51,31 +57,44 @@ const ALL_TIERS = [
  * @returns {Promise<Object>} pools keyed by rarity tier
  */
 export async function loadSet(setId) {
-  // 1. Check in-memory cache first
-  if (setId === currentSetId && cachedCards) return cachedCards;
+  cleanupLegacySetCaches();
 
-  // 2. Check persistent hard drive cache (Instant Loading)
-  // Using a new cache key (_hd_) to force bypass of old blurry caches
-  const cacheKey = `rb_set_hd_${setId}`; 
-  const savedData = localStorage.getItem(cacheKey);
-  
-  if (savedData) {
-    try {
-      const parsed = JSON.parse(savedData);
-      currentSetId = setId;
-      cachedCards = parsed.pools;
-      rawSetCache[setId] = parsed.raw;
-      return cachedCards;
-    } catch (e) {
-      console.warn("Cache corrupted, re-fetching...");
-    }
+  if (poolCache[setId]) {
+    currentSetId = setId;
+    cachedCards = poolCache[setId];
+    return cachedCards;
   }
 
-  // 3. If not cached, fetch from API (using the new blazing fast &select url)
-  const apiCards = await fetchSetCards(setId);
-  rawSetCache[setId] = apiCards;
+  const persistent = readPersistentSet(setId);
+  if (persistent) {
+    currentSetId = setId;
+    cachedCards = persistent.pools;
+    poolCache[setId] = persistent.pools;
+    rawSetCache[setId] = persistent.raw;
+    return cachedCards;
+  }
 
-  if (apiCards.length === 0) {
+  if (inFlightLoads[setId]) return inFlightLoads[setId];
+
+  inFlightLoads[setId] = (async () => {
+    const apiCards = normalizeCardData(await fetchSetCards(setId));
+    const pools = buildPools(apiCards);
+
+    rawSetCache[setId] = apiCards;
+    poolCache[setId] = pools;
+    currentSetId = setId;
+    cachedCards = pools;
+    writePersistentSet(setId, { pools, raw: apiCards });
+    return pools;
+  })().finally(() => {
+    delete inFlightLoads[setId];
+  });
+
+  return inFlightLoads[setId];
+}
+
+function buildPools(apiCards) {
+  if (!Array.isArray(apiCards) || apiCards.length === 0) {
     throw new Error('No cards passed into cardPoolManager');
   }
 
@@ -124,16 +143,7 @@ export async function loadSet(setId) {
     }
   }
 
-  // 4. Save the processed high-res pools to the hard drive cache
-  try {
-    localStorage.setItem(cacheKey, JSON.stringify({ pools, raw: apiCards }));
-  } catch (e) {
-    console.warn("Storage full, could not cache set");
-  }
-
-  currentSetId = setId;
-  cachedCards = pools;
-  return cachedCards;
+  return pools;
 }
 
 /**
@@ -174,4 +184,79 @@ export function isSetLoaded() {
  */
 export function getCachedSetCards(setId) {
   return rawSetCache[setId] ?? null;
+}
+
+function cacheKeyFor(setId) {
+  return `${CACHE_PREFIX}${setId}`;
+}
+
+function readPersistentSet(setId) {
+  if (typeof localStorage === 'undefined') return null;
+  const cacheKey = cacheKeyFor(setId);
+  const savedData = localStorage.getItem(cacheKey);
+  if (!savedData) return null;
+
+  try {
+    const parsed = JSON.parse(savedData);
+    const raw = normalizeCardData(parsed?.raw);
+    if (!parsed?.pools || raw.length === 0) throw new Error('cache payload incomplete');
+    const pools = normalizePools(parsed.pools);
+    return { pools, raw };
+  } catch (e) {
+    console.warn(`[cardPoolManager] Cache corrupted for ${setId}; clearing entry.`);
+    try { localStorage.removeItem(cacheKey); } catch {}
+    return null;
+  }
+}
+
+function writePersistentSet(setId, payload) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(cacheKeyFor(setId), JSON.stringify(payload));
+  } catch (e) {
+    console.warn(`[cardPoolManager] Storage full; could not cache ${setId}.`);
+    pruneSetCachesExcept(setId);
+    try { localStorage.setItem(cacheKeyFor(setId), JSON.stringify(payload)); } catch {}
+  }
+}
+
+function normalizePools(pools) {
+  const normalized = {};
+  for (const tier of ALL_TIERS) {
+    normalized[tier] = Array.isArray(pools?.[tier]) ? pools[tier].map((card) => ({
+      ...card,
+      imageUrl: card.imageUrl || card.images?.hires || card.images?.large || card.images?.small || '',
+    })) : [];
+  }
+  return normalized;
+}
+
+let _legacyCleanupDone = false;
+function cleanupLegacySetCaches() {
+  if (_legacyCleanupDone || typeof localStorage === 'undefined') return;
+  _legacyCleanupDone = true;
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && LEGACY_CACHE_PREFIXES.some((prefix) => key.startsWith(prefix)) && !key.startsWith(CACHE_PREFIX)) {
+        keys.push(key);
+      }
+    }
+    keys.forEach((key) => localStorage.removeItem(key));
+  } catch (e) {
+    console.warn('[cardPoolManager] Legacy cache cleanup skipped:', e.message);
+  }
+}
+
+function pruneSetCachesExcept(activeSetId) {
+  try {
+    const activeKey = cacheKeyFor(activeSetId);
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(CACHE_PREFIX) && key !== activeKey) keys.push(key);
+    }
+    keys.slice(0, Math.ceil(keys.length / 2)).forEach((key) => localStorage.removeItem(key));
+  } catch {}
 }

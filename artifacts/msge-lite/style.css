@@ -248,7 +248,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   position: relative;
   width: min(340px, 100%);
   max-width: 340px;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 63 / 88;
   overflow: visible;
   perspective: 900px;
   --rb-pointer-x: 50%;
@@ -500,16 +500,17 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 
 .overlay-card-stage {
   position: relative;
-  /* Phase 5.2.2 — base size grown so cards dominate the screen on phones and
-   * remain comfortably readable on tablets/desktop. Patch named
-   * .overlay-card-wrapper, but in our DOM that is a 100%-of-stage container
-   * inside the perspective context, so resizing belongs on the stage. */
-  /* Phase 5.2.4 — final balanced sizing matching the Numel reference layout. */
-  width: min(74vw, 340px);
+  /* Phase 5.2.4 — Updated for strict Pokemon ratio and larger presentation */
+  /* Re-tuned to 74vw / 360px for cinematic negative space while keeping 63/88 */
+  width: min(74vw, 360px);
   max-width: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
-  height: min(52vh, 460px);
-  perspective: 900px;
-  padding: 40px;
+  height: auto;
+  aspect-ratio: 63 / 88;
+  max-height: 55vh;
+  perspective: 1000px;
+  /* Padding removed: we rely on viewport relative width (85vw) for side margins. 
+     This ensures the inner content box maintains exactly 63/88 ratio. */
+  padding: 0;
   overflow: visible;
 }
 
@@ -780,7 +781,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 .skip-summary-container .skip-summary-card {
   width: 100%;
   height: auto;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 63 / 88;
 }
 
 .skip-summary-row {
@@ -1103,9 +1104,11 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
    * with the reduced #pack-overlay padding-top so the swipe prompt no longer
    * sits behind the card. */
   .overlay-card-stage {
-    width: 74vw;
+    width: 76vw;
+    height: auto;
+    aspect-ratio: 63 / 88;
     max-width: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
-    height: 52vh;
+    max-height: 58vh;
   }
 
   .overlay-summary-card { width: 44px; height: 62px; }
@@ -2093,7 +2096,7 @@ body.is-mobile button      { min-height: 44px; }
 
 /* ─── Phase 5.2.4 — desktop stage cap (matched to new 460px base height) ──── */
 @media (min-width: 900px) {
-  .overlay-card-stage { max-height: 480px; }
+  .overlay-card-stage { max-height: 65vh; }
 }
 
 /* ═══ PHASE 6.5.1 — LOADING GATE + CARD BACK FIX ════════════════════════ */
