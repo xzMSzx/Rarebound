@@ -107,7 +107,7 @@ function renderMarketScreen() {
       return {
         cardId, value: value * boost, move, tier, hist,
         name:    meta.apiCard.name,
-        imageUrl:meta.apiCard.images.small || meta.apiCard.images.large,
+        imageUrl:meta.apiCard.images.large || meta.apiCard.images.small,
         setId:   meta.setId,
       };
     })

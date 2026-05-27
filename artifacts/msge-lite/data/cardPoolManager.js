@@ -51,11 +51,28 @@ const ALL_TIERS = [
  * @returns {Promise<Object>} pools keyed by rarity tier
  */
 export async function loadSet(setId) {
+  // 1. Check in-memory cache first
   if (setId === currentSetId && cachedCards) return cachedCards;
 
-  const apiCards = await fetchSetCards(setId);
+  // 2. Check persistent hard drive cache (Instant Loading)
+  // Using a new cache key (_hd_) to force bypass of old blurry caches
+  const cacheKey = `rb_set_hd_${setId}`; 
+  const savedData = localStorage.getItem(cacheKey);
+  
+  if (savedData) {
+    try {
+      const parsed = JSON.parse(savedData);
+      currentSetId = setId;
+      cachedCards = parsed.pools;
+      rawSetCache[setId] = parsed.raw;
+      return cachedCards;
+    } catch (e) {
+      console.warn("Cache corrupted, re-fetching...");
+    }
+  }
 
-  // Phase 7 — cache the full raw list for binder display
+  // 3. If not cached, fetch from API (using the new blazing fast &select url)
+  const apiCards = await fetchSetCards(setId);
   rawSetCache[setId] = apiCards;
 
   if (apiCards.length === 0) {
@@ -63,83 +80,59 @@ export async function loadSet(setId) {
   }
 
   const pools = {
-    common:                  [],
-    uncommon:                [],
-    rare:                    [],
-    holoRare:                [],
-    doubleRare:              [],
-    illustrationRare:        [],
-    ultraRare:               [],
-    specialIllustrationRare: [],
-    hyperRare:               [],
+    common: [], uncommon: [], rare: [], holoRare: [], doubleRare: [],
+    illustrationRare: [], ultraRare: [], specialIllustrationRare: [], hyperRare: [],
   };
 
   for (const card of apiCards) {
     if (!card.images?.large && !card.images?.small) continue;
 
     const rarity = mapPokemonRarity(card.rarity);
-    if (!rarity) {
-      console.warn('Unknown rarity string — defaulting to common:', card.rarity);
-    }
     pools[rarity ?? 'common'].push({
       id:       card.id,
       name:     card.name,
       rarity:   rarity ?? 'common',
-      imageUrl: card.images.large ?? card.images.small,
+      // Prioritise high-res image
+      imageUrl: card.images.large || card.images.small,
     });
   }
 
-
-  // Per-pool auto-fill: if a base tier is individually empty, build stand-in
-  // entries from the raw API cards so pack generation always has artwork.
-  // formatCard converts a raw API object to the pool shape.
+  // Auto-fill fallbacks
   function formatCard(apiCard, forcedRarity) {
     return {
       name:     apiCard.name,
       rarity:   forcedRarity,
-      imageUrl: apiCard.images.large ?? apiCard.images.small,
+      imageUrl: apiCard.images.large || apiCard.images.small,
     };
   }
 
-  if (pools.common.length === 0) {
-    console.warn('Common pool empty — auto-filling from first 20 API cards');
-    pools.common = apiCards.slice(0, 20).map((c) => formatCard(c, 'common'));
-  }
-  if (pools.uncommon.length === 0) {
-    console.warn('Uncommon pool empty — auto-filling from API cards 20–40');
-    pools.uncommon = apiCards.slice(20, 40).map((c) => formatCard(c, 'uncommon'));
-  }
-  if (pools.rare.length === 0) {
-    console.warn('Rare pool empty — auto-filling from API cards 40–60');
-    pools.rare = apiCards.slice(40, 60).map((c) => formatCard(c, 'rare'));
-  }
+  if (pools.common.length === 0) pools.common = apiCards.slice(0, 20).map((c) => formatCard(c, 'common'));
+  if (pools.uncommon.length === 0) pools.uncommon = apiCards.slice(20, 40).map((c) => formatCard(c, 'uncommon'));
+  if (pools.rare.length === 0) pools.rare = apiCards.slice(40, 60).map((c) => formatCard(c, 'rare'));
 
-  // Validate that the three base tiers are populated. A set that maps zero
-  // commons, uncommons, and rares is unusable — fail early so the UI can
-  // surface the error rather than opening packs with no artwork.
-  if (pools.common.length === 0 && pools.uncommon.length === 0 && pools.rare.length === 0) {
-    throw new Error(`Card pools empty after loading set "${setId}" — rarity mapping may need updating`);
-  }
-
-  // Safety fallback: if a higher-rarity tier is empty, borrow from the nearest
-  // non-empty lower tier so augmentation never fails silently.
+  // Borrow from lower tiers if a higher tier is empty
   for (let i = ALL_TIERS.length - 1; i >= 1; i--) {
     const tier = ALL_TIERS[i];
     if (pools[tier].length === 0) {
-      // Walk down to find the nearest populated lower tier
       for (let j = i - 1; j >= 0; j--) {
         const donor = ALL_TIERS[j];
         if (pools[donor].length > 0) {
-          const sample = pools[donor].slice(0, Math.min(10, pools[donor].length));
-          pools[tier] = sample.map((c) => ({ ...c, rarity: tier }));
+          pools[tier] = pools[donor].slice(0, 10).map((c) => ({ ...c, rarity: tier }));
           break;
         }
       }
     }
   }
 
+  // 4. Save the processed high-res pools to the hard drive cache
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify({ pools, raw: apiCards }));
+  } catch (e) {
+    console.warn("Storage full, could not cache set");
+  }
+
   currentSetId = setId;
-  cachedCards  = pools;
+  cachedCards = pools;
   return cachedCards;
 }
 

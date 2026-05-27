@@ -18,7 +18,7 @@
 import { getApiId } from './setRegistry.js';
 
 const API_BASE = 'https://api.pokemontcg.io/v2/cards';
-const PAGE_SIZE = 250;
+const PAGE_SIZE = 100;
 
 /**
  * Single-page fetch with strict response validation.
@@ -79,7 +79,7 @@ export async function fetchSetCards(setId) {
   try {
     while (true) {
       const apiId = getApiId(setId);
-      const url = `${API_BASE}?q=set.id:${apiId}&pageSize=${PAGE_SIZE}&page=${page}`;
+      const url = `${API_BASE}?q=set.id:${apiId}&pageSize=${PAGE_SIZE}&page=${page}&select=id,name,rarity,images`;
 
       const pageData = await fetchWithRetry(url);
 
@@ -105,7 +105,7 @@ export async function fetchSetCards(setId) {
 
   // Keep any card that has at least one image (small or large).
   // Some sets (Evolving Skies Trainer Gallery) only carry images.large.
-  let cards = allCards.filter((c) => c.images && (c.images.small || c.images.large));
+  let cards = allCards.filter((c) => c.images && (c.images.large || c.images.small));
 
   // Widen filter safely: if filtering removes everything, use all cards but inject placeholder
   if (cards.length === 0) {

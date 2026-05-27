@@ -124,7 +124,7 @@ export function ensureDailyChase() {
     cardId:   pick.apiCard.id,
     setId:    pick.setId,
     name:     pick.apiCard.name,
-    imageUrl: pick.apiCard.images.small || pick.apiCard.images.large,
+    imageUrl: pick.apiCard.images.large || pick.apiCard.images.small,
     tier:     pick.tier,
     boostPct,
     expiry:   Date.now() + CHASE_DURATION_MS,
@@ -179,7 +179,7 @@ function buildBrokerPick({ apiCard, setId, tier }) {
     tier,
     price:    +price.toFixed(2),
     name:     apiCard.name,
-    imageUrl: apiCard.images.small || apiCard.images.large,
+    imageUrl: apiCard.images.large || apiCard.images.small,
   };
 }
 

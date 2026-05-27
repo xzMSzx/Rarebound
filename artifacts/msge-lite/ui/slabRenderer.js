@@ -43,8 +43,8 @@ export function renderSlab(slab, apiCard, opts = {}) {
   slabEl.dataset.slabUid = slab?.uid || '';
 
   const imgUrl =
-    apiCard?.images?.small ||
     apiCard?.images?.large ||
+    apiCard?.images?.small ||
     '';
 
   const subgradesHTML = showSubgrades && slab?.grade?.subgrades ? `
