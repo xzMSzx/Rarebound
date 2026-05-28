@@ -709,6 +709,17 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   min-height: 0;
 }
 
+/* ─── Reward Reveal Cluster ───────────────────────────────────────────── */
+
+.overlay-reward-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: -6px;
+  min-height: 52px;
+}
+
 /* ─── Overlay status message ──────────────────────────────────────────── */
 
 .overlay-status {
@@ -756,6 +767,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 }
 
 #pack-overlay.overlay-summary-mode #overlay-counter    { display: none; }
+#pack-overlay.overlay-summary-mode #overlay-reward-cluster { display: none; }
 #pack-overlay.overlay-summary-mode #overlay-status     { display: none; }
 #pack-overlay.overlay-summary-mode .overlay-skip-btn   { display: none; }
 
@@ -1158,7 +1170,7 @@ body.is-mobile button      { min-height: 44px; }
 /* ─── Context-specific icon sizing ──────────────────────────────────── */
 
 .overlay-status .rarity-icon  { width: 36px; height: 36px; }   /* Phase 5.2.5 — bumped from 30 */
-.overlay-status              { margin-top: 6px; }              /* Phase 5.2.5 — extra breathing room above the rarity diamond */
+.overlay-status              { margin-top: 0; }                /* Phase 5.2.6 — margin moved to cluster wrapper */
 .overlay-status .rarity-multi { gap: 5px; }
 
 .skip-summary-card .rarity-icon  { width: 22px; height: 22px; }
