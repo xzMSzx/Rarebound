@@ -24,6 +24,7 @@ import { getCollection as _getCollection } from './collectionManager.js';
 // ⚡ Bolt: Scoped cache for the collection object.
 // We use this to prevent redundant localStorage parses during a single milestone sweep.
 let _sweepCollection = null;
+let _sweepContext = null;
 function getCollection() {
   return _sweepCollection || _getCollection();
 }
@@ -214,13 +215,34 @@ function countUnique() {
   return n;
 }
 
+function _getSetMap(setId) {
+  const cached = getCachedSetCards(setId) || [];
+  if (_sweepContext) {
+    let setMap = _sweepContext._apiCardMapCache.get(setId);
+    if (!setMap) {
+      setMap = new Map();
+      for (let i = 0; i < cached.length; i++) {
+        setMap.set(cached[i].id, cached[i]);
+      }
+      _sweepContext._apiCardMapCache.set(setId, setMap);
+    }
+    return setMap;
+  } else {
+    const setMap = new Map();
+    for (let i = 0; i < cached.length; i++) {
+      setMap.set(cached[i].id, cached[i]);
+    }
+    return setMap;
+  }
+}
+
 function countByTiers(tiers) {
   const c = getCollection();
   let n = 0;
   for (const setId of Object.keys(c)) {
-    const cached = getCachedSetCards(setId) || [];
+    const setMap = _getSetMap(setId);
     for (const cardId of Object.keys(c[setId])) {
-      const api = cached.find(x => x.id === cardId);
+      const api = setMap.get(cardId);
       if (api && tiers.has(mapPokemonRarity(api.rarity))) n++;
     }
   }
@@ -231,10 +253,10 @@ function countByTiersOwning(tiers, minCount = 1) {
   const c = getCollection();
   let n = 0;
   for (const setId of Object.keys(c)) {
-    const cached = getCachedSetCards(setId) || [];
+    const setMap = _getSetMap(setId);
     for (const [cardId, entry] of Object.entries(c[setId])) {
       if (entry.count < minCount) continue;
-      const api = cached.find(x => x.id === cardId);
+      const api = setMap.get(cardId);
       if (api && tiers.has(mapPokemonRarity(api.rarity))) n++;
     }
   }
@@ -278,9 +300,9 @@ function countDistinctRarities() {
   const c = getCollection();
   const seen = new Set();
   for (const setId of Object.keys(c)) {
-    const cached = getCachedSetCards(setId) || [];
+    const setMap = _getSetMap(setId);
     for (const cardId of Object.keys(c[setId])) {
-      const api = cached.find(x => x.id === cardId);
+      const api = setMap.get(cardId);
       if (api) seen.add(mapPokemonRarity(api.rarity));
     }
   }
@@ -407,6 +429,7 @@ function getRevealedMilestones(milestones, claimedSet) {
  */
 export function getCategoryStatus() {
   _sweepCollection = _getCollection();
+  _sweepContext = { _apiCardMapCache: new Map() };
   try {
     const claimedSet = new Set(load().claimed);
     return CATEGORIES.map(cat => {
@@ -431,6 +454,7 @@ export function getCategoryStatus() {
     });
   } finally {
     _sweepCollection = null;
+    _sweepContext = null;
   }
 }
 
@@ -440,6 +464,7 @@ export function getCategoryStatus() {
  */
 export function getMilestoneStatus() {
   _sweepCollection = _getCollection();
+  _sweepContext = { _apiCardMapCache: new Map() };
   try {
     const claimedSet = new Set(load().claimed);
     return MILESTONES.map(m => {
@@ -455,6 +480,7 @@ export function getMilestoneStatus() {
     });
   } finally {
     _sweepCollection = null;
+    _sweepContext = null;
   }
 }
 
