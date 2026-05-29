@@ -37,6 +37,7 @@ export function createCardElement(card) {
     img.src     = card.imageUrl;
     img.alt     = card.name ?? card.rarity;
     img.loading = 'lazy';
+    img.decoding = 'async';
     el.appendChild(img);
   } else {
     el.title = `${card.rarity} — Pack #${card.packNumber}`;

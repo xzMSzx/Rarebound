@@ -2,14 +2,9 @@
  * data/setRegistry.js
  * Single source of truth for all set IDs across the system.
  *
- * Phase 5.0: Centralised registry to prevent ID mismatch bugs (the kind that
- * caused Evolving Skies to silently fail when its tile shipped `data-set-id="evs"`
- * but the API ID was `swsh7`). Tiles, probability tables, and the loader all
- * key off the same registry slug.
- *
- * Each entry's `apiId` is the official Pokémon TCG API set identifier
- * (https://api.pokemontcg.io/v2/sets). Adding a new set requires a single
- * entry here plus its probability table in setProbabilityTables.js.
+ * Tiles, probability tables, and the loader all key off the same registry
+ * slug. `apiId` is now the static pokemon-tcg-data JSON filename, so aliases
+ * can still resolve to the canonical file.
  */
 
 export const SET_REGISTRY = {
@@ -60,8 +55,8 @@ export const SET_REGISTRY = {
 };
 
 /**
- * Resolve a registry slug to its API set ID.
- * Falls back to the slug itself when not registered (preserves direct API IDs).
+ * Resolve a registry slug to its static data filename.
+ * Falls back to the slug itself when not registered.
  *
  * @param {string} slug
  * @returns {string}
@@ -69,3 +64,4 @@ export const SET_REGISTRY = {
 export function getApiId(slug) {
   return SET_REGISTRY[slug]?.apiId ?? slug;
 }
+

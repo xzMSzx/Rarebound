@@ -107,7 +107,7 @@ function renderMarketScreen() {
       return {
         cardId, value: value * boost, move, tier, hist,
         name:    meta.apiCard.name,
-        imageUrl:meta.apiCard.images.small || meta.apiCard.images.large,
+        imageUrl:meta.apiCard.images.large || meta.apiCard.images.small,
         setId:   meta.setId,
       };
     })
@@ -194,7 +194,7 @@ function renderRowHTML(r) {
   const chase = isChaseCard(r.cardId) ? '<span class="market-chase-pip">🔥</span>' : '';
   return `
     <div class="market-row" data-card-id="${r.cardId}">
-      <img class="market-row-img" src="${r.imageUrl}" alt="" loading="lazy"/>
+      <img class="market-row-img" src="${r.imageUrl}" alt="" loading="lazy" decoding="async"/>
       <div class="market-row-info">
         <div class="market-row-name">${r.name}${chase}</div>
         <div class="market-row-meta">${RARITY_LABELS[r.tier] || r.tier} · ${PACK_STORE[r.setId]?.name || r.setId}</div>
@@ -259,7 +259,7 @@ function openGraphModal(cardId) {
   modal.innerHTML = `
     <div class="graph-modal-content" id="graph-modal-content">
       <button class="graph-close-btn" id="graph-close-btn" aria-label="Close">×</button>
-      <img class="graph-card-art" src="${meta.apiCard.images.large || meta.apiCard.images.small}" alt="${meta.apiCard.name}" />
+      <img class="graph-card-art" src="${meta.apiCard.images.large || meta.apiCard.images.small}" alt="${meta.apiCard.name}" loading="eager" decoding="async" />
       <div class="graph-card-name">${meta.apiCard.name}</div>
       <div class="graph-card-meta">${RARITY_LABELS[tier] || tier} · ${PACK_STORE[meta.setId]?.name || meta.setId}</div>
       <div class="graph-card-value">$${value.toFixed(2)} <span class="graph-move-${move >= 0 ? 'up' : 'down'}">${move >= 0 ? '+' : ''}${move.toFixed(1)}%</span></div>

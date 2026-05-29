@@ -232,26 +232,29 @@ try {
 const SET_IDS = ['swsh7', 'sv4pt5', 'sv3pt5', 'sv2', 'swsh11', 'sv6', 'sv7', 'sv8', 'sv8pt5', 'sv9'];
 
 function preloadAllSetsAsync() {
-  // Stagger requests slightly to avoid hammering the API in one burst.
-  // Each set gets a 7s individual timeout and the whole batch caps at 12s
-  // so a hanging fetch (no TCP error, just no response) never blocks the
-  // boot screen from completing and removing boot-locked from the body.
-  const TIMEOUT_PER_SET_MS = 7000;
-  const TIMEOUT_TOTAL_MS   = 12000;
+  return new Promise((resolve) => {
+    // Run sequentially in the background
+    (async () => {
+      for (let i = 0; i < SET_IDS.length; i++) {
+        try {
+          // Await each set completely before firing the next request
+          await loadSet(SET_IDS[i]);
+        } catch (err) {
+          console.warn(`[Preload] Failed to load ${SET_IDS[i]}:`, err);
+        }
+        
+        // Once the very first set is loaded, unblock the boot screen!
+        // The rest will continue loading quietly in the background.
+        if (i === 0) {
+          resolve();
+        }
+      }
+      resolve(); // Failsafe if the array is empty
+    })();
 
-  const perSet = (setId, i) => new Promise(resolve => {
-    const timer = setTimeout(resolve, TIMEOUT_PER_SET_MS + i * 250);
-    setTimeout(() => {
-      loadSet(setId)
-        .then(() => { clearTimeout(timer); resolve(); })
-        .catch(() => { clearTimeout(timer); resolve(); });
-    }, i * 250);
+    // Overall failsafe: Unblock the boot screen after 8 seconds no matter what
+    setTimeout(resolve, 8000);
   });
-
-  return Promise.race([
-    Promise.all(SET_IDS.map(perSet)),
-    new Promise(resolve => setTimeout(resolve, TIMEOUT_TOTAL_MS)),
-  ]);
 }
 
 async function hydrateChaseSystemsAsync() {
@@ -1173,7 +1176,7 @@ function renderDuplicateVault() {
       items.push({
         setId, cardId, entry, dups, value, tier,
         name:  apiCard?.name || cardId,
-        image: apiCard?.images?.small || apiCard?.images?.large || '',
+        image: apiCard?.images?.large || apiCard?.images?.small || '',
         setName,
         rarityLabel: RARITY_LABELS[tier] || tier,
         totalDupValue: dups * value,
@@ -1929,7 +1932,7 @@ function openMuseumContributionModal(exhibition) {
     gridHtml = eligibleCards.map(item => {
       const cached = getCachedSetCards(item.setId) || [];
       const apiCard = cached.find(c => c.id === item.cardId) || { name: item.cardId, images: {} };
-      const imgUrl = apiCard.images.small || apiCard.images.large || '';
+      const imgUrl = apiCard.images.large || apiCard.images.small || '';
       return `
         <div class="museum-contribute-card" data-set="${item.setId}" data-card="${item.cardId}">
           ${imgUrl ? `<img src="${imgUrl}" alt="${apiCard.name}" />` : '<div class="vault-thumb-placeholder">?</div>'}
@@ -2044,7 +2047,7 @@ function renderEstateAuctionsFoundation(vendor) {
   const slab = buildAuctionPreviewSlab(lot);
   slab.setId = preview.setId;
   slab.cardId = preview.apiCard.id;
-  const imgUrl = preview.apiCard.images?.small || preview.apiCard.images?.large || '';
+  const imgUrl = preview.apiCard.images?.large || preview.apiCard.images?.small || '';
 
   const wrap = document.createElement('div');
   wrap.className = 'foundation-vendor foundation-estate';
@@ -2879,7 +2882,7 @@ async function buyChaseCard(apiCard, setId, price, vendor, btn) {
   recordHit({
     cardId: apiCard.id, setId, rarity: tier,
     name: apiCard.name,
-    imageUrl: apiCard.images?.small || apiCard.images?.large,
+    imageUrl: apiCard.images?.large || apiCard.images?.small,
   });
 
   showToast(`Acquired ${apiCard.name}`, 'rep');
@@ -3351,9 +3354,10 @@ function renderBinderPage() {
     if (ownedEntry) {
       slot.classList.add(`rarity-${rarityTier}`);
       const img = document.createElement('img');
-      img.src = apiCard.images.small || apiCard.images.large;
+      img.src = apiCard.images.large || apiCard.images.small;
       img.alt = apiCard.name;
       img.loading = 'lazy';
+      img.decoding = 'async';
       img.className = 'binder-slot-img';
       slot.appendChild(img);
 
@@ -3398,9 +3402,10 @@ function renderBinderPage() {
     } else {
       slot.classList.add('unowned', `unowned-${rarityTier}`);
       const img = document.createElement('img');
-      img.src = apiCard.images.small || apiCard.images.large;
+      img.src = apiCard.images.large || apiCard.images.small;
       img.alt = '';
       img.loading = 'lazy';
+      img.decoding = 'async';
       img.className = 'binder-slot-img binder-slot-img--unowned';
       slot.appendChild(img);
 
@@ -3562,7 +3567,7 @@ function buildCardDetailHTML(apiCard, ownedEntry, resolvedSetId, value, rarityTi
   const html = `
     <div class="card-detail-content" id="cdp-panel">
       <div class="cdp-image-wrap">
-        <img src="${imgSrc}" alt="${apiCard.name}" class="${imgClass}" />
+        <img src="${imgSrc}" alt="${apiCard.name}" class="${imgClass}" loading="eager" decoding="async" />
         ${!isOwned ? `<div class="cdp-preview-badge">${rarityLbl}</div>` : ''}
       </div>
       <div class="card-detail-info">
@@ -3768,7 +3773,7 @@ function openSellModal(apiCard, ownedEntry, setId) {
   modal.innerHTML = `
     <div class="sell-modal-content" id="sell-panel">
       <div class="sell-header">
-        <img src="${apiCard.images.small || apiCard.images.large}" alt="${apiCard.name}" class="sell-card-img" />
+        <img src="${apiCard.images.large || apiCard.images.small}" alt="${apiCard.name}" class="sell-card-img" loading="eager" decoding="async" />
         <div class="sell-card-info">
           <div class="sell-card-name">${apiCard.name}</div>
           <div class="sell-card-rarity">${RARITY_LABELS[rarityTier]}</div>
@@ -4141,7 +4146,7 @@ function renderStatsScreen() {
     ${mostValCard ? `
     <div class="stats-showcase" id="showcase-most-val" style="cursor:pointer">
       <div class="stats-showcase-label">Most Valuable Card</div>
-      <img src="${mostValCard.images.small || mostValCard.images.large}" alt="${mostValCard.name}" class="stats-showcase-img" loading="eager" />
+      <img src="${mostValCard.images.large || mostValCard.images.small}" alt="${mostValCard.name}" class="stats-showcase-img" loading="eager" decoding="async" />
       <div class="stats-showcase-name">${mostValCard.name}</div>
       <div class="stats-showcase-value">$${mostValAmount.toFixed(2)}</div>
     </div>` : '<p class="stats-empty">Open some packs to see your stats!</p>'}
@@ -4149,7 +4154,7 @@ function renderStatsScreen() {
     ${rarestCard && rarestIdx !== -1 ? `
     <div class="stats-showcase" id="showcase-rarest" style="cursor:pointer">
       <div class="stats-showcase-label">Rarest Pull</div>
-      <img src="${rarestCard.images.small || rarestCard.images.large}" alt="${rarestCard.name}" class="stats-showcase-img" loading="eager" />
+      <img src="${rarestCard.images.large || rarestCard.images.small}" alt="${rarestCard.name}" class="stats-showcase-img" loading="eager" decoding="async" />
       <div class="stats-showcase-name">${rarestCard.name}</div>
       <div class="stats-showcase-value">${RARITY_LABELS[RARITY_ORDER[rarestIdx]] || ''}</div>
     </div>` : ''}
@@ -4301,7 +4306,7 @@ function renderWishlistScreen() {
       const imgClass = ownedEntry ? '' : 'binder-slot-img--unowned';
       tile.innerHTML = `
         <div class="wishlist-tile-img-wrap">
-          <img src="${apiCard.images.small || apiCard.images.large}" alt="${apiCard.name}" class="wishlist-tile-img ${imgClass}" loading="lazy" />
+          <img src="${apiCard.images.large || apiCard.images.small}" alt="${apiCard.name}" class="wishlist-tile-img ${imgClass}" loading="lazy" decoding="async" />
           ${ownedEntry ? '<div class="wishlist-owned-badge">Owned</div>' : ''}
         </div>
         <div class="wishlist-tile-name">${apiCard.name}</div>

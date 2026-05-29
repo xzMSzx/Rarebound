@@ -43,8 +43,8 @@ export function renderSlab(slab, apiCard, opts = {}) {
   slabEl.dataset.slabUid = slab?.uid || '';
 
   const imgUrl =
-    apiCard?.images?.small ||
     apiCard?.images?.large ||
+    apiCard?.images?.small ||
     '';
 
   const subgradesHTML = showSubgrades && slab?.grade?.subgrades ? `
@@ -66,7 +66,7 @@ export function renderSlab(slab, apiCard, opts = {}) {
       <div class="ags-slab__window">
         <div class="ags-slab__sheen" aria-hidden="true"></div>
         ${imgUrl
-          ? `<img class="ags-slab__art" src="${imgUrl}" alt="${apiCard?.name || 'card'}" loading="lazy" />`
+          ? `<img class="ags-slab__art" src="${imgUrl}" alt="${apiCard?.name || 'card'}" loading="lazy" decoding="async" />`
           : `<div class="ags-slab__art ags-slab__art--missing">${apiCard?.name || 'card'}</div>`
         }
         <div class="ags-slab__badge">
@@ -218,7 +218,7 @@ export function renderPremiumSlab(slab, apiCard) {
     .map(w => `<span style="width:${w}px"></span>`).join('');
 
   const cardImgHTML = imgUrl
-    ? `<img class="premium-slab__card" src="${safeText(imgUrl)}" alt="${safeText(apiCard?.name || 'card')}" loading="eager" />`
+    ? `<img class="premium-slab__card" src="${safeText(imgUrl)}" alt="${safeText(apiCard?.name || 'card')}" loading="eager" decoding="async" />`
     : `<div class="premium-slab__card premium-slab__card--fallback">
          ${safeText(cardName)}<br/>${safeText(rarity)}<br/>${safeText(setName)}
        </div>`;

@@ -5,7 +5,8 @@ import * as profileStorage from './profileStorage.js';
 /**
  * data/marketValue.js — Phase 8 + Phase 9 drift + Phase 10 Hydration
  *
- * Procedural value engine with live API market price hydration.
+ * Procedural value engine. Live market hydration was removed so Rarebound
+ * never depends on a runtime card-data API.
  *
  * Storage:
  *   tcg_market_values  → { [cardId]: number }
@@ -33,23 +34,6 @@ const VOLATILITY = {
   specialIllustrationRare: 0.10, hyperRare: 0.10,
 };
 
-const CACHE_TTL_MS = {
-  common: 24 * 60 * 60 * 1000,
-  uncommon: 24 * 60 * 60 * 1000,
-  rare: 12 * 60 * 60 * 1000,
-  holoRare: 12 * 60 * 60 * 1000,
-  doubleRare: 12 * 60 * 60 * 1000,
-  illustrationRare: 6 * 60 * 60 * 1000,
-  ultraRare: 6 * 60 * 60 * 1000,
-  specialIllustrationRare: 6 * 60 * 60 * 1000,
-  hyperRare: 6 * 60 * 60 * 1000,
-};
-
-const _fetchQueue = [];
-const _fetchingIds = new Set();
-let _isProcessingQueue = false;
-const MAX_CONCURRENCY = 3;
-
 function hashFraction(str) {
   let h = 0x811c9dc5;
   for (let i = 0; i < str.length; i++) {
@@ -64,78 +48,7 @@ function saveValues(v) { profileStorage.setItem(VALUE_KEY, JSON.stringify(v)); }
 function loadMeta()   { try { return JSON.parse(profileStorage.getItem(META_KEY))  || {}; } catch { return {}; } }
 function saveMeta(m)  { profileStorage.setItem(META_KEY,  JSON.stringify(m)); }
 
-function extractPrice(apiCard) {
-  if (!apiCard || !apiCard.tcgplayer || !apiCard.tcgplayer.prices) return null;
-  const p = apiCard.tcgplayer.prices;
-  const types = ['holofoil', 'reverseHolofoil', 'normal', '1stEditionHolofoil', 'unlimitedHolofoil'];
-  for (const t of types) {
-    if (p[t] && p[t].market) return p[t].market;
-  }
-  for (const t of types) {
-    if (p[t] && p[t].mid) return p[t].mid;
-  }
-  return null;
-}
-
-async function processFetchQueue() {
-  if (_isProcessingQueue) return;
-  _isProcessingQueue = true;
-
-  while (_fetchQueue.length > 0) {
-    const batch = _fetchQueue.splice(0, MAX_CONCURRENCY);
-    
-    await Promise.all(batch.map(async ({ cardId, rarityTier, retries }) => {
-      try {
-        const url = `https://api.pokemontcg.io/v2/cards/${cardId}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const json = await response.json();
-        const price = extractPrice(json.data);
-        
-        const meta = loadMeta();
-        if (price != null) {
-          meta[cardId] = { ...(meta[cardId] || {}), externalReferenceValue: +parseFloat(price).toFixed(2) };
-          console.log(`[MarketValue] fetch success - id: ${cardId}, externalReferenceValue: ${meta[cardId].externalReferenceValue}`);
-        } else {
-          console.log(`[MarketValue] fetch success but no price - id: ${cardId}`);
-        }
-        
-        meta[cardId] = { ...(meta[cardId] || {}), tier: rarityTier, updatedAt: Date.now() };
-        saveMeta(meta);
-        _fetchingIds.delete(cardId);
-      } catch (err) {
-        console.warn(`[MarketValue] API fallback/retry - id: ${cardId}, err: ${err.message}`);
-        if (retries < 2) {
-           _fetchQueue.push({ cardId, rarityTier, retries: retries + 1 });
-        } else {
-           const meta = loadMeta();
-           meta[cardId] = { ...(meta[cardId] || {}), tier: rarityTier, updatedAt: Date.now() };
-           saveMeta(meta);
-           _fetchingIds.delete(cardId);
-        }
-      }
-    }));
-    
-    // Debounce
-    await new Promise(r => setTimeout(r, 1000));
-  }
-
-  _isProcessingQueue = false;
-}
-
-function queueFetch(cardId, rarityTier) {
-  if (_fetchingIds.has(cardId)) return;
-  _fetchingIds.add(cardId);
-  _fetchQueue.push({ cardId, rarityTier, retries: 0 });
-  console.log(`[MarketValue] refresh queued - id: ${cardId}, queue size: ${_fetchQueue.length}`);
-  processFetchQueue();
-}
-
-/** Persisted market value for a card. Instantly resolves from cache or procedural fallback, then queues hydration. */
+/** Persisted market value for a card. Instantly resolves from cache or procedural fallback. */
 export function getMarketValue(cardId, rarityTier) {
   if (!cardId) return 0;
   const values = loadValues();
@@ -143,12 +56,6 @@ export function getMarketValue(cardId, rarityTier) {
   const curMeta = meta[cardId] || {};
   
   const now = Date.now();
-  const ttl = CACHE_TTL_MS[rarityTier] || CACHE_TTL_MS.common;
-  const isStale = !curMeta.updatedAt || (now - curMeta.updatedAt > ttl);
-
-  if (isStale) {
-    queueFetch(cardId, rarityTier);
-  }
 
   const [min, max] = VALUE_RANGES[rarityTier] ?? VALUE_RANGES.common;
   let finalVal = values[cardId];
@@ -161,7 +68,7 @@ export function getMarketValue(cardId, rarityTier) {
     values[cardId] = finalVal;
     saveValues(values);
     
-    meta[cardId] = { ...curMeta, tier: rarityTier, proceduralAuthority: true };
+    meta[cardId] = { ...curMeta, tier: rarityTier, proceduralAuthority: true, updatedAt: curMeta.updatedAt || now };
     if (!meta[cardId].lastDrift) meta[cardId].lastDrift = now;
     saveMeta(meta);
     
@@ -171,6 +78,8 @@ export function getMarketValue(cardId, rarityTier) {
     finalVal = Math.min(max, Math.max(min, finalVal));
     values[cardId] = finalVal;
     saveValues(values);
+    meta[cardId] = { ...curMeta, tier: rarityTier, proceduralAuthority: true, updatedAt: curMeta.updatedAt || now };
+    saveMeta(meta);
   }
 
   return finalVal;

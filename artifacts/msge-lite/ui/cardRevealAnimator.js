@@ -105,6 +105,7 @@ function renderFront(frontFace, isSuspense) {
       src="https://images.pokemontcg.io/cardback.png"
       alt="Card back"
       draggable="false"
+      decoding="async"
     />
   `;
 }
@@ -127,6 +128,7 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
     const img = document.createElement('img');
     img.className = 'card-reveal-img';
     img.loading = 'eager';
+    img.decoding = 'async';
     img.alt = (RARITY_LABEL[rarity] ?? rarity);
     let settled = false;
     img.onload = async () => {

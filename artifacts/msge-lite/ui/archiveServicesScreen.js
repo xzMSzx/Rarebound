@@ -365,7 +365,7 @@ function renderActiveTile(sub) {
   return `
     <div class="ags-active-tile" data-uid="${sub.uid}">
       ${imgUrl
-        ? `<img class="ags-active-tile__art" src="${imgUrl}" alt="${apiCard?.name || ''}" loading="lazy" />`
+        ? `<img class="ags-active-tile__art" src="${imgUrl}" alt="${apiCard?.name || ''}" loading="lazy" decoding="async" />`
         : `<div class="ags-active-tile__art ags-active-tile__art--missing">${apiCard?.name || ''}</div>`
       }
       <div class="ags-active-tile__body">
@@ -409,7 +409,7 @@ function renderEligibleTile(row) {
   return `
     <div class="ags-eligible-tile" data-set="${row.setId}" data-card="${row.cardId}" data-tier="${row.tier}">
       ${imgUrl
-        ? `<img class="ags-eligible-tile__art" src="${imgUrl}" alt="${row.apiCard.name || ''}" loading="lazy" />`
+        ? `<img class="ags-eligible-tile__art" src="${imgUrl}" alt="${row.apiCard.name || ''}" loading="lazy" decoding="async" />`
         : `<div class="ags-eligible-tile__art ags-eligible-tile__art--missing">${row.apiCard.name || ''}</div>`
       }
       <div class="ags-eligible-tile__name">${row.apiCard.name || row.cardId}</div>
