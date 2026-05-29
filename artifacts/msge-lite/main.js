@@ -74,6 +74,8 @@ import {
   setVendorAmbient, sfx, refreshAmbientFromSettings, unlockAudioContext,
   getAudioContextState,
 } from './data/ambientAudioManager.js';
+import { getPendingSession, setPendingSession, clearPendingSession } from './data/pendingPackManager.js';
+import { checkUpdate, startBackgroundUpdateCheck } from './data/updateManager.js';
 import { wasFreshLaunch } from './state/playerState.js';
 import { DEBUG_FLAGS, isDebugMode, isDebugFromUrl, logActiveFlags, mountDebugTapButton } from './data/debugFlags.js';
 import { isDiagFlag, initDiagnosticsFromStorage } from './data/diagnosticsManager.js';
@@ -273,6 +275,12 @@ window.addEventListener('load', () => {
     restoreCollection: () => {},
     syncVendors:       () => {},
     loadMarket:        () => {},
+    checkVersion:      async () => {
+      const hasUpdate = await checkUpdate();
+      if (!hasUpdate) {
+        startBackgroundUpdateCheck();
+      }
+    },
     preloadPacks:      () => preloadAllSetsAsync(),
     hydrateBinders:    () => hydrateChaseSystemsAsync(),
     finalizeEconomy:   () => {
@@ -293,7 +301,7 @@ window.addEventListener('load', () => {
       // on the default vendor so the boot fade lands on something alive.
       refreshAmbientFromSettings();
     },
-  }).then(() => {
+  }).then(async () => {
     // Safety valve: ensure boot-locked is removed even if hideBootScreen() had
     // any issue (e.g. bootEl null on a hot-reload).  Idempotent — classList.remove
     // on an absent class is a no-op.
@@ -342,6 +350,9 @@ window.addEventListener('load', () => {
 
     // Phase 10.3: restore persistent diagnostics overlay + debug tap from storage.
     initDiagnosticsFromStorage();
+    
+    // Resume interrupted pack opening if any
+    resumePendingSessionIfAny();
   });
 });
 
@@ -2350,8 +2361,35 @@ async function buyPackFromVendor(setId, price, vendor, btn) {
  * recent hits, and set-completion bonus.
  */
 async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
+  let dataReady = false;
+  const loadDone = (async () => {
+    if (getCurrentSetId() !== setId) await loadSet(setId);
+    setCurrentSet(setId); dataReady = true; hidePackLoadingIndicator();
+  })();
+  if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
+
+  engine.stepSimulation();
+  const newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
+
+  const session = {
+    id: Date.now().toString() + Math.random().toString(36).substring(2),
+    setId,
+    vendorId: vendor?.id,
+    skipSpend,
+    favorBasis,
+    price,
+    newCards,
+    packNumber: engine.state.packsOpened,
+    currentRevealIndex: 0,
+    createdAt: Date.now()
+  };
+  setPendingSession(session);
+
   if (!skipSpend) {
-    if (!spendBalance(price)) return;          // race-safety
+    if (!spendBalance(price)) {
+      clearPendingSession();
+      return;          // race-safety
+    }
     sfx.purchase();
   }
   updateBalanceUI();
@@ -2361,23 +2399,28 @@ async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
   // Balanced in finally so load/reveal errors cannot strand iOS scroll.
   lockBodyScroll();
 
-  let newCards = [];
   try {
     const animationDone = openPackInteraction(setId);
-    let dataReady = false;
-    const loadDone = (async () => {
-      if (getCurrentSetId() !== setId) await loadSet(setId);
-      setCurrentSet(setId); dataReady = true; hidePackLoadingIndicator();
-    })();
     await animationDone;
-    if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
-
-    engine.stepSimulation();
-    newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
-    await openPackOverlay(newCards, engine.state.packsOpened);
+    await openPackOverlay(newCards, session.packNumber, 0);
   } finally {
     unlockBodyScroll();
   }
+
+  await finalizePackOpening(session);
+}
+
+async function finalizePackOpening(session) {
+  const currentSession = getPendingSession();
+  if (!currentSession || currentSession.id !== session.id || currentSession.finalizing) {
+    console.warn('[PendingSession] Already finalizing or missing, skipping to prevent duplication.');
+    return;
+  }
+  currentSession.finalizing = true;
+  setPendingSession(currentSession);
+
+  const { setId, vendorId, skipSpend, favorBasis, price, newCards } = session;
+  const vendor = vendorId ? VENDORS[vendorId] : { id: vendorId, name: 'Vendor' };
 
   const newDiscoveries = newCards.filter(c => !getOwnedEntry(setId, c.id)).length;
   newCards.forEach(addCard);
@@ -2498,6 +2541,31 @@ async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
   if (hadSignificantPull) {
     triggerPreservationCheck('pack_pull');
   }
+
+  clearPendingSession();
+}
+
+async function resumePendingSessionIfAny() {
+  const session = getPendingSession();
+  if (!session) return;
+  
+  const { setId, newCards, packNumber, currentRevealIndex } = session;
+
+  let dataReady = false;
+  const loadDone = (async () => {
+    if (getCurrentSetId() !== setId) await loadSet(setId);
+    setCurrentSet(setId); dataReady = true; hidePackLoadingIndicator();
+  })();
+  if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
+
+  lockBodyScroll();
+  try {
+    await openPackOverlay(newCards, packNumber, currentRevealIndex);
+  } finally {
+    unlockBodyScroll();
+  }
+
+  await finalizePackOpening(session);
 }
 
 // ─── Phase 10.4 — Collector Requests UI + completion ─────────────────────────

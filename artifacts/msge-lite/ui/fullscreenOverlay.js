@@ -13,6 +13,8 @@
  */
 
 import { attachSwipeController } from './swipeController.js';
+import { updatePendingSessionIndex } from '../data/pendingPackManager.js';
+
 import {
   initAnimator,
   setOverlayState,
@@ -187,7 +189,7 @@ function showSkipSummary(allCards) {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export function openPackOverlay(cards, packNumber) {
+export function openPackOverlay(cards, packNumber, startIndex = 0) {
   return new Promise((resolve) => {
     const ov    = overlay();
     const stage = cardStage();
@@ -237,7 +239,7 @@ export function openPackOverlay(cards, packNumber) {
     setStatus(`Pack #${packNumber}`, 'overlay-pack-label');
     setHint('');
 
-    let cardIndex = 0;
+    let cardIndex = startIndex;
     let revealed  = false;
     let busy      = false;
     let done      = false;
@@ -307,6 +309,7 @@ export function openPackOverlay(cards, packNumber) {
 
     async function goToNext() {
       cardIndex++;
+      updatePendingSessionIndex(cardIndex);
       if (cardIndex >= cards.length) {
         if (state === 'summary') return;
         await finishPack(false);

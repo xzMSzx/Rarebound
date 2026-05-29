@@ -51,23 +51,40 @@ function setStage(stage) {
  * @param {() => void}                 ops.restoreCollection
  * @param {() => void}                 ops.syncVendors
  * @param {() => void}                 ops.loadMarket
- * @param {() => Promise<unknown>}     ops.preloadPacks   (long async work)
+ * @param {() => Promise<unknown>}     ops.checkPendingSession
+ * @param {() => Promise<unknown>}     ops.checkVersion
+ * @param {() => Promise<unknown>}     ops.preloadPacks
  * @param {() => Promise<unknown>}     ops.hydrateBinders
  * @param {() => void}                 ops.finalizeEconomy
  */
 export async function runBootSequence(ops) {
   ensureMounted();
-  if (!bootEl) return;
+  
+  if (!bootEl) {
+    try { ops.restoreCollection?.(); } catch {}
+    try { ops.syncVendors?.(); } catch {}
+    try { ops.loadMarket?.(); } catch {}
+    try { await ops.checkPendingSession?.(); } catch {}
+    try { await ops.checkVersion?.(); } catch {}
+    try { await ops.preloadPacks?.(); } catch {}
+    try { await ops.hydrateBinders?.(); } catch {}
+    try { ops.finalizeEconomy?.(); } catch {}
+    return;
+  }
 
   // Minimum visible time so the boot screen reads as intentional, not a flash.
-  const minVisibleMs = 1400;
+  const minVisibleMs = 1500;
   const startedAt = performance.now();
 
-  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  const rAF = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-  setStage(STAGES[0]); try { ops.restoreCollection?.(); } catch {} await wait(180);
-  setStage(STAGES[1]); try { ops.syncVendors?.();       } catch {} await wait(220);
-  setStage(STAGES[2]); try { ops.loadMarket?.();        } catch {} await wait(220);
+  setStage(STAGES[0]); try { ops.restoreCollection?.(); } catch {} await rAF();
+  setStage(STAGES[1]); try { ops.syncVendors?.();       } catch {} await rAF();
+  setStage(STAGES[2]); try { ops.loadMarket?.();        } catch {} await rAF();
+
+  // We weave the new checks in before heavy preload, but don't add stages for them.
+  try { await ops.checkPendingSession?.(); } catch {}
+  try { await ops.checkVersion?.(); } catch {}
 
   setStage(STAGES[3]);
   try { await ops.preloadPacks?.(); } catch {}
@@ -75,11 +92,13 @@ export async function runBootSequence(ops) {
   setStage(STAGES[4]);
   try { await ops.hydrateBinders?.(); } catch {}
 
-  setStage(STAGES[5]); try { ops.finalizeEconomy?.(); } catch {} await wait(260);
+  setStage(STAGES[5]); try { ops.finalizeEconomy?.(); } catch {} await rAF();
 
   // Ensure minimum visible duration
   const elapsed = performance.now() - startedAt;
-  if (elapsed < minVisibleMs) await wait(minVisibleMs - elapsed);
+  if (elapsed < minVisibleMs) {
+    await new Promise(r => setTimeout(r, minVisibleMs - elapsed));
+  }
 
   await hideBootScreen();
 }
