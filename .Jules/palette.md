@@ -8,3 +8,6 @@
 ## 2026-05-21 - Accessible Placeholder-Only Inputs
 **Learning:** Using `placeholder` text on `<input>` elements without an associated `<label>` or an explicit `aria-label` attribute creates accessibility barriers, as screen readers may not read the placeholder when focusing the input. This is prevalent in simple forms like login panels or search inputs.
 **Action:** When working on inputs without visible `<label>` elements, always explicitly define an `aria-label` attribute matching the intended purpose (e.g., `aria-label="Email address"`) to ensure the field is correctly announced by screen readers.
+## 2026-05-29 - Accessible Custom Toggle Switches
+**Learning:** Custom UI toggle switches (built using hidden `<input type="checkbox">` elements wrapped in a visual `<label>`) must include explicit accessibility labels if the text description is structurally separate and not linked via `for` attributes. Relying on visual proximity of text elements leaves screen readers unable to announce the toggle's function.
+**Action:** When implementing or modifying custom toggle switches, explicitly add an `aria-label` (e.g., `aria-label="Toggle Haptic Feedback"`) directly to the `<input type="checkbox">` if it lacks a `for`/`id` binding to its visible label text.
