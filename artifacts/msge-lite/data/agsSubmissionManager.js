@@ -77,7 +77,7 @@ export const REVIEW_STATUSES = [
   'Final Archive Certification',
 ];
 
-function load() {
+export function loadAgsStore() {
   const result = readJson(STORAGE_KEY, null, isPlainObject);
   const raw = result.value;
   if (!raw) {
@@ -104,7 +104,7 @@ function formatSerial(n) {
 
 /** Total number of "currently busy" copies for a card (active + completed). */
 export function lockedCopiesFor(setId, cardId) {
-  const s = load();
+  const s = loadAgsStore();
   let n = 0;
   for (const a of s.active)    if (a.setId === setId && a.cardId === cardId) n++;
   for (const g of s.completed) if (g.setId === setId && g.cardId === cardId) n++;
@@ -114,7 +114,7 @@ export function lockedCopiesFor(setId, cardId) {
 /** Specific-copy lock check. */
 export function isCopyLocked(setId, cardId, copyN) {
   const uid = copyKey(setId, cardId, copyN);
-  const s = load();
+  const s = loadAgsStore();
   if (s.active.some(a => a.uid === uid)) return true;
   if (s.completed.some(g => g.uid === uid)) return true;
   return false;
@@ -158,7 +158,7 @@ export function submitForGrading({ setId, cardId, copyN, tier, rarity }) {
     submittedAt: now,
     returnAt:    now + tierDef.durationMs,
   };
-  const store = load();
+  const store = loadAgsStore();
   store.active.push(sub);
   if (!save(store)) return null;
   return sub;
@@ -166,17 +166,17 @@ export function submitForGrading({ setId, cardId, copyN, tier, rarity }) {
 
 /** Active submissions, optionally sorted by closest-return first. */
 export function getActiveSubmissions() {
-  return load().active.slice().sort((a, b) => a.returnAt - b.returnAt);
+  return loadAgsStore().active.slice().sort((a, b) => a.returnAt - b.returnAt);
 }
 
 /** All graded slabs the player owns. */
 export function getCompletedSlabs() {
-  return load().completed.slice();
+  return loadAgsStore().completed.slice();
 }
 
 /** Look up a graded slab by uid (copyKey). */
 export function getSlabByUid(uid) {
-  return load().completed.find(g => g.uid === uid) || null;
+  return loadAgsStore().completed.find(g => g.uid === uid) || null;
 }
 
 /** Time-progress for an active submission, 0..1. */
@@ -213,7 +213,7 @@ export function timeRemainingLabel(sub) {
  * @returns {GradedSlab[]} — slabs newly completed by this tick (for UI fanfare)
  */
 export function tickSubmissions() {
-  const store = load();
+  const store = loadAgsStore();
   const now = Date.now();
   const stillActive = [];
   const newlyCompleted = [];
@@ -255,7 +255,7 @@ export function tickSubmissions() {
  */
 export function getSlabsForCard(setId, cardId) {
   if (!setId || !cardId) return [];
-  return load().completed.filter(g => g.setId === setId && g.cardId === cardId);
+  return loadAgsStore().completed.filter(g => g.setId === setId && g.cardId === cardId);
 }
 
 /**
@@ -274,7 +274,7 @@ export function getHighestSlabForCard(setId, cardId) {
 
 /** Aggregate stats surfaced in the AGS hero panel + activity feed. */
 export function getAgsStats() {
-  const s = load();
+  const s = loadAgsStore();
   let highest = null;
   let totalArchiveValue = 0;
   for (const slab of s.completed) {
@@ -299,7 +299,7 @@ export function clearAllSubmissions() {
  * @returns {boolean} - true if successful and slab was found, false otherwise.
  */
 export function removeSlabFromArchive(uid) {
-  const store = load();
+  const store = loadAgsStore();
   const index = store.completed.findIndex(g => g.uid === uid);
   if (index === -1) return false;
   store.completed.splice(index, 1);
