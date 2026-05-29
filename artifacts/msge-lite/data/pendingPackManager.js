@@ -5,7 +5,9 @@ export function getPendingSession() {
     const data = localStorage.getItem(PENDING_SESSION_KEY);
     if (!data) return null;
     const parsed = JSON.parse(data);
-    if (!parsed || !parsed.id || !parsed.newCards || !Array.isArray(parsed.newCards)) {
+    
+    // v2.0.0 - multi-pack architecture validation
+    if (!parsed || !parsed.id || !parsed.packs || !Array.isArray(parsed.packs) || parsed.packs.length === 0) {
        console.warn('[PendingPackManager] Malformed session detected. Clearing.');
        clearPendingSession();
        return null;
@@ -22,17 +24,18 @@ export function setPendingSession(session) {
   try {
     localStorage.setItem(PENDING_SESSION_KEY, JSON.stringify({
       ...session,
-      sessionVersion: '1.7.9'
+      sessionVersion: '2.0.0'
     }));
   } catch (e) {
     console.error('[PendingPackManager] Failed to save pending session', e);
   }
 }
 
-export function updatePendingSessionIndex(index) {
+export function updatePendingSessionIndex(packIndex, revealIndex) {
   const session = getPendingSession();
   if (session) {
-    session.currentRevealIndex = index;
+    if (packIndex !== undefined) session.currentPackIndex = packIndex;
+    if (revealIndex !== undefined) session.currentRevealIndex = revealIndex;
     setPendingSession(session);
   }
 }

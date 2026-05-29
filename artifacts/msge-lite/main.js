@@ -2321,20 +2321,48 @@ async function purchaseMysteryBox(box, vendor, btn) {
   if (btn) btn.disabled = true;
   if (btn) btn.textContent = 'Opening…';
 
-  // Roll contents and reveal — the modal resolves once the user either
-  // confirms the reveal or dismisses it. Either way the box was paid
-  // for, so we always proceed to open the contained packs.
-  const setIds = rollBoxContents(box.id);
-  await showMysteryBoxReveal(box, setIds);
-
-  // Sequentially open each pack via the existing flow (skip spend)
-  for (const setId of setIds) {
-    await runPackOpening(setId, vendor, { skipSpend: true, favorBasis: box.price / setIds.length });
-  }
-
-  // Vendor favor bonus for the box itself (small additional)
+  // Vendor favor bonus for the box itself
   addFavor(vendor.id, Math.max(2, Math.floor(box.price / 12)));
   showToast(`${vendor.name} Favor +${Math.max(2, Math.floor(box.price / 12))}`, 'favor');
+
+  const setIds = rollBoxContents(box.id);
+  
+  // 1. Generate ALL packs for the purchase immediately after charging
+  const packs = [];
+  for (let i = 0; i < setIds.length; i++) {
+    const setId = setIds[i];
+    if (getCurrentSetId() !== setId) await loadSet(setId);
+    setCurrentSet(setId);
+    engine.stepSimulation();
+    const newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
+    packs.push({
+      setId,
+      newCards,
+      packNumber: engine.state.packsOpened + i,
+      skipSpend: true,
+      favorBasis: box.price / setIds.length,
+      price: box.price / setIds.length
+    });
+  }
+
+  // 2. Persist the entire purchase session
+  const session = {
+    id: Date.now().toString() + Math.random().toString(36).substring(2),
+    purchaseType: 'mystery_box',
+    vendorId: vendor?.id,
+    totalPacks: packs.length,
+    packs,
+    currentPackIndex: 0,
+    currentRevealIndex: 0,
+    createdAt: Date.now()
+  };
+  setPendingSession(session);
+
+  // 3. Show the reveal modal
+  await showMysteryBoxReveal(box, setIds);
+
+  // 4. Play the session
+  await playPendingSession();
 
   renderVendorHub();
   updateRankStrip();
@@ -2343,8 +2371,6 @@ async function purchaseMysteryBox(box, vendor, btn) {
 // ─── Pack purchase ────────────────────────────────────────────────────────────
 
 async function buyPackFromVendor(setId, price, vendor, btn) {
-  // Pre-check (so we can show "Insufficient Funds" without engaging the
-  // full pack-opening flow that the helper below would otherwise start).
   if (!isInfiniteBalance() && getBalance() < price) {
     if (btn) btn.textContent = 'Insufficient Funds';
     setTimeout(() => { if (btn) btn.textContent = 'Buy Pack'; }, 2000);
@@ -2352,77 +2378,131 @@ async function buyPackFromVendor(setId, price, vendor, btn) {
   }
   btn.disabled = true;
   try {
-    await runPackOpening(setId, vendor, { skipSpend: false, favorBasis: price, price });
+    if (getCurrentSetId() !== setId) await loadSet(setId);
+    setCurrentSet(setId);
+    
+    if (!spendBalance(price)) return;
+    sfx.purchase();
+    updateBalanceUI();
+
+    engine.stepSimulation();
+    const newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
+    
+    const session = {
+      id: Date.now().toString() + Math.random().toString(36).substring(2),
+      purchaseType: 'single_pack',
+      vendorId: vendor?.id,
+      totalPacks: 1,
+      packs: [{
+        setId,
+        newCards,
+        packNumber: engine.state.packsOpened,
+        skipSpend: false,
+        favorBasis: price,
+        price
+      }],
+      currentPackIndex: 0,
+      currentRevealIndex: 0,
+      createdAt: Date.now()
+    };
+    setPendingSession(session);
+
+    await playPendingSession();
   } finally {
     btn.disabled = false;
   }
 }
 
-/**
- * Core pack opening flow shared by direct purchases and mystery boxes.
- * Handles balance debit, animation, card grant, favor, reputation,
- * recent hits, and set-completion bonus.
- */
 async function runPackOpening(setId, vendor, { skipSpend, favorBasis, price }) {
-  let dataReady = false;
-  const loadDone = (async () => {
-    if (getCurrentSetId() !== setId) await loadSet(setId);
-    setCurrentSet(setId); dataReady = true; hidePackLoadingIndicator();
-  })();
-  if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
+  // Legacy single pack support for Capsule Corner or direct callers
+  if (getCurrentSetId() !== setId) await loadSet(setId);
+  setCurrentSet(setId);
+
+  if (!skipSpend) {
+    if (!spendBalance(price)) return;
+    sfx.purchase();
+    updateBalanceUI();
+  }
 
   engine.stepSimulation();
   const newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
-
+  
   const session = {
     id: Date.now().toString() + Math.random().toString(36).substring(2),
-    setId,
+    purchaseType: 'direct',
     vendorId: vendor?.id,
-    skipSpend,
-    favorBasis,
-    price,
-    newCards,
-    packNumber: engine.state.packsOpened,
+    totalPacks: 1,
+    packs: [{
+      setId,
+      newCards,
+      packNumber: engine.state.packsOpened,
+      skipSpend,
+      favorBasis,
+      price
+    }],
+    currentPackIndex: 0,
     currentRevealIndex: 0,
     createdAt: Date.now()
   };
   setPendingSession(session);
-
-  if (!skipSpend) {
-    if (!spendBalance(price)) {
-      clearPendingSession();
-      return;          // race-safety
-    }
-    sfx.purchase();
-  }
-  updateBalanceUI();
-
-  // v1.2.2e — lock background scroll for the full pack-opening sequence.
-  // Prevents Safari rubber-band / scroll-bleed behind the overlay.
-  // Balanced in finally so load/reveal errors cannot strand iOS scroll.
-  lockBodyScroll();
-
-  try {
-    const animationDone = openPackInteraction(setId);
-    await animationDone;
-    await openPackOverlay(newCards, session.packNumber, 0);
-  } finally {
-    unlockBodyScroll();
-  }
-
-  await finalizePackOpening(session);
+  await playPendingSession();
 }
 
-async function finalizePackOpening(session) {
-  const currentSession = getPendingSession();
-  if (!currentSession || currentSession.id !== session.id || currentSession.finalizing) {
-    console.warn('[PendingSession] Already finalizing or missing, skipping to prevent duplication.');
-    return;
+async function playPendingSession() {
+  let session = getPendingSession();
+  if (!session) return;
+
+  while (session && session.currentPackIndex < session.totalPacks) {
+    const packIndex = session.currentPackIndex;
+    const pack = session.packs[packIndex];
+    const { setId, newCards, packNumber } = pack;
+
+    let dataReady = false;
+    const loadDone = (async () => {
+      if (getCurrentSetId() !== setId) await loadSet(setId);
+      setCurrentSet(setId); dataReady = true; hidePackLoadingIndicator();
+    })();
+    if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
+
+    lockBodyScroll();
+    try {
+      if (session.currentRevealIndex === 0) {
+        const animationDone = openPackInteraction(setId);
+        await animationDone;
+      }
+      await openPackOverlay(newCards, packNumber, session.currentRevealIndex);
+    } finally {
+      unlockBodyScroll();
+    }
+
+    await finalizePackOpening(pack, session.vendorId, session.id, packIndex);
+
+    session = getPendingSession();
+    if (!session) break;
+
+    session.currentPackIndex++;
+    session.currentRevealIndex = 0;
+
+    if (session.currentPackIndex >= session.totalPacks) {
+      clearPendingSession();
+      break;
+    } else {
+      setPendingSession(session);
+    }
   }
-  currentSession.finalizing = true;
+}
+
+async function finalizePackOpening(pack, vendorId, sessionId, packIndex) {
+  const currentSession = getPendingSession();
+  if (!currentSession || currentSession.id !== sessionId) {
+    return; // Safety guard
+  }
+  // Prevent duplicate finalization of the same pack in the session
+  if (currentSession.packs[packIndex].finalized) return;
+  currentSession.packs[packIndex].finalized = true;
   setPendingSession(currentSession);
 
-  const { setId, vendorId, skipSpend, favorBasis, price, newCards } = session;
+  const { setId, skipSpend, favorBasis, price, newCards } = pack;
   const vendor = vendorId ? VENDORS[vendorId] : { id: vendorId, name: 'Vendor' };
 
   const newDiscoveries = newCards.filter(c => !getOwnedEntry(setId, c.id)).length;
@@ -2544,31 +2624,13 @@ async function finalizePackOpening(session) {
   if (hadSignificantPull) {
     triggerPreservationCheck('pack_pull');
   }
-
-  clearPendingSession();
 }
 
 async function resumePendingSessionIfAny() {
   const session = getPendingSession();
-  if (!session) return;
-  
-  const { setId, newCards, packNumber, currentRevealIndex } = session;
-
-  let dataReady = false;
-  const loadDone = (async () => {
-    if (getCurrentSetId() !== setId) await loadSet(setId);
-    setCurrentSet(setId); dataReady = true; hidePackLoadingIndicator();
-  })();
-  if (!dataReady) { showPackLoadingIndicator(); await loadDone; }
-
-  lockBodyScroll();
-  try {
-    await openPackOverlay(newCards, packNumber, currentRevealIndex);
-  } finally {
-    unlockBodyScroll();
+  if (session && session.packs) {
+    await playPendingSession();
   }
-
-  await finalizePackOpening(session);
 }
 
 // ─── Phase 10.4 — Collector Requests UI + completion ─────────────────────────

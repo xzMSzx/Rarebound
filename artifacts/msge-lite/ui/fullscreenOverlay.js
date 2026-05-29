@@ -309,7 +309,7 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
 
     async function goToNext() {
       cardIndex++;
-      updatePendingSessionIndex(cardIndex);
+      updatePendingSessionIndex(undefined, cardIndex);
       if (cardIndex >= cards.length) {
         if (state === 'summary') return;
         await finishPack(false);
