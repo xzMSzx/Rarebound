@@ -48,6 +48,7 @@ import {
 } from './data/vendorManager.js';
 import { getReputation, addReputation, getRank, getAllRanks } from './data/reputationManager.js';
 import { calculateSellPayout, isSellGated, sellCard }    from './data/sellingManager.js';
+import { CARD_RENDER_TIERS } from './ui/renderTiers.js';
 import { lockBodyScroll, unlockBodyScroll, getLockDepth } from './ui/scrollManager.js';
 import { onEscapeKey } from './ui/overlayScrollLock.js';
 import { computeTotalCollectionValue, lineValueForCollectionEntry } from './data/collectionValuation.js';
@@ -3412,6 +3413,7 @@ function renderBinderPage() {
     const slot = document.createElement('div');
     slot.className = 'binder-slot';
     slot.dataset.cardId = apiCard.id;
+    slot.dataset.renderTier = CARD_RENDER_TIERS.THUMBNAIL;
 
     if (ownedEntry) {
       slot.classList.add(`rarity-${rarityTier}`);
@@ -3628,7 +3630,7 @@ function buildCardDetailHTML(apiCard, ownedEntry, resolvedSetId, value, rarityTi
 
   const html = `
     <div class="card-detail-content" id="cdp-panel">
-      <div class="cdp-image-wrap">
+      <div class="cdp-image-wrap" data-render-tier="${CARD_RENDER_TIERS.SHOWCASE}">
         <img src="${imgSrc}" alt="${apiCard.name}" class="${imgClass}" loading="eager" decoding="async" />
         ${!isOwned ? `<div class="cdp-preview-badge">${rarityLbl}</div>` : ''}
       </div>

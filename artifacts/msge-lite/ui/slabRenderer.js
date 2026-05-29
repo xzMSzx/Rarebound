@@ -16,6 +16,7 @@
 
 import { tierLabel } from '../data/agsGradingEngine.js';
 import { SUBMISSION_TIERS } from '../data/agsSubmissionManager.js';
+import { CARD_RENDER_TIERS } from './renderTiers.js';
 
 /**
  * @param {object} slab    — GradedSlab from agsSubmissionManager
@@ -41,6 +42,7 @@ export function renderSlab(slab, apiCard, opts = {}) {
     `ags-slab ags-slab--${variant} ags-tier-${tierId.toLowerCase()}`
     + (slab?.prestigeSlab ? ' ags-slab--prestige' : '');
   slabEl.dataset.slabUid = slab?.uid || '';
+  slabEl.dataset.renderTier = CARD_RENDER_TIERS.THUMBNAIL;
 
   const imgUrl =
     apiCard?.images?.large ||
@@ -227,6 +229,7 @@ export function renderPremiumSlab(slab, apiCard) {
   root.className = `premium-slab ${tierCls}`;
   if (slab?.prestigeSlab) root.classList.add('premium-slab--prestige');
   root.dataset.slabUid = slab?.uid || '';
+  root.dataset.renderTier = CARD_RENDER_TIERS.SHOWCASE;
 
   root.innerHTML = `
     <div class="premium-slab__outer-shell">

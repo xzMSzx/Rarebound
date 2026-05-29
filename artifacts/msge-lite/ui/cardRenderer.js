@@ -15,6 +15,7 @@
  */
 
 import { RARITY_ICONS, RARITY_ICON_FALLBACK } from './rarityIcons.js';
+import { CARD_RENDER_TIERS, getTierCapabilities } from './renderTiers.js';
 
 const MAX_DISPLAY_CARDS = 300;
 
@@ -27,6 +28,7 @@ const MAX_DISPLAY_CARDS = 300;
 export function createCardElement(card) {
   const el = document.createElement('div');
   el.className = `grid-card grid-card-${card.rarity}`;
+  el.dataset.renderTier = CARD_RENDER_TIERS.THUMBNAIL;
 
   if (card.imageUrl) {
     el.classList.add('grid-card-has-img');
@@ -63,7 +65,9 @@ export function createCardElement(card) {
   // have no reveal moment to trigger that class, so we add it on creation —
   // the collection gallery is a static display where always-on shimmer is the
   // desired behaviour. Also append a small "RH" badge in the corner.
-  if (card.isReverseHolo) {
+  const capabilities = getTierCapabilities(CARD_RENDER_TIERS.THUMBNAIL);
+
+  if (card.isReverseHolo && capabilities.holo) {
     el.classList.add('reverse-holo-active');
 
     const foil = document.createElement('div');

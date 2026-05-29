@@ -1,4 +1,5 @@
 import { SpringValue } from './springValue.js';
+import { getTierCapabilities } from './renderTiers.js';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const toDeg = (value) => `${value.toFixed(2)}deg`;
@@ -26,9 +27,15 @@ export class HoloController {
     const translater = card.querySelector('.card__translater');
     if (!translater) return;
 
+    const tierNode = card.closest('[data-render-tier]');
+    const tier = tierNode ? tierNode.dataset.renderTier : null;
+    const capabilities = getTierCapabilities(tier);
+    if (!capabilities.tilt) return;
+
     const state = {
       card,
       translater,
+      capabilities,
       bounds: null,
       lastPointer: null,
       dirty: true,
@@ -71,7 +78,7 @@ export class HoloController {
     };
 
     card.addEventListener('pointerdown', (event) => {
-      if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false') return;
+      if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false' || !state.capabilities.tilt) return;
       event.preventDefault();
       card.setPointerCapture?.(event.pointerId);
       cancelDisengage();
@@ -81,7 +88,7 @@ export class HoloController {
     }, { passive: false });
 
     card.addEventListener('pointermove', (event) => {
-      if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false') return;
+      if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false' || !state.capabilities.tilt) return;
       event.preventDefault();
       cancelDisengage();
       state.lastPointer = { x: event.clientX, y: event.clientY };
