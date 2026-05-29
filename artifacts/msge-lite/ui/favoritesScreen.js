@@ -22,6 +22,7 @@ import { mapPokemonRarity } from '../data/rarityMapper.js';
 import { getCompletedSlabs } from '../data/agsSubmissionManager.js';
 import { tierLabel } from '../data/agsGradingEngine.js';
 import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
+import { CARD_RENDER_TIERS } from './renderTiers.js';
 
 const RARITY_LABELS = {
   common: 'Common', uncommon: 'Uncommon', rare: 'Rare',
@@ -156,7 +157,7 @@ function renderFavoriteTile(row) {
   const rarityLbl = RARITY_LABELS[rarity] || rarity;
 
   return `
-    <button class="favorite-tile" data-fav-card="${cardId}" data-fav-set="${setId}" type="button">
+    <button class="favorite-tile" data-fav-card="${cardId}" data-fav-set="${setId}" type="button" data-render-tier="${CARD_RENDER_TIERS.THUMBNAIL}">
       <div class="favorite-tile__art-wrap">
         ${img
           ? `<img class="favorite-tile__art" src="${img}" alt="${apiCard.name}" loading="lazy" decoding="async" />`

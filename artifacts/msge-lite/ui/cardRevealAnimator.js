@@ -1,4 +1,5 @@
 import { playCardFlip, playRareChime, playUltraHit } from './audioManager.js';
+import { CARD_RENDER_TIERS, getTierCapabilities } from './renderTiers.js';
 
 /**
  * ui/cardRevealAnimator.js
@@ -75,6 +76,7 @@ function buildCard(container) {
 
   const wrapper = document.createElement('div');
   wrapper.className = 'overlay-card-wrapper';
+  wrapper.dataset.renderTier = CARD_RENDER_TIERS.SHOWCASE;
 
   const inner = document.createElement('div');
   inner.className = 'overlay-card-inner';
@@ -188,7 +190,10 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
   // If a caller forgets to pass it, fall back to the engine rarity so legacy
   // calls still trigger holo on whatever simple 'rare' cards exist.
   const rarityForHolo = realRarity ?? rarity;
-  if (!isReverseHolo && HOLO_RARITIES.has(rarityForHolo)) {
+  const tier = backFace.parentElement?.parentElement?.dataset.renderTier || CARD_RENDER_TIERS.SHOWCASE;
+  const capabilities = getTierCapabilities(tier);
+
+  if (!isReverseHolo && HOLO_RARITIES.has(rarityForHolo) && capabilities.holo) {
     const rainbow = document.createElement('div');
     rainbow.className = 'holo-rainbow';
     const reflection = document.createElement('div');
@@ -313,16 +318,19 @@ export async function revealCard(rarity, isSuspense = false, imageUrl = null, is
       'specialIllustrationRare', 'hyperRare',
     ]);
 
-    if (BURST_TIERS.has(realRarity)) {
+    const tier = wrapper.dataset.renderTier;
+    const capabilities = getTierCapabilities(tier);
+
+    if (BURST_TIERS.has(realRarity) && capabilities.particles) {
       const burst = document.createElement('div');
       burst.className = 'reveal-burst';
       wrapper.appendChild(burst);
       setTimeout(() => burst.remove(), 900);
     }
-    if (SPARKLE_TIERS.has(realRarity)) {
+    if (SPARKLE_TIERS.has(realRarity) && capabilities.particles) {
       _spawnSparkles(wrapper);
     }
-    if (BG_TIERS.has(realRarity)) {
+    if (BG_TIERS.has(realRarity) && capabilities.holo) {
       const bg = document.createElement('div');
       bg.className = 'reveal-background';
       wrapper.appendChild(bg);
@@ -425,6 +433,9 @@ function _shake(element) {
 //
 function _applyCardTilt(wrapper) {
   if (!wrapper) return;
+  const tier = wrapper.dataset.renderTier;
+  const capabilities = getTierCapabilities(tier);
+  if (!capabilities.tilt) return;
   const MAX_DEG = 10;
 
   // Phase 5.4.3 — initialize the holo CSS vars to centered so the iridescent
