@@ -534,7 +534,7 @@ function getSettingsHTML(s, dev) {
         <div class="confirm-title">Developer Access</div>
         <div class="confirm-body dev-access-sub">Restricted archive utilities</div>
         <input id="dev-access-input" class="dev-access-input" type="password"
-               placeholder="Access key" autocomplete="off" />
+               placeholder="Access key" autocomplete="off" aria-label="Developer access key" />
         <div class="dev-access-error hidden" id="dev-access-err">Invalid access key</div>
         <div class="confirm-actions">
           <button class="confirm-cancel" id="dev-access-cancel">Cancel</button>
