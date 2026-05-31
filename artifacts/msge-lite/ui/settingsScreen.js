@@ -266,7 +266,7 @@ function diagSectionHTML() {
     <div class="diag-sub-row">
       <span class="diag-sub-label">${label}</span>
       <label class="toggle-switch toggle-switch--sm">
-        <input type="checkbox" class="diag-iso-toggle" data-iso="${key}" ${iso[key] ? 'checked' : ''} ${!diagOn ? 'disabled' : ''} />
+        <input type="checkbox" class="diag-iso-toggle" data-iso="${key}" aria-label="Toggle ${label}" ${iso[key] ? 'checked' : ''} ${!diagOn ? 'disabled' : ''} />
         <span class="toggle-slider"></span>
       </label>
     </div>
@@ -287,7 +287,7 @@ function diagSectionHTML() {
             <div class="settings-row-desc">Enables internal logging, overlay, and debug tools.</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="diag-master-toggle" ${diagOn ? 'checked' : ''} />
+            <input type="checkbox" id="diag-master-toggle" aria-label="Toggle Developer Diagnostics" ${diagOn ? 'checked' : ''} />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -299,7 +299,7 @@ function diagSectionHTML() {
           <div class="diag-sub-row">
             <span class="diag-sub-label">Diagnostic Overlay</span>
             <label class="toggle-switch toggle-switch--sm">
-              <input type="checkbox" id="diag-overlay-toggle"
+              <input type="checkbox" id="diag-overlay-toggle" aria-label="Toggle Diagnostic Overlay"
                 ${flags.showOverlay ? 'checked' : ''} ${!diagOn ? 'disabled' : ''} />
               <span class="toggle-slider"></span>
             </label>
@@ -308,7 +308,7 @@ function diagSectionHTML() {
           <div class="diag-sub-row">
             <span class="diag-sub-label">Debug Tap Button</span>
             <label class="toggle-switch toggle-switch--sm">
-              <input type="checkbox" id="diag-tap-toggle"
+              <input type="checkbox" id="diag-tap-toggle" aria-label="Toggle Debug Tap Button"
                 ${flags.showDebugTap ? 'checked' : ''} ${!diagOn ? 'disabled' : ''} />
               <span class="toggle-slider"></span>
             </label>
@@ -321,7 +321,7 @@ function diagSectionHTML() {
           <div class="diag-sub-row">
             <span class="diag-sub-label">Touch Trace</span>
             <label class="toggle-switch toggle-switch--sm">
-              <input type="checkbox" id="diag-touchtrace-toggle"
+              <input type="checkbox" id="diag-touchtrace-toggle" aria-label="Toggle Touch Trace"
                 ${flags.touchTrace !== false ? 'checked' : ''} ${!diagOn ? 'disabled' : ''} />
               <span class="toggle-slider"></span>
             </label>
@@ -330,7 +330,7 @@ function diagSectionHTML() {
           <div class="diag-sub-row">
             <span class="diag-sub-label">Nav Audit</span>
             <label class="toggle-switch toggle-switch--sm">
-              <input type="checkbox" id="diag-navaudit-toggle"
+              <input type="checkbox" id="diag-navaudit-toggle" aria-label="Toggle Nav Audit"
                 ${flags.navAudit !== false ? 'checked' : ''} ${!diagOn ? 'disabled' : ''} />
               <span class="toggle-slider"></span>
             </label>
@@ -339,7 +339,7 @@ function diagSectionHTML() {
           <div class="diag-sub-row">
             <span class="diag-sub-label">Audio Diagnostics</span>
             <label class="toggle-switch toggle-switch--sm">
-              <input type="checkbox" id="diag-audioDiag-toggle"
+              <input type="checkbox" id="diag-audioDiag-toggle" aria-label="Toggle Audio Diagnostics"
                 ${flags.audioDiag ? 'checked' : ''} ${!diagOn ? 'disabled' : ''} />
               <span class="toggle-slider"></span>
             </label>
@@ -388,7 +388,7 @@ function devToolsHTML() {
           </div>
         </div>
         <label class="toggle-switch">
-          <input type="checkbox" id="dev-infinite-toggle" ${infinite ? 'checked' : ''} />
+          <input type="checkbox" id="dev-infinite-toggle" aria-label="Toggle Infinite Mode" ${infinite ? 'checked' : ''} />
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -401,7 +401,7 @@ function devToolsHTML() {
           </div>
         </div>
         <label class="toggle-switch">
-          <input type="checkbox" id="dev-broker-toggle" ${brokerForced ? 'checked' : ''} />
+          <input type="checkbox" id="dev-broker-toggle" aria-label="Toggle Force Broker Active" ${brokerForced ? 'checked' : ''} />
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -444,7 +444,7 @@ function getSettingsHTML(s, dev) {
             </div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" ${s.ambientAudio ? 'checked' : ''} />
+            <input type="checkbox" aria-label="Toggle Ambient Vendor Audio" ${s.ambientAudio ? 'checked' : ''} />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -455,7 +455,7 @@ function getSettingsHTML(s, dev) {
             <div class="settings-row-desc">Subtle vibration on supported devices</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" ${s.haptics ? 'checked' : ''} />
+            <input type="checkbox" aria-label="Toggle Haptic Feedback" ${s.haptics ? 'checked' : ''} />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -466,7 +466,7 @@ function getSettingsHTML(s, dev) {
             <div class="settings-row-desc">Shorten animations and transitions</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" ${s.reducedMotion ? 'checked' : ''} />
+            <input type="checkbox" aria-label="Toggle Reduced Motion" ${s.reducedMotion ? 'checked' : ''} />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -534,7 +534,7 @@ function getSettingsHTML(s, dev) {
         <div class="confirm-title">Developer Access</div>
         <div class="confirm-body dev-access-sub">Restricted archive utilities</div>
         <input id="dev-access-input" class="dev-access-input" type="password"
-               placeholder="Access key" autocomplete="off" />
+               placeholder="Access key" aria-label="Access key" autocomplete="off" />
         <div class="dev-access-error hidden" id="dev-access-err">Invalid access key</div>
         <div class="confirm-actions">
           <button class="confirm-cancel" id="dev-access-cancel">Cancel</button>
