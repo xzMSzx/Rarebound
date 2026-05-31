@@ -19,12 +19,41 @@ import { isPlainObject, readJson, writeJson } from './persistenceStore.js';
 
 const STORAGE_KEY = 'tcg_collection_v2';
 
+let _collectionCache = null;
+let _collectionDirty = false;
+
+export function runWithCollectionCache(fn) {
+  if (_collectionCache !== null) return fn();
+
+  _collectionCache = getCollection();
+  _collectionDirty = false;
+  try {
+    // Note: This implementation only supports synchronous functions correctly.
+    // If an async function is passed, the finally block will clear the cache
+    // before the promise resolves.
+    const result = fn();
+    if (_collectionDirty) {
+      writeJson(STORAGE_KEY, _collectionCache);
+    }
+    return result;
+  } finally {
+    _collectionCache = null;
+    _collectionDirty = false;
+  }
+}
+
 export function getCollection() {
+  if (_collectionCache !== null) return _collectionCache;
   return readJson(STORAGE_KEY, {}, isPlainObject).value;
 }
 
 export function saveCollection(collection) {
-  return writeJson(STORAGE_KEY, collection);
+  if (_collectionCache !== null) {
+    _collectionCache = collection;
+    _collectionDirty = true;
+  } else {
+    return writeJson(STORAGE_KEY, collection);
+  }
 }
 
 /**

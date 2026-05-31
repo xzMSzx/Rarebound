@@ -32,7 +32,7 @@ import {
   loadPlayerState, getBalance, spendBalance, addCard, addBalance,
 } from './state/playerState.js';
 import {
-  getCollection, addCardToCollection, getOwnedEntry,
+  getCollection, addCardToCollection, getOwnedEntry, runWithCollectionCache
 } from './data/collectionManager.js';
 import { getMarketValue, getAllMarketValues, enrichMarketMeta } from './data/marketValue.js';
 import { isWishlisted, toggleWishlist, getWishlist } from './data/wishlistManager.js';
@@ -2513,14 +2513,16 @@ async function finalizePackOpening(pack, vendorId, sessionId, packIndex) {
   // physical copy carries its own hidden quality fingerprint, so we must
   // capture the copy number AT THE MOMENT OF ADD (not after all adds, which
   // would lose the per-copy ordering for cards pulled multiple times).
-  newCards.forEach(c => {
-    addCardToCollection(c);
-    const tier = c.rarityType || c.rarity;
-    if (!isEligibleRarity(tier)) return;
-    try {
-      const copyN = getOwnedEntry(setId, c.id)?.count || 1;
-      ensureQualityForCopy(setId, c.id, copyN, tier, { sourceVendor: vendor });
-    } catch (err) { console.error('[quality] per-copy generation failed', err); }
+  runWithCollectionCache(() => {
+    newCards.forEach(c => {
+      addCardToCollection(c);
+      const tier = c.rarityType || c.rarity;
+      if (!isEligibleRarity(tier)) return;
+      try {
+        const copyN = getOwnedEntry(setId, c.id)?.count || 1;
+        ensureQualityForCopy(setId, c.id, copyN, tier, { sourceVendor: vendor });
+      } catch (err) { console.error('[quality] per-copy generation failed', err); }
+    });
   });
   incrementPacksOpened();
 
