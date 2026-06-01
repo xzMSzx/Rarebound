@@ -8,3 +8,6 @@
 ## 2026-05-21 - Accessible Placeholder-Only Inputs
 **Learning:** Using `placeholder` text on `<input>` elements without an associated `<label>` or an explicit `aria-label` attribute creates accessibility barriers, as screen readers may not read the placeholder when focusing the input. This is prevalent in simple forms like login panels or search inputs.
 **Action:** When working on inputs without visible `<label>` elements, always explicitly define an `aria-label` attribute matching the intended purpose (e.g., `aria-label="Email address"`) to ensure the field is correctly announced by screen readers.
+## 2025-02-18 - Accessibility for Custom Toggles and Placeholder-only Inputs
+**Learning:** Found custom toggle switches lacking explicit `<label>` encapsulation and a password input field that relies entirely on `placeholder` text visually in `msge-lite/ui/settingsScreen.js`. This is an accessibility issue pattern specific to how some ad-hoc UI forms are generated in this vanilla JS app.
+**Action:** When working with vanilla JS components rendering custom toggle switches (e.g. `<input type="checkbox">` styled as a slider) or inputs visually relying on placeholders, ensure to add an explicit `aria-label` directly on the `<input>` element so screen readers can correctly identify their purpose.
