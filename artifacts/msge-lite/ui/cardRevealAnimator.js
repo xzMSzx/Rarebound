@@ -263,7 +263,12 @@ export function showMystery(isSuspense = false) {
   });
 
   // Pre-fill the hidden back face blank; revealCard fills it just before flip
+  const glare = _currentCard.backFace.querySelector('.card__glare');
+  const shine = _currentCard.backFace.querySelector('.card__shine');
   _currentCard.backFace.innerHTML = '';
+  if (glare) _currentCard.backFace.appendChild(glare);
+  if (shine) _currentCard.backFace.appendChild(shine);
+
   _currentCard.inner.classList.remove('overlay-flipped');
 
   if (isSuspense) {
@@ -413,6 +418,7 @@ export function slideOutCard() {
   return new Promise((resolve) => {
     wrapper.classList.add('slide-out-left');
     setTimeout(() => {
+      if (holoController && wrapper) holoController.unregisterCard(wrapper);
       if (_container) _container.innerHTML = '';
       _currentCard = null;
       resolve();
@@ -424,6 +430,9 @@ export function slideOutCard() {
  * Clear the container immediately (no animation).
  */
 export function clearCard() {
+  if (_currentCard && _currentCard.wrapper && holoController) {
+    holoController.unregisterCard(_currentCard.wrapper);
+  }
   if (_container) _container.innerHTML = '';
   _currentCard = null;
 }

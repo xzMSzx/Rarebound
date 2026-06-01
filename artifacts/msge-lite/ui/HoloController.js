@@ -80,7 +80,7 @@ export class HoloController {
       }, 120);
     };
 
-    card.addEventListener('pointerdown', (event) => {
+    const onPointerDown = (event) => {
       if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false' || !state.capabilities.tilt) return;
       event.preventDefault();
       card.setPointerCapture?.(event.pointerId);
@@ -88,36 +88,56 @@ export class HoloController {
       state.lastPointer = { x: event.clientX, y: event.clientY };
       state.dirty = true;
       this._requestFlush();
-    }, { passive: false });
+    };
 
-    card.addEventListener('pointermove', (event) => {
+    const onPointerMove = (event) => {
       if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false' || !state.capabilities.tilt) return;
       event.preventDefault();
       cancelDisengage();
       state.lastPointer = { x: event.clientX, y: event.clientY };
       state.dirty = true;
       this._requestFlush();
-    }, { passive: false });
+    };
 
-    card.addEventListener('pointerup', (event) => {
+    const onPointerUp = (event) => {
       card.releasePointerCapture?.(event.pointerId);
       scheduleDisengage();
-    }, { passive: true });
+    };
 
-    card.addEventListener('pointercancel', () => {
-      scheduleDisengage();
-    }, { passive: true });
+    const onPointerCancel = () => scheduleDisengage();
+    const onLostPointerCapture = () => scheduleDisengage();
+    const onDragStart = (event) => event.preventDefault();
+    const onPointerLeave = scheduleDisengage;
+    const onPointerOut = scheduleDisengage;
 
-    card.addEventListener('lostpointercapture', () => {
-      scheduleDisengage();
-    }, { passive: true });
+    card.addEventListener('pointerdown', onPointerDown, { passive: false });
+    card.addEventListener('pointermove', onPointerMove, { passive: false });
+    card.addEventListener('pointerup', onPointerUp, { passive: true });
+    card.addEventListener('pointercancel', onPointerCancel, { passive: true });
+    card.addEventListener('lostpointercapture', onLostPointerCapture, { passive: true });
+    card.addEventListener('dragstart', onDragStart);
+    card.addEventListener('pointerleave', onPointerLeave, { passive: true });
+    card.addEventListener('pointerout', onPointerOut, { passive: true });
 
-    card.addEventListener('dragstart', (event) => {
-      event.preventDefault();
-    });
+    state.cleanup = () => {
+      observer.disconnect();
+      card.removeEventListener('pointerdown', onPointerDown);
+      card.removeEventListener('pointermove', onPointerMove);
+      card.removeEventListener('pointerup', onPointerUp);
+      card.removeEventListener('pointercancel', onPointerCancel);
+      card.removeEventListener('lostpointercapture', onLostPointerCapture);
+      card.removeEventListener('dragstart', onDragStart);
+      card.removeEventListener('pointerleave', onPointerLeave);
+      card.removeEventListener('pointerout', onPointerOut);
+    };
+  }
 
-    card.addEventListener('pointerleave', scheduleDisengage, { passive: true });
-    card.addEventListener('pointerout', scheduleDisengage, { passive: true });
+  unregisterCard(card) {
+    const state = this.cards.get(card);
+    if (!state) return;
+
+    if (state.cleanup) state.cleanup();
+    this.cards.delete(card);
   }
 
   _updateBounds(state) {

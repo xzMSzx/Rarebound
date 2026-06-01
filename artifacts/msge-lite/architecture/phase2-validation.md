@@ -40,7 +40,7 @@
 
 ## 6. Shine Validation
 - A lightweight validation shine will be added to `.card__shine`.
-- Driven by `capabilities.holo` or `capabilities.glare`.
+- Driven by `capabilities.holo`.
 - Uses a simple linear-gradient: `linear-gradient(135deg, transparent, rgba(255,255,255,0.15), transparent)`.
 - Opacity scaled by `--rb-shine-opacity, 0`.
 
