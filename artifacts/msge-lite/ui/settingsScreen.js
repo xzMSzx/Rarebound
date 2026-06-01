@@ -444,7 +444,7 @@ function getSettingsHTML(s, dev) {
             </div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" ${s.ambientAudio ? 'checked' : ''} />
+            <input type="checkbox" aria-label="Toggle Ambient Audio" ${s.ambientAudio ? 'checked' : ''} />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -455,7 +455,7 @@ function getSettingsHTML(s, dev) {
             <div class="settings-row-desc">Subtle vibration on supported devices</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" ${s.haptics ? 'checked' : ''} />
+            <input type="checkbox" aria-label="Toggle Haptic Feedback" ${s.haptics ? 'checked' : ''} />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -466,7 +466,7 @@ function getSettingsHTML(s, dev) {
             <div class="settings-row-desc">Shorten animations and transitions</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" ${s.reducedMotion ? 'checked' : ''} />
+            <input type="checkbox" aria-label="Toggle Reduced Motion" ${s.reducedMotion ? 'checked' : ''} />
             <span class="toggle-slider"></span>
           </label>
         </div>
