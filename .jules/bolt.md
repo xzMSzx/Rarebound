@@ -7,3 +7,6 @@
 ## 2026-05-21 - Operation-Scoped Caching for Data Processing Bottlenecks
 **Learning:** During collection valuation, converting `cached.find()` into an `O(1)` map lookup yielded a 2.5x speedup for large user portfolios. However, storing the instantiated Map on the module scope breaks Vitest tests because the codebase heavily mocks/mutates state.
 **Action:** When performing `Array.find()` to Map lookups to resolve O(N) bottlenecks in bulk data processing like `computeTotalCollectionValue`, cache the instantiated Map on a transient context object passed down the stack (e.g., `ctx._apiCardMapCache`), and clear it in a `finally` block to avoid global side-effects.
+## 2024-05-22 - Operation-Scoped Map Caching in Milestone Manager
+**Learning:** Functions evaluating milestone progress (`countByTiers`, etc.) looped over the whole collection, performing an `Array.find` on set cards for every user card. This resulted in significant O(N^2) overhead during milestone checks.
+**Action:** Replaced `Array.find` with a Map lookup (`_sweepMapCache.get(setId).get(cardId)`). To prevent breaking test state while maintaining performance, the Map cache is lazily initialized and explicitly cleared in the `finally` block of the top-level sweep functions (`getMilestoneStatus`, `getCategoryStatus`), matching the existing `_sweepCollection` paradigm.
