@@ -1,0 +1,3 @@
+## 2024-05-31 - Optimize Bulk Collection Updates
+**Learning:** In msge-lite, repetitive JSON.parse operations on `localStorage` within tightly bound loops (like unpacking multiple cards) introduce measurable CPU overhead. However, directly caching `getCollection()` module-wide breaks Vitest tests because the test suites frequently mutate `localStorage` natively, causing caches to desync.
+**Action:** When optimizing synchronous loops that require bulk `localStorage` access, implement an operation-scoped cache using a `try...finally` block. This guarantees state freshness and prevents N+1 parsing bottlenecks without violating test independence or isolation. Async functions must be carefully handled or avoided in this pattern to prevent premature cache clearing.
