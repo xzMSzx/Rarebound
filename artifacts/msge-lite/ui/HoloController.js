@@ -1,5 +1,6 @@
 import { SpringValue } from './springValue.js';
 import { getTierCapabilities } from './renderTiers.js';
+import { diagnosticOverlay } from './diagnosticOverlay.js';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const toDeg = (value) => `${value.toFixed(2)}deg`;
@@ -13,15 +14,17 @@ export class HoloController {
     this._lastFrameTime = null;
     this._boundFlush = this._flush.bind(this);
     this._init();
+    diagnosticOverlay.attachHoloController(this);
   }
 
   _init() {
     const cards = Array.from(this.root.querySelectorAll('[data-rb-interactive="true"]'));
-    cards.forEach((card) => this._registerCard(card));
+    cards.forEach((card) => this.registerCard(card));
     window.addEventListener('resize', () => this._refreshBounds(), { passive: true });
   }
 
-  _registerCard(card) {
+  // Public method so new cards can be registered dynamically
+  registerCard(card) {
     if (this.cards.has(card)) return;
 
     const translater = card.querySelector('.card__translater');
@@ -229,14 +232,18 @@ export class HoloController {
         const interaction = state.interactionSpring.current;
 
         // 4. Dispatch to the DOM (Simey-Compatible Format)
-        state.translater.style.setProperty('--rb-tilt-x', `${rbTiltX * 100}%`);
-        state.translater.style.setProperty('--rb-tilt-y', `${rbTiltY * 100}%`);
+        state.translater.style.setProperty('--rb-tilt-x', `${interaction.tiltX * 100}%`);
+        state.translater.style.setProperty('--rb-tilt-y', `${interaction.tiltY * 100}%`);
 
-        state.translater.style.setProperty('--rb-from-left', rbTiltX); // Raw decimal
-        state.translater.style.setProperty('--rb-from-top', rbTiltY); // Raw decimal
+        state.translater.style.setProperty('--rb-from-left', interaction.tiltX); // Raw decimal
+        state.translater.style.setProperty('--rb-from-top', interaction.tiltY); // Raw decimal
 
-        state.translater.style.setProperty('--rb-from-center', rbFromCenter);
-        state.translater.style.setProperty('--rb-at-edge', rbAtEdge);
+        state.translater.style.setProperty('--rb-from-center', interaction.fromCenter);
+        state.translater.style.setProperty('--rb-at-edge', interaction.atEdge);
+
+        // Capability driven rendering
+        state.translater.style.setProperty('--rb-glare-opacity', state.capabilities.glare ? 1 : 0);
+        state.translater.style.setProperty('--rb-shine-opacity', state.capabilities.holo ? 1 : 0);
         // rotation.x/y are normalized (-1..1) from the spring — scale to degrees
         const degX = clamp(rotation.x, -1, 1) * state.qualityMax;
         const degY = clamp(rotation.y, -1, 1) * state.qualityMax;

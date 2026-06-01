@@ -1,5 +1,8 @@
 import { playCardFlip, playRareChime, playUltraHit } from './audioManager.js';
 import { CARD_RENDER_TIERS, getTierCapabilities } from './renderTiers.js';
+import { HoloController } from './HoloController.js';
+
+let holoController = null;
 
 /**
  * ui/cardRevealAnimator.js
@@ -75,11 +78,13 @@ function buildCard(container) {
   container.innerHTML = '';
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'overlay-card-wrapper';
+  wrapper.className = 'overlay-card-wrapper card'; // Add .card for Simey architecture
   wrapper.dataset.renderTier = CARD_RENDER_TIERS.SHOWCASE;
+  wrapper.dataset.rbInteractive = 'true'; // Enable HoloController attachment
 
+  // The inner element is the one HoloController uses to rotate/translate
   const inner = document.createElement('div');
-  inner.className = 'overlay-card-inner';
+  inner.className = 'overlay-card-inner card__translater';
 
   const frontFace = document.createElement('div');
   frontFace.className = 'overlay-card-face overlay-card-front';
@@ -87,12 +92,24 @@ function buildCard(container) {
   const backFace = document.createElement('div');
   backFace.className = 'overlay-card-face overlay-card-back-face';
 
+  const glare = document.createElement('div');
+  glare.className = 'card__glare';
+
+  const shine = document.createElement('div');
+  shine.className = 'card__shine';
+
+  // Structure: wrapper > inner > (frontFace, backFace, glare, shine)
+  // Glare/Shine need to follow the face flip or be on the backFace.
+  // Actually, glare and shine should probably be inside backFace so they only appear on the front of the card.
+  backFace.appendChild(glare);
+  backFace.appendChild(shine);
+
   inner.appendChild(frontFace);
   inner.appendChild(backFace);
   wrapper.appendChild(inner);
   container.appendChild(wrapper);
 
-  return { wrapper, inner, frontFace, backFace };
+  return { wrapper, inner, frontFace, backFace, glare, shine };
 }
 
 /**
@@ -124,9 +141,15 @@ function renderFront(frontFace, isSuspense) {
 function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, realRarity = null) {
   backFace.className = `overlay-card-face overlay-card-back-face rarity-reveal-${rarity}`;
 
+  // Preserve glare and shine when replacing innerHTML
+  const glare = backFace.querySelector('.card__glare');
+  const shine = backFace.querySelector('.card__shine');
+
   if (imageUrl) {
     // Append immediately so foil layers mounted below survive image load/decode.
     backFace.innerHTML = '';
+    if (glare) backFace.appendChild(glare);
+    if (shine) backFace.appendChild(shine);
     const img = document.createElement('img');
     img.className = 'card-reveal-img';
     img.loading = 'eager';
@@ -163,6 +186,8 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
         <span class="card-reveal-rarity">${RARITY_LABEL[rarity] ?? rarity}</span>
       </div>
     `;
+    if (glare) backFace.appendChild(glare);
+    if (shine) backFace.appendChild(shine);
   }
 
   // Phase 5.2 — reverse-holo foil shimmer (visual only; engine logic untouched).
@@ -433,48 +458,11 @@ function _shake(element) {
 //
 function _applyCardTilt(wrapper) {
   if (!wrapper) return;
-  const tier = wrapper.dataset.renderTier;
-  const capabilities = getTierCapabilities(tier);
-  if (!capabilities.tilt) return;
-  const MAX_DEG = 10;
 
-  // Phase 5.4.3 — initialize the holo CSS vars to centered so the iridescent
-  // bands and spotlight render properly at rest (before any pointer activity).
-  wrapper.style.setProperty('--holo-x', '50%');
-  wrapper.style.setProperty('--holo-y', '50%');
+  if (!holoController) {
+    holoController = new HoloController(document);
+  }
 
-  const setTilt = (clientX, clientY) => {
-    const rect = wrapper.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    const fx = x / rect.width;
-    const fy = y / rect.height;
-    const rotateY = (fx - 0.5) * (MAX_DEG * 2);
-    const rotateX = (0.5 - fy) * (MAX_DEG * 2);
-    wrapper.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    // Phase 5.4.3 — drive the holo spotlight + band shift via CSS vars so the
-    // reflection physically tracks the pointer like a real foil card.
-    wrapper.style.setProperty('--holo-x', `${fx * 100}%`);
-    wrapper.style.setProperty('--holo-y', `${fy * 100}%`);
-  };
-
-  const resetTilt = () => {
-    wrapper.style.transform = 'rotateX(0deg) rotateY(0deg)';
-    wrapper.style.setProperty('--holo-x', '50%');
-    wrapper.style.setProperty('--holo-y', '50%');
-  };
-
-  wrapper.addEventListener('mousemove', (e) => setTilt(e.clientX, e.clientY));
-  wrapper.addEventListener('mouseleave', resetTilt);
-
-  // Touch — do NOT preventDefault; the overlay's swipe-to-next-card handler
-  // also listens on touch and needs the events to bubble through.
-  wrapper.addEventListener('touchmove', (e) => {
-    if (!e.touches || e.touches.length === 0) return;
-    const t = e.touches[0];
-    setTilt(t.clientX, t.clientY);
-  }, { passive: true });
-  wrapper.addEventListener('touchend',   resetTilt);
-  wrapper.addEventListener('touchcancel', resetTilt);
+  wrapper.dataset.cardState = 'interactive';
+  holoController.registerCard(wrapper);
 }
