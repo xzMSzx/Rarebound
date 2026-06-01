@@ -508,7 +508,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   aspect-ratio: 63 / 88;
   max-height: 55vh;
   perspective: 1000px;
-  /* Padding removed: we rely on viewport relative width (85vw) for side margins. 
+  /* Padding removed: we rely on viewport relative width (85vw) for side margins.
      This ensures the inner content box maintains exactly 63/88 ratio. */
   padding: 0;
   overflow: visible;
@@ -11409,7 +11409,7 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
 .mcc-btn { background: rgba(214, 178, 92, 0.15); color: #d6b25c; border: 1px solid rgba(214, 178, 92, 0.4); padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .mcc-btn:hover { background: rgba(214, 178, 92, 0.25); }
 /* trigger vercel deployment */
- 
+
 /* =========================
    RAREBOUND HOLOGRAPHIC RENDERER
    (Simey-Style Integration Layer)
@@ -11472,42 +11472,11 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
 
   z-index: 2;
 
-  mix-blend-mode: hard-light;
-
-  /* Edge-sensitive intensity */
-  opacity: calc(
-    0.08 +
-    (var(--rb-at-edge, 0) * 0.42)
-  );
-
-  background:
-    radial-gradient(
-      farthest-corner circle
-      at calc(var(--rb-tilt-x, 0.5) * 100%)
-         calc(var(--rb-tilt-y, 0.5) * 100%),
-
-      rgba(255,255,255,0.95) 0%,
-      rgba(255,255,255,0.45) 12%,
-      rgba(255,255,255,0.16) 26%,
-      rgba(255,255,255,0.08) 40%,
-      transparent 72%
-    );
-
-  filter:
-    brightness(
-      calc(
-        0.92 +
-        (var(--rb-from-center, 0) * 0.18)
-      )
-    );
-
-  transform:
-    translateZ(1px);
-
-  will-change:
-    opacity,
-    background-position,
-    filter;
+  /* Validation: pure lightweight rgba, no mix-blend-mode */
+  background: rgba(255, 255, 255, 1);
+  opacity: calc(var(--rb-glare-opacity, 0) * (0.08 + (var(--rb-at-edge, 0) * 0.42)));
+  transform: translateZ(1px);
+  will-change: opacity;
 }
 
 /* 6. SECONDARY SHINE / FOIL LAYER */
@@ -11521,41 +11490,16 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
 
   z-index: 3;
 
-  mix-blend-mode: color-dodge;
-
-  /* Slightly softer than glare */
-  opacity: calc(
-    0.04 +
-    (var(--rb-from-center, 0) * 0.22)
+  /* Validation: Lightweight dummy shine, no mix-blend-mode */
+  background: linear-gradient(
+    135deg,
+    transparent,
+    rgba(255,255,255,0.15),
+    transparent
   );
-
-  /* Opposing parallax feel */
-  background:
-    radial-gradient(
-      farthest-corner circle
-      at calc((1 - var(--rb-tilt-x, 0.5)) * 100%)
-         calc((1 - var(--rb-tilt-y, 0.5)) * 100%),
-
-      rgba(255,255,255,0.34) 0%,
-      rgba(255,255,255,0.12) 20%,
-      transparent 56%
-    );
-
-  filter:
-    brightness(
-      calc(
-        0.88 +
-        (var(--rb-at-edge, 0) * 0.28)
-      )
-    );
-
-  transform:
-    translateZ(2px);
-
-  will-change:
-    opacity,
-    background-position,
-    filter;
+  opacity: calc(var(--rb-shine-opacity, 0) * (0.04 + (var(--rb-from-center, 0) * 0.22)));
+  transform: translateZ(2px);
+  will-change: opacity;
 }
 
 /* 7. INTERACTION SAFETY */

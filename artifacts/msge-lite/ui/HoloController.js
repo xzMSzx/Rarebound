@@ -1,5 +1,6 @@
 import { SpringValue } from './springValue.js';
 import { getTierCapabilities } from './renderTiers.js';
+import { diagnosticOverlay } from './diagnosticOverlay.js';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const toDeg = (value) => `${value.toFixed(2)}deg`;
@@ -13,15 +14,17 @@ export class HoloController {
     this._lastFrameTime = null;
     this._boundFlush = this._flush.bind(this);
     this._init();
+    diagnosticOverlay.attachHoloController(this);
   }
 
   _init() {
     const cards = Array.from(this.root.querySelectorAll('[data-rb-interactive="true"]'));
-    cards.forEach((card) => this._registerCard(card));
+    cards.forEach((card) => this.registerCard(card));
     window.addEventListener('resize', () => this._refreshBounds(), { passive: true });
   }
 
-  _registerCard(card) {
+  // Public method so new cards can be registered dynamically
+  registerCard(card) {
     if (this.cards.has(card)) return;
 
     const translater = card.querySelector('.card__translater');
@@ -77,7 +80,7 @@ export class HoloController {
       }, 120);
     };
 
-    card.addEventListener('pointerdown', (event) => {
+    const onPointerDown = (event) => {
       if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false' || !state.capabilities.tilt) return;
       event.preventDefault();
       card.setPointerCapture?.(event.pointerId);
@@ -85,36 +88,56 @@ export class HoloController {
       state.lastPointer = { x: event.clientX, y: event.clientY };
       state.dirty = true;
       this._requestFlush();
-    }, { passive: false });
+    };
 
-    card.addEventListener('pointermove', (event) => {
+    const onPointerMove = (event) => {
       if (card.dataset.cardState === 'idle' || card.dataset.rbInteractive === 'false' || !state.capabilities.tilt) return;
       event.preventDefault();
       cancelDisengage();
       state.lastPointer = { x: event.clientX, y: event.clientY };
       state.dirty = true;
       this._requestFlush();
-    }, { passive: false });
+    };
 
-    card.addEventListener('pointerup', (event) => {
+    const onPointerUp = (event) => {
       card.releasePointerCapture?.(event.pointerId);
       scheduleDisengage();
-    }, { passive: true });
+    };
 
-    card.addEventListener('pointercancel', () => {
-      scheduleDisengage();
-    }, { passive: true });
+    const onPointerCancel = () => scheduleDisengage();
+    const onLostPointerCapture = () => scheduleDisengage();
+    const onDragStart = (event) => event.preventDefault();
+    const onPointerLeave = scheduleDisengage;
+    const onPointerOut = scheduleDisengage;
 
-    card.addEventListener('lostpointercapture', () => {
-      scheduleDisengage();
-    }, { passive: true });
+    card.addEventListener('pointerdown', onPointerDown, { passive: false });
+    card.addEventListener('pointermove', onPointerMove, { passive: false });
+    card.addEventListener('pointerup', onPointerUp, { passive: true });
+    card.addEventListener('pointercancel', onPointerCancel, { passive: true });
+    card.addEventListener('lostpointercapture', onLostPointerCapture, { passive: true });
+    card.addEventListener('dragstart', onDragStart);
+    card.addEventListener('pointerleave', onPointerLeave, { passive: true });
+    card.addEventListener('pointerout', onPointerOut, { passive: true });
 
-    card.addEventListener('dragstart', (event) => {
-      event.preventDefault();
-    });
+    state.cleanup = () => {
+      observer.disconnect();
+      card.removeEventListener('pointerdown', onPointerDown);
+      card.removeEventListener('pointermove', onPointerMove);
+      card.removeEventListener('pointerup', onPointerUp);
+      card.removeEventListener('pointercancel', onPointerCancel);
+      card.removeEventListener('lostpointercapture', onLostPointerCapture);
+      card.removeEventListener('dragstart', onDragStart);
+      card.removeEventListener('pointerleave', onPointerLeave);
+      card.removeEventListener('pointerout', onPointerOut);
+    };
+  }
 
-    card.addEventListener('pointerleave', scheduleDisengage, { passive: true });
-    card.addEventListener('pointerout', scheduleDisengage, { passive: true });
+  unregisterCard(card) {
+    const state = this.cards.get(card);
+    if (!state) return;
+
+    if (state.cleanup) state.cleanup();
+    this.cards.delete(card);
   }
 
   _updateBounds(state) {
@@ -229,14 +252,18 @@ export class HoloController {
         const interaction = state.interactionSpring.current;
 
         // 4. Dispatch to the DOM (Simey-Compatible Format)
-        state.translater.style.setProperty('--rb-tilt-x', `${rbTiltX * 100}%`);
-        state.translater.style.setProperty('--rb-tilt-y', `${rbTiltY * 100}%`);
+        state.translater.style.setProperty('--rb-tilt-x', `${interaction.tiltX * 100}%`);
+        state.translater.style.setProperty('--rb-tilt-y', `${interaction.tiltY * 100}%`);
 
-        state.translater.style.setProperty('--rb-from-left', rbTiltX); // Raw decimal
-        state.translater.style.setProperty('--rb-from-top', rbTiltY); // Raw decimal
+        state.translater.style.setProperty('--rb-from-left', interaction.tiltX); // Raw decimal
+        state.translater.style.setProperty('--rb-from-top', interaction.tiltY); // Raw decimal
 
-        state.translater.style.setProperty('--rb-from-center', rbFromCenter);
-        state.translater.style.setProperty('--rb-at-edge', rbAtEdge);
+        state.translater.style.setProperty('--rb-from-center', interaction.fromCenter);
+        state.translater.style.setProperty('--rb-at-edge', interaction.atEdge);
+
+        // Capability driven rendering
+        state.translater.style.setProperty('--rb-glare-opacity', state.capabilities.glare ? 1 : 0);
+        state.translater.style.setProperty('--rb-shine-opacity', state.capabilities.holo ? 1 : 0);
         // rotation.x/y are normalized (-1..1) from the spring — scale to degrees
         const degX = clamp(rotation.x, -1, 1) * state.qualityMax;
         const degY = clamp(rotation.y, -1, 1) * state.qualityMax;
