@@ -11461,45 +11461,61 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
   transform: translateZ(0);
 }
 
-/* 5. PRIMARY GLARE LAYER */
-.card__glare {
+/* ==========================================================================
+   PHASE 3 - REAL SIMEY SHOWCASE INTEGRATION
+   ========================================================================== */
+
+/* The Real Simey Base Glare (Light Source Reflection) */
+.card[data-render-tier="showcase"] .card__glare {
   position: absolute;
   inset: 0;
-
   border-radius: inherit;
-
   pointer-events: none;
 
-  z-index: 2;
+  /* Core Simey Layout & Hardware Layering */
+  transform: translateZ(1.41px);
+  overflow: hidden;
+  mix-blend-mode: overlay;
+  opacity: var(--rb-glare-opacity, 1);
 
-  /* Validation: pure lightweight rgba, no mix-blend-mode */
-  background: rgba(255, 255, 255, 1);
-  opacity: calc(var(--rb-glare-opacity, 0) * (0.08 + (var(--rb-at-edge, 0) * 0.42)));
-  transform: translateZ(1px);
-  will-change: opacity;
+  /* Perfect HSL non-banding glare gradient */
+  background-image: radial-gradient(
+    farthest-corner circle at var(--rb-tilt-x) var(--rb-tilt-y),
+    hsla(0, 0%, 100%, 0.8) 10%,
+    hsla(0, 0%, 100%, 0.65) 20%,
+    hsla(0, 0%, 0%, 0.5) 90%
+  );
 }
 
-/* 6. SECONDARY SHINE / FOIL LAYER */
-.card__shine {
+/* The Real Simey Base Shine (Holographic Foil Container) */
+.card[data-render-tier="showcase"] .card__shine {
   position: absolute;
   inset: 0;
-
   border-radius: inherit;
-
   pointer-events: none;
 
+  /* Core Simey Optical Blend Layering */
+  display: grid;
+  transform: translateZ(1px);
+  overflow: hidden;
   z-index: 3;
+  mix-blend-mode: color-dodge;
+  opacity: var(--rb-shine-opacity, 1);
 
-  /* Validation: Lightweight dummy shine, no mix-blend-mode */
-  background: linear-gradient(
-    135deg,
-    transparent,
-    rgba(255,255,255,0.15),
-    transparent
+  /* High-contrast foil punch filter */
+  filter: brightness(.85) contrast(2.75) saturate(.65);
+
+  /* Safe baseline color sweep to track interaction */
+  background-image: linear-gradient(
+    110deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.15) 45%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.15) 55%,
+    transparent 60%
   );
-  opacity: calc(var(--rb-shine-opacity, 0) * (0.04 + (var(--rb-from-center, 0) * 0.22)));
-  transform: translateZ(2px);
-  will-change: opacity;
+  background-size: 200% 200%;
+  background-position: var(--rb-tilt-x) var(--rb-tilt-y);
 }
 
 /* 7. INTERACTION SAFETY */
