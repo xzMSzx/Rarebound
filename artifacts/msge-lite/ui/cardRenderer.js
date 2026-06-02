@@ -54,6 +54,28 @@ export function createCardElement(card) {
 
     // Minimal runtime sanitization: strip executable/active elements just in case
     doc.querySelectorAll('script, iframe, object, embed, img').forEach(el => el.remove());
+
+    // Remove dangerous attributes from all remaining elements
+    doc.querySelectorAll('*').forEach(el => {
+      // Remove event handler attributes (onclick, onload, etc.)
+      Array.from(el.attributes).forEach(attr => {
+        if (attr.name.startsWith('on')) {
+          el.removeAttribute(attr.name);
+        }
+      });
+
+      // Remove attributes with dangerous URI schemes
+      const dangerousUriPattern = /^(\s*)(javascript|vbscript|data):/i;
+      ['href', 'src', 'srcset', 'action'].forEach(attrName => {
+        const attrValue = el.getAttribute(attrName);
+        if (attrValue && dangerousUriPattern.test(attrValue)) {
+          el.removeAttribute(attrName);
+        }
+      });
+
+      // Remove inline style attributes
+      el.removeAttribute('style');
+    });
     iconWrap.replaceChildren(...doc.body.childNodes);
 
     const pack = document.createElement('span');
