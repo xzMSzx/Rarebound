@@ -11,3 +11,6 @@
 ## 2025-02-18 - Accessibility for Custom Toggles and Placeholder-only Inputs
 **Learning:** Found custom toggle switches lacking explicit `<label>` encapsulation and a password input field that relies entirely on `placeholder` text visually in `msge-lite/ui/settingsScreen.js`. This is an accessibility issue pattern specific to how some ad-hoc UI forms are generated in this vanilla JS app.
 **Action:** When working with vanilla JS components rendering custom toggle switches (e.g. `<input type="checkbox">` styled as a slider) or inputs visually relying on placeholders, ensure to add an explicit `aria-label` directly on the `<input>` element so screen readers can correctly identify their purpose.
+## 2024-05-18 - Add aria-labels to settings toggle switches
+**Learning:** Found multiple custom toggle switches (`<input type="checkbox">`) inside the developer diagnostic section without explicitly associated descriptive context strings accessible to screen readers. This pattern is common for custom CSS toggle designs where the visual label isn't directly bound using `for`/`id` or implicitly associated by nesting within a common `<label>`.
+**Action:** Always add descriptive `aria-label` attributes to explicitly define the function (e.g. `aria-label="Toggle Developer Diagnostics"`) when a toggle input lacks a valid explicit or implicit text string association.
