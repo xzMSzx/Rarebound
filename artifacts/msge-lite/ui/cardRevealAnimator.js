@@ -1,6 +1,7 @@
 import { playCardFlip, playRareChime, playUltraHit } from './audioManager.js';
 import { CARD_RENDER_TIERS, getTierCapabilities } from './renderTiers.js';
 import { HoloController } from '../src/utils/HoloController.js';
+import { applyCardVisualDataset } from '../data/cardVisualMapper.js';
 
 let holoController = null;
 
@@ -82,6 +83,7 @@ function buildCard(container) {
   wrapper.setAttribute('data-render-tier', 'showcase');
   wrapper.setAttribute('data-rb-interactive', 'true');
   wrapper.setAttribute('data-card-state', 'interactive');
+  applyCardVisualDataset(wrapper, null);
 
   const animator = document.createElement('div');
   animator.className = 'card__animator';
@@ -295,10 +297,11 @@ export function showMystery(isSuspense = false) {
  * @param {string|null}  imageUrl    — Pokémon card image URL, or null for placeholder
  * @returns {Promise<void>}            resolves when flip completes (or aborted early)
  */
-export async function revealCard(rarity, isSuspense = false, imageUrl = null, isReverseHolo = false, realRarity = null) {
+export async function revealCard(rarity, isSuspense = false, imageUrl = null, isReverseHolo = false, realRarity = null, visualCard = null) {
   if (!rarity) return;
   if (!_currentCard || _overlayState !== 'revealing') return;
   const { wrapper, inner, backFace } = _currentCard;
+  applyCardVisualDataset(wrapper, visualCard);
 
   // Fill the reveal face just before flipping. realRarity drives the holo
   // gating in renderBack; rarity (engine 4-tier) drives the glow/pulse class.

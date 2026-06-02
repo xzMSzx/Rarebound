@@ -297,6 +297,7 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
         card.imageUrl ?? null,
         card.isReverseHolo === true,          // Phase 5.2 — pipe foil flag through to animator
         card.rarityType ?? card.rarity,       // Phase 5.4.3 — REAL Pokémon rarity gates the holo
+        card,
       );
 
       if (done) return;

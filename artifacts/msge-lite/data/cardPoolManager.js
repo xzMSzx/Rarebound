@@ -111,6 +111,8 @@ function buildPools(apiCards) {
       id:       card.id,
       name:     card.name,
       rarity:   rarity ?? 'common',
+      apiRarity: card.rarity,
+      set:      card.set,
       // Prioritise high-res image
       imageUrl: card.images.large || card.images.small,
     });
@@ -121,6 +123,8 @@ function buildPools(apiCards) {
     return {
       name:     apiCard.name,
       rarity:   forcedRarity,
+      apiRarity: apiCard.rarity,
+      set:      apiCard.set,
       imageUrl: apiCard.images.large || apiCard.images.small,
     };
   }

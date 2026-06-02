@@ -49,6 +49,7 @@ import {
 import { getReputation, addReputation, getRank, getAllRanks } from './data/reputationManager.js';
 import { calculateSellPayout, isSellGated, sellCard }    from './data/sellingManager.js';
 import { CARD_RENDER_TIERS } from './ui/renderTiers.js';
+import { getCardVisualDataset, getCardVisualProfile } from './data/cardVisualMapper.js';
 import { lockBodyScroll, unlockBodyScroll, getLockDepth } from './ui/scrollManager.js';
 import { onEscapeKey } from './ui/overlayScrollLock.js';
 import { computeTotalCollectionValue, lineValueForCollectionEntry } from './data/collectionValuation.js';
@@ -208,8 +209,14 @@ function augmentCards(engineCards, setId, vendor) {
     const biasedRarity = applyVendorRarityBias(card.rarity, vendor);
     const poolCard = getRandomCard(biasedRarity) || getRandomCard(card.rarity);
     if (!poolCard) return card;
+    const visualCard = {
+      rarity: poolCard.apiRarity,
+      set: poolCard.set || { name: PACK_STORE[setId]?.name || setId },
+    };
     return { ...card, id: poolCard.id || null, setId, name: poolCard.name,
              imageUrl: poolCard.imageUrl, rarityType: poolCard.rarity,
+             apiRarity: poolCard.apiRarity, set: visualCard.set,
+             visualProfile: getCardVisualProfile(visualCard),
              isReverseHolo: card.isReverseHolo };
   });
 }
@@ -3630,9 +3637,11 @@ function buildCardDetailHTML(apiCard, ownedEntry, resolvedSetId, value, rarityTi
   const sellBtn = (isOwned && resolvedSetId)
     ? `<button class="cdp-sell-btn" id="cdp-sell">💰 Sell to Vendor</button>` : '';
 
+  const visualDataset = getCardVisualDataset(apiCard);
+
   const html = `
     <div class="card-detail-content" id="cdp-panel">
-      <div class="cdp-image-wrap" data-render-tier="${CARD_RENDER_TIERS.SHOWCASE}">
+      <div class="cdp-image-wrap" data-render-tier="${CARD_RENDER_TIERS.SHOWCASE}" ${visualDataset}>
         <img src="${imgSrc}" alt="${apiCard.name}" class="${imgClass}" loading="eager" decoding="async" />
         ${!isOwned ? `<div class="cdp-preview-badge">${rarityLbl}</div>` : ''}
       </div>

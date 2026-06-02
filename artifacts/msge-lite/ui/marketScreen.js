@@ -24,6 +24,7 @@ import { PACK_STORE } from '../data/packStore.js';
 import { getCurrentTrend } from '../data/economyManager.js';
 import { isChaseCard, getChaseBoost } from '../data/chaseManager.js';
 import { CARD_RENDER_TIERS } from './renderTiers.js';
+import { getCardVisualDataset } from '../data/cardVisualMapper.js';
 
 const SET_IDS = ['swsh7', 'sv4pt5', 'sv3pt5', 'sv2', 'swsh11', 'sv6', 'sv7', 'sv8', 'sv8pt5', 'sv9'];
 
@@ -237,6 +238,7 @@ function openGraphModal(cardId) {
   if (!meta || !modal) return;
 
   const tier    = mapPokemonRarity(meta.apiCard.rarity) || 'common';
+  const visualDataset = getCardVisualDataset(meta.apiCard);
   const boost   = 1 + (getChaseBoost(cardId) / 100);
   const rawVal  = getMarketValue(cardId, tier);
   const value   = rawVal * boost;
@@ -260,7 +262,7 @@ function openGraphModal(cardId) {
   modal.innerHTML = `
     <div class="graph-modal-content" id="graph-modal-content">
       <button class="graph-close-btn" id="graph-close-btn" aria-label="Close">×</button>
-      <img class="graph-card-art" data-render-tier="${CARD_RENDER_TIERS.SHOWCASE}" src="${meta.apiCard.images.large || meta.apiCard.images.small}" alt="${meta.apiCard.name}" loading="eager" decoding="async" />
+      <img class="graph-card-art" data-render-tier="${CARD_RENDER_TIERS.SHOWCASE}" ${visualDataset} src="${meta.apiCard.images.large || meta.apiCard.images.small}" alt="${meta.apiCard.name}" loading="eager" decoding="async" />
       <div class="graph-card-name">${meta.apiCard.name}</div>
       <div class="graph-card-meta">${RARITY_LABELS[tier] || tier} · ${PACK_STORE[meta.setId]?.name || meta.setId}</div>
       <div class="graph-card-value">$${value.toFixed(2)} <span class="graph-move-${move >= 0 ? 'up' : 'down'}">${move >= 0 ? '+' : ''}${move.toFixed(1)}%</span></div>
