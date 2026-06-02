@@ -43,10 +43,12 @@ export function attachSwipeController(element, { onSwipeLeft, onTap }) {
     if (absDy > absDx * 1.5) return;
 
     if (absDx < TAP_THRESHOLD && absDy < TAP_THRESHOLD) {
-      onTap?.();
+      onTap?.(e);
     } else if (absDx >= SWIPE_THRESHOLD) {
       // Both left and right swipes trigger reveal
-      onSwipeLeft?.();
+      const direction = dx > 0 ? 'right' : 'left';
+      console.log("SWIPE DETECTED:", direction);
+      onSwipeLeft?.(direction);
     }
   }
 
@@ -59,8 +61,8 @@ export function attachSwipeController(element, { onSwipeLeft, onTap }) {
   element.addEventListener('touchcancel', handleTouchCancel, { passive: true });
 
   // Also allow mouse click on desktop so the overlay is usable without touch
-  function handleClick() {
-    onTap?.();
+  function handleClick(e) {
+    onTap?.(e);
   }
   element.addEventListener('click', handleClick);
 

@@ -29,7 +29,7 @@
   </head>
   <body>
     <div class="page-shell">
-      <div class="card" data-rarity="sir" data-card-state="interactive" data-quality-tier="high" data-rb-interactive="true">
+      <div class="card" data-render-tier="showcase" data-rb-interactive="true" data-card-state="interactive">
         <div class="card__animator">
           <div class="card__translater">
             <img class="card__image" src="./test-card.jpeg.jpg" alt="Greninja ex SIR Test Asset" />
@@ -41,8 +41,13 @@
     </div>
 
     <script type="module">
-      import { HoloController } from './ui/HoloController.js';
-      new HoloController();
+      import { HoloController } from './src/utils/HoloController.js';
+
+      // Find all interactive cards and boot up their physics engines
+      const cards = document.querySelectorAll('.card[data-rb-interactive="true"]');
+      cards.forEach(card => {
+        window.activeHoloController = new HoloController(card);
+      });
     </script>
   </body>
 </html>

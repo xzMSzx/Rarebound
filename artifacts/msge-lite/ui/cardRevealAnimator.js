@@ -72,20 +72,27 @@ export function setOverlayState(state) {
 /**
  * Build the two-face card element and mount it into the container.
  * @param {HTMLElement} container
- * @returns {{ wrapper, inner, frontFace, backFace }}
+ * @returns {{ wrapper, animator, translater, inner, frontFace, backFace }}
  */
 function buildCard(container) {
   container.innerHTML = '';
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'overlay-card-wrapper card'; // Add .card for Simey architecture
+  wrapper.className = 'overlay-card-wrapper card';
   wrapper.setAttribute('data-render-tier', 'showcase');
   wrapper.setAttribute('data-rb-interactive', 'true');
   wrapper.setAttribute('data-card-state', 'interactive');
 
-  // The inner element is the one HoloController uses to rotate/translate
+  const animator = document.createElement('div');
+  animator.className = 'card__animator';
+
+  const translater = document.createElement('div');
+  translater.className = 'card__translater';
+
+  // The inner element owns only the card flip. HoloController rotates the
+  // parent translater so tilt and flip transforms compose instead of competing.
   const inner = document.createElement('div');
-  inner.className = 'overlay-card-inner card__translater';
+  inner.className = 'overlay-card-inner';
 
   const frontFace = document.createElement('div');
   frontFace.className = 'overlay-card-face overlay-card-front';
@@ -99,18 +106,19 @@ function buildCard(container) {
   const shine = document.createElement('div');
   shine.className = 'card__shine';
 
-  // Structure: wrapper > inner > (frontFace, backFace, glare, shine)
-  // Glare/Shine need to follow the face flip or be on the backFace.
-  // Actually, glare and shine should probably be inside backFace so they only appear on the front of the card.
+  // Structure: .card > .card__animator > .card__translater > flip inner.
+  // The visual foil layers live on the revealed face so they flip with it.
   backFace.appendChild(glare);
   backFace.appendChild(shine);
 
   inner.appendChild(frontFace);
   inner.appendChild(backFace);
-  wrapper.appendChild(inner);
+  translater.appendChild(inner);
+  animator.appendChild(translater);
+  wrapper.appendChild(animator);
   container.appendChild(wrapper);
 
-  return { wrapper, inner, frontFace, backFace, glare, shine };
+  return { wrapper, animator, translater, inner, frontFace, backFace, glare, shine };
 }
 
 /**
@@ -408,7 +416,8 @@ function _spawnSparkles(container) {
  * Slide the current card off-screen to the left, then clear the container.
  * @returns {Promise<void>}
  */
-export function slideOutCard() {
+export function slideOutCard(direction = 'left') {
+  console.log("ANIMATOR DIRECTION:", direction);
   if (!_currentCard) return Promise.resolve();
   const { wrapper } = _currentCard;
   // Phase 5.4 — clear any inline tilt transform left by _applyCardTilt so the
@@ -417,7 +426,9 @@ export function slideOutCard() {
   // mid-tilt instead of sliding off-screen.
   wrapper.style.transform = '';
   return new Promise((resolve) => {
-    wrapper.classList.add('slide-out-left');
+    console.log("ANIMATION CLASS:", direction === 'right' ? 'slide-out-right' : 'slide-out-left');
+    const className = direction === 'right' ? 'slide-out-right' : 'slide-out-left';
+    wrapper.classList.add(className);
     setTimeout(() => {
       if (holoController && wrapper) holoController.unregisterCard(wrapper);
       if (_container) _container.innerHTML = '';

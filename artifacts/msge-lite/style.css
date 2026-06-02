@@ -678,15 +678,24 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 
 .overlay-shake { animation: shake 0.42s ease; }
 
-/* ─── Slide-out animation (card exits left between cards) ────────────── */
+/* ─── Slide-out animations (direction-aware card exits) ────────────── */
 
 @keyframes slide-out-left {
-  0%   { transform: translateX(0)    opacity(1); }
-  100% { transform: translateX(-120%) opacity(0); }
+  0%   { transform: translateX(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(-110%) rotate(-8deg); opacity: 0; }
 }
 
 .slide-out-left {
   animation: slide-out-left 0.24s ease-in forwards;
+}
+
+@keyframes slide-out-right {
+  0%   { transform: translateX(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(110%) rotate(8deg); opacity: 0; }
+}
+
+.slide-out-right {
+  animation: slide-out-right 0.24s ease-in forwards;
 }
 
 /* ─── Overlay hint (pinned to bottom of overlay, readable over glows) ── */
@@ -11576,16 +11585,29 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
 */
 
 /* ==========================================================================
-   PHASE 3 - PHYSICS ENGINE OVERRIDE
-   Force Rarebound's semantic tilt math back onto the translater
+   FINAL SHOWCASE HOLO RIG
    ========================================================================== */
-.card[data-render-tier="showcase"] .card__translater {
-  --rb-rotate-max: 14deg;
 
-  /* Combine Simey's hardware acceleration with our semantic rotation variables */
+.card[data-card-state="interactive"] {
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.card__animator {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+.card__translater {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+.card[data-render-tier="showcase"] .card__translater {
   transform:
     translateZ(0.01px)
-    rotateX(calc((var(--rb-tilt-y, 0.5) - 0.5) * -1 * var(--rb-rotate-max)))
-    rotateY(calc((var(--rb-tilt-x, 0.5) - 0.5) * var(--rb-rotate-max)))
-    scale(var(--rb-scale, 1)) !important;
+    rotateX(var(--rb-rotate-x, 0deg))
+    rotateY(var(--rb-rotate-y, 0deg))
+    scale(var(--rb-scale, 1));
 }

@@ -18,7 +18,11 @@ export class HoloController {
   }
 
   _init() {
-    const cards = Array.from(this.root.querySelectorAll('[data-rb-interactive="true"]'));
+    const cards = [];
+    if (this.root?.nodeType === 1 && this.root.matches('[data-rb-interactive="true"]')) {
+      cards.push(this.root);
+    }
+    cards.push(...Array.from(this.root.querySelectorAll('[data-rb-interactive="true"]')));
     cards.forEach((card) => this.registerCard(card));
     window.addEventListener('resize', () => this._refreshBounds(), { passive: true });
   }
@@ -27,8 +31,20 @@ export class HoloController {
   registerCard(card) {
     if (this.cards.has(card)) return;
 
+    const animator = card.querySelector('.card__animator');
     const translater = card.querySelector('.card__translater');
-    if (!translater) return;
+    const glare = card.querySelector('.card__glare');
+    const shine = card.querySelector('.card__shine');
+    if (!animator || !translater) {
+      console.warn('[HoloController] Skipping card with incomplete holo rig', {
+        card,
+        animator,
+        translater,
+        glare,
+        shine,
+      });
+      return;
+    }
 
     const tierNode = card.closest('[data-render-tier]');
     const tier = tierNode ? tierNode.dataset.renderTier : null;
@@ -37,14 +53,18 @@ export class HoloController {
 
     const state = {
       card,
+      animator,
       translater,
+      glare,
+      shine,
       capabilities,
+      tier,
       bounds: null,
       lastPointer: null,
       dirty: true,
       // DEBUG: temporarily amplify rotation range for visual verification
       // Set to 22 during tuning; revert to original logic after verification
-      qualityMax: window.matchMedia('(max-width: 700px)').matches ? 12 : 22,
+      qualityMax: window.matchMedia?.('(max-width: 700px)')?.matches ? 12 : 22,
       rotationSpring: new SpringValue(
         { x: 0, y: 0 },
         { stiffness: 0.38, damping: 0.78, precision: 0.001 }
@@ -109,6 +129,11 @@ export class HoloController {
     const onDragStart = (event) => event.preventDefault();
     const onPointerLeave = scheduleDisengage;
     const onPointerOut = scheduleDisengage;
+    const onTouchMove = (event) => {
+      if (tier === 'showcase' || tier === 'interactive') {
+        event.preventDefault();
+      }
+    };
 
     card.addEventListener('pointerdown', onPointerDown, { passive: false });
     card.addEventListener('pointermove', onPointerMove, { passive: false });
@@ -118,6 +143,7 @@ export class HoloController {
     card.addEventListener('dragstart', onDragStart);
     card.addEventListener('pointerleave', onPointerLeave, { passive: true });
     card.addEventListener('pointerout', onPointerOut, { passive: true });
+    card.addEventListener('touchmove', onTouchMove, { passive: false });
 
     state.cleanup = () => {
       observer.disconnect();
@@ -129,6 +155,7 @@ export class HoloController {
       card.removeEventListener('dragstart', onDragStart);
       card.removeEventListener('pointerleave', onPointerLeave);
       card.removeEventListener('pointerout', onPointerOut);
+      card.removeEventListener('touchmove', onTouchMove);
     };
   }
 
@@ -213,8 +240,8 @@ export class HoloController {
           // Use normalized centered targets for the spring (-1..1), multiply
           // by qualityMax *after* the spring to produce degrees. This keeps
           // spring values meaningful and avoids tiny degree-step integration.
-          targetNormX = centeredX * resistanceX;
-          targetNormY = centeredY * resistanceY;
+          targetNormX = centeredY * -resistanceY;
+          targetNormY = centeredX * resistanceX;
 
           targetInteraction = {
             tiltX: pointerX,
@@ -263,7 +290,11 @@ export class HoloController {
 
         // Capability driven rendering
         state.translater.style.setProperty('--rb-glare-opacity', state.capabilities.glare ? 1 : 0);
-        state.translater.style.setProperty('--rb-shine-opacity', state.capabilities.holo ? 1 : 0);
+        
+        // Dynamic Idle Shine Tuning:
+        // Lerp shine opacity from 0.10 (at center / idle) to 1.00 (at outer edge)
+        const shineOpacity = state.capabilities.holo ? (0.10 + 0.90 * interaction.fromCenter) : 0;
+        state.translater.style.setProperty('--rb-shine-opacity', shineOpacity);
         // rotation.x/y are normalized (-1..1) from the spring — scale to degrees
         const degX = clamp(rotation.x, -1, 1) * state.qualityMax;
         const degY = clamp(rotation.y, -1, 1) * state.qualityMax;

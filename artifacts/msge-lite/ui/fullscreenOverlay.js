@@ -271,13 +271,16 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
       finishPack(true);
     }
 
-    async function handleAdvance() {
+    async function handleAdvance(directionOrEvent) {
+      // Swipe controller passes direction ('left' or 'right'). Tap/click passes event.
+      const direction = typeof directionOrEvent === 'string' ? directionOrEvent : 'left';
+      console.log("HANDLE ADVANCE:", direction);
       if (busy || done) return;
       busy = true;
       if (!revealed) {
         await doReveal();
       } else {
-        await goToNext();
+        await goToNext(direction);
       }
       busy = false;
     }
@@ -307,7 +310,7 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
         : 'Tap to finish');
     }
 
-    async function goToNext() {
+    async function goToNext(direction = "left") {
       cardIndex++;
       updatePendingSessionIndex(undefined, cardIndex);
       if (cardIndex >= cards.length) {
@@ -315,7 +318,7 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
         await finishPack(false);
         return;
       }
-      await slideOutCard();
+      await slideOutCard(direction);
       await wait(80);
 
       if (done) return;
