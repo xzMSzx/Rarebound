@@ -21,6 +21,7 @@
 import { Engine } from '../engine/engine.js';
 import { weightedRandom } from '../engine/rng.js';
 import { getHitProbabilities } from '../data/setProbabilityTables.js';
+import { secureRandom } from '../data/cryptoUtils.js';
 
 // ─── Backward-compatibility rarity stat mapping ──────────────────────────────
 //
@@ -103,7 +104,7 @@ const REVERSE_HOLO_OPTIONS = [
  */
 function rollHitSlot() {
   const table = getHitProbabilities();
-  const roll  = Math.random();
+  const roll  = secureRandom();
 
   let cumulative = 0;
 
