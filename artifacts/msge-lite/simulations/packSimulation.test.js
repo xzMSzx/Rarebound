@@ -21,17 +21,21 @@ describe('packSimulation', () => {
     expect(typeof stats.rare).toBe('number');
   });
 
-  it('should use cryptoUtils securely without Math.random', async () => {
+  it('should use cryptoUtils securely without Math.random', () => {
     // Import Math to spy on it and verify it doesn't get called
     // for simulation randomness (though it might be used internally by other functions
     // but the task specifically was to replace it in rollHitSlot)
     const engine = createPackSimulation();
     const spy = vi.spyOn(Math, 'random');
 
-    engine.stepSimulation();
-    // We just verify it does not throw and runs using our newly updated logic
-    expect(engine.state.packsOpened).toBe(1);
-
-    spy.mockRestore();
+    try {
+      engine.stepSimulation();
+      // We just verify it does not throw and runs using our newly updated logic
+      expect(engine.state.packsOpened).toBe(1);
+      // Ensure Math.random was not called (rollHitSlot should use secureRandom)
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
