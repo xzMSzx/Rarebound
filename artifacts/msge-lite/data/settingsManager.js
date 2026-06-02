@@ -7,7 +7,7 @@
  */
 
 const STORAGE_KEY = 'tcg_settings';
-export const APP_VERSION = '1.8.2';
+export const APP_VERSION = __APP_VERSION__;
 
 const DEFAULTS = Object.freeze({
   ambientAudio:  false,   // OFF by default — opt-in atmosphere

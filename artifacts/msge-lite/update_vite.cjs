@@ -1,0 +1,1 @@
+const fs = require("fs"); let content = fs.readFileSync("vite.config.ts", "utf8"); content = content.replace("import path from \"path\";", "import path from \"path\";\nimport fs from \"fs\";"); content = content.replace(/__dirname/g, "import.meta.dirname"); fs.writeFileSync("vite.config.ts", content);

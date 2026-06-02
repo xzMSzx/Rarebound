@@ -43,11 +43,7 @@ function showUpdateModal(newVersion) {
         </div>
       </div>
       <div style="padding: 24px 20px; color: #eee; font-size: 15px; line-height: 1.5; text-align: center;">
-        A new version of Rarebound is available.<br/><br/>
-        Includes:<br/>
-        • performance improvements<br/>
-        • new features<br/>
-        • bug fixes
+        A new version of Rarebound is available.
       </div>
       <div class="sell-actions" style="margin-top: 8px; flex-direction: column; gap: 12px;">
         <button class="sell-confirm-btn" id="update-reload-btn" style="width: 100%; background: #D4AF37; color: #000;">Reload Now</button>
