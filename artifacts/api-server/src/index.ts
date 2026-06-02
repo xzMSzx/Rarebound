@@ -1,3 +1,4 @@
+import { checkDatabaseConnection } from "@workspace/db";
 import app from "./app";
 import { logger } from "./lib/logger";
 
@@ -15,11 +16,22 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
+async function startServer() {
+  try {
+    await checkDatabaseConnection();
+  } catch (err) {
+    logger.error({ err }, "Database connection failed during startup health-check. Exiting.");
     process.exit(1);
   }
 
-  logger.info({ port }, "Server listening");
-});
+  app.listen(port, (err) => {
+    if (err) {
+      logger.error({ err }, "Error listening on port");
+      process.exit(1);
+    }
+
+    logger.info({ port }, "Server listening");
+  });
+}
+
+startServer();
