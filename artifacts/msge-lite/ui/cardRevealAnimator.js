@@ -1,6 +1,6 @@
 import { playCardFlip, playRareChime, playUltraHit } from './audioManager.js';
 import { CARD_RENDER_TIERS, getTierCapabilities } from './renderTiers.js';
-import { HoloController } from './HoloController.js';
+import { HoloController } from '../src/utils/HoloController.js';
 
 let holoController = null;
 
@@ -79,8 +79,9 @@ function buildCard(container) {
 
   const wrapper = document.createElement('div');
   wrapper.className = 'overlay-card-wrapper card'; // Add .card for Simey architecture
-  wrapper.dataset.renderTier = CARD_RENDER_TIERS.SHOWCASE;
-  wrapper.dataset.rbInteractive = 'true'; // Enable HoloController attachment
+  wrapper.setAttribute('data-render-tier', 'showcase');
+  wrapper.setAttribute('data-rb-interactive', 'true');
+  wrapper.setAttribute('data-card-state', 'interactive');
 
   // The inner element is the one HoloController uses to rotate/translate
   const inner = document.createElement('div');
@@ -469,9 +470,8 @@ function _applyCardTilt(wrapper) {
   if (!wrapper) return;
 
   if (!holoController) {
-    holoController = new HoloController(document);
+    holoController = new HoloController(wrapper);
   }
 
-  wrapper.dataset.cardState = 'interactive';
   holoController.registerCard(wrapper);
 }

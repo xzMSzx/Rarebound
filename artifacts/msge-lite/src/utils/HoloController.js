@@ -1,6 +1,6 @@
-import { SpringValue } from './springValue.js';
-import { getTierCapabilities } from './renderTiers.js';
-import { diagnosticOverlay } from './diagnosticOverlay.js';
+import { SpringValue } from '../../ui/springValue.js';
+import { getTierCapabilities } from '../../ui/renderTiers.js';
+import { diagnosticOverlay } from '../../ui/diagnosticOverlay.js';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const toDeg = (value) => `${value.toFixed(2)}deg`;
