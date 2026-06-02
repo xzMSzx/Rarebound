@@ -46,7 +46,15 @@ export function createCardElement(card) {
 
     const iconWrap = document.createElement('span');
     iconWrap.className = 'grid-card-icon';
-    iconWrap.innerHTML = RARITY_ICONS[card.rarity] ?? RARITY_ICON_FALLBACK;
+
+    // Parse safe HTML (SVG or span wrappers) to avoid innerHTML assignment
+    const iconHtml = RARITY_ICONS[card.rarity] ?? RARITY_ICON_FALLBACK;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(iconHtml, 'text/html');
+
+    // Minimal runtime sanitization: strip executable/active elements just in case
+    doc.querySelectorAll('script, iframe, object, embed, img').forEach(el => el.remove());
+    iconWrap.replaceChildren(...doc.body.childNodes);
 
     const pack = document.createElement('span');
     pack.className = 'grid-card-pack';
