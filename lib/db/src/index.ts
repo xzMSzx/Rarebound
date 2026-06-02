@@ -35,9 +35,12 @@ export const db = drizzle(pool, { schema });
 export async function checkDatabaseConnection() {
   try {
     const client = await pool.connect();
-    await client.query("SELECT 1");
-    client.release();
-    console.log("Database connection successful.");
+    try {
+      await client.query("SELECT 1");
+      console.log("Database connection successful.");
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error("Database connection failed during health-check:", error);
     console.error("Context:", {
@@ -46,7 +49,10 @@ export async function checkDatabaseConnection() {
       operation: "health-check",
     });
     // Rethrow or exit so the caller (e.g., server startup) fails fast
-    throw new Error(`Database connection failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Database connection failed: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
+    );
   }
 }
 
