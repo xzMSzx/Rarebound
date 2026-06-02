@@ -11574,3 +11574,18 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
   pointer-events: none;
 }
 */
+
+/* ==========================================================================
+   PHASE 3 - PHYSICS ENGINE OVERRIDE
+   Force Rarebound's semantic tilt math back onto the translater
+   ========================================================================== */
+.card[data-render-tier="showcase"] .card__translater {
+  --rb-rotate-max: 14deg;
+
+  /* Combine Simey's hardware acceleration with our semantic rotation variables */
+  transform:
+    translateZ(0.01px)
+    rotateX(calc((var(--rb-tilt-y, 0.5) - 0.5) * -1 * var(--rb-rotate-max)))
+    rotateY(calc((var(--rb-tilt-x, 0.5) - 0.5) * var(--rb-rotate-max)))
+    scale(var(--rb-scale, 1)) !important;
+}
