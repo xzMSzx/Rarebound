@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { clearCardPoolCache } from '../data/cardPoolManager.js';
 
 function stubStorage(initial = {}, throwingKeys = new Set()) {
   const store = new Map(Object.entries(initial));
@@ -19,6 +20,7 @@ describe('request fulfillment transactions', () => {
     vi.resetModules();
     vi.restoreAllMocks();
     vi.stubGlobal('window', {});
+    clearCardPoolCache();
   });
 
   it('fulfills regular requests through one commit path', async () => {

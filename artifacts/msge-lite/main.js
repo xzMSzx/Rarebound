@@ -20,7 +20,7 @@ import { createPackSimulation }    from './simulations/packSimulation.js';
 import { openPackOverlay }         from './ui/fullscreenOverlay.js';
 import { initMobileLayoutManager } from './ui/mobileLayoutManager.js';
 import {
-  loadSet, getRandomCard, isSetLoaded, getCurrentSetId, getCachedSetCards,
+  loadSet, getRandomCard, isSetLoaded, getCurrentSetId, getCachedSetCards, getCachedSetCardsMap,
 } from './data/cardPoolManager.js';
 import { getDailyCapsules, getCapsuleStocks, getCapsuleStock, tryDispenseCapsule, refreshCapsuleStocks } from './data/capsuleManager.js';
 import { ensureTimer, subscribe, formatMs, nextDailyRefreshTimestamp } from './data/vendorTimers.js';
@@ -683,8 +683,8 @@ function enqueueAgsReveals(slabs, reducedMotion) {
     // Activity feed + prestige + archive hooks per slab.
     try {
       const apiName = (() => {
-        const cached = getCachedSetCards(slab.setId) || [];
-        return cached.find(c => c.id === slab.cardId)?.name || slab.cardId;
+        const cardMap = getCachedSetCardsMap(slab.setId);
+        return (cardMap ? cardMap.get(slab.cardId)?.name : null) || slab.cardId;
       })();
       const tierId = slab.grade?.tier?.id;
       logActivity('ags_complete',
@@ -717,8 +717,8 @@ function enqueueAgsReveals(slabs, reducedMotion) {
 function _drainAgsRevealQueue() {
   if (_agsRevealActive || _agsRevealQueue.length === 0) return;
   const { slab, reducedMotion } = _agsRevealQueue.shift();
-  const cached  = getCachedSetCards(slab.setId) || [];
-  const apiCard = cached.find(c => c.id === slab.cardId) || { name: slab.cardId };
+  const cardMap = getCachedSetCardsMap(slab.setId);
+  const apiCard = (cardMap ? cardMap.get(slab.cardId) : null) || { name: slab.cardId };
   _agsRevealActive = true;
 
   // Safety failsafe — if the overlay never fires onClose (user navigates
@@ -1172,13 +1172,12 @@ function renderDuplicateVault() {
   // chase cards the player explicitly wants to keep visible elsewhere.
   const items = [];
   for (const [setId, cards] of Object.entries(collection)) {
-    const cached = getCachedSetCards(setId) || [];
-    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    const cardMap = getCachedSetCardsMap(setId);
     const setName = PACK_STORE[setId]?.name || setId;
     for (const [cardId, entry] of Object.entries(cards)) {
       if (entry.count <= 1) continue;
       const dups   = entry.count - 1;
-      const apiCard = byId[cardId];
+      const apiCard = cardMap ? cardMap.get(cardId) : undefined;
       const tier   = apiCard ? mapPokemonRarity(apiCard.rarity) : 'common';
       const value  = allValues[cardId] ?? getMarketValue(cardId, tier);
       items.push({
@@ -1346,8 +1345,8 @@ function renderChaseStrip() {
   `;
   strip.classList.remove('hidden');
   strip.onclick = () => {
-    const cached  = getCachedSetCards(chase.setId) || [];
-    const apiCard = cached.find(c => c.id === chase.cardId);
+    const cardMap = getCachedSetCardsMap(chase.setId);
+    const apiCard = cardMap ? cardMap.get(chase.cardId) : undefined;
     if (apiCard) {
       const ownedEntry = getCollection()[chase.setId]?.[chase.cardId] ?? null;
       openCardDetail(apiCard, ownedEntry, chase.setId);
@@ -1408,8 +1407,8 @@ function renderRecentHits() {
       <div class="recent-hit-rarity">${rarityLabel}</div>
     `;
     tile.onclick = () => {
-      const cached  = getCachedSetCards(hit.setId) || [];
-      const apiCard = cached.find(c => c.id === hit.cardId);
+      const cardMap = getCachedSetCardsMap(hit.setId);
+      const apiCard = cardMap ? cardMap.get(hit.cardId) : undefined;
       if (apiCard) {
         const ownedEntry = getCollection()[hit.setId]?.[hit.cardId] ?? null;
         openCardDetail(apiCard, ownedEntry, hit.setId);
@@ -1938,9 +1937,9 @@ function openMuseumContributionModal(exhibition) {
     gridHtml = '<p class="stats-empty">No eligible cards in your collection.</p>';
   } else {
     gridHtml = eligibleCards.map(item => {
-      const cached = getCachedSetCards(item.setId) || [];
-      const apiCard = cached.find(c => c.id === item.cardId) || { name: item.cardId, images: {} };
-      const imgUrl = apiCard.images.large || apiCard.images.small || '';
+      const cardMap = getCachedSetCardsMap(item.setId);
+      const apiCard = (cardMap ? cardMap.get(item.cardId) : null) || { name: item.cardId, images: {} };
+      const imgUrl = apiCard.images?.large || apiCard.images?.small || '';
       return `
         <div class="museum-contribute-card" data-set="${item.setId}" data-card="${item.cardId}">
           ${imgUrl ? `<img src="${imgUrl}" alt="${apiCard.name}" />` : '<div class="vault-thumb-placeholder">?</div>'}
@@ -2245,8 +2244,8 @@ function renderBrokerChaseTile(pick, vendor) {
   const tile = document.createElement('div');
   tile.className = 'broker-chase-tile';
 
-  const cached  = getCachedSetCards(pick.setId) || [];
-  const apiCard = cached.find(c => c.id === pick.cardId);
+  const cardMap = getCachedSetCardsMap(pick.setId);
+  const apiCard = cardMap ? cardMap.get(pick.cardId) : undefined;
 
   // ── Preview region: art + metadata, navigation handler only ────────────────
   const preview = document.createElement('div');
@@ -3060,8 +3059,8 @@ if (_wlLegacyBtn) {
 }
 const _openFavoritesScreen = () => openFavoritesScreen({
   openCardDetail: (setId, cardId) => {
-    const cached = getCachedSetCards(setId) || [];
-    const apiCard = cached.find(c => c.id === cardId);
+    const cardMap = getCachedSetCardsMap(setId);
+    const apiCard = cardMap ? cardMap.get(cardId) : undefined;
     if (!apiCard) return;
     const ownedEntry = getCollection()[setId]?.[cardId] ?? null;
     openCardDetail(apiCard, ownedEntry, setId);
@@ -3186,10 +3185,10 @@ function computeAgsEntrySummary() {
   try {
     const collection = getCollection();
     for (const [setId, cards] of Object.entries(collection)) {
-      const cached = getCachedSetCards(setId) || [];
-      const byId = Object.fromEntries(cached.map(c => [c.id, c]));
+      const cardMap = getCachedSetCardsMap(setId);
+      if (!cardMap) continue;
       for (const [cardId, entry] of Object.entries(cards)) {
-        const apiCard = byId[cardId];
+        const apiCard = cardMap.get(cardId);
         if (!apiCard) continue;
         const tier = mapPokemonRarity(apiCard.rarity);
         if (!isEligibleRarity(tier)) continue;
@@ -3718,8 +3717,8 @@ function attachCardDetailListeners(modal, apiCard, ownedEntry, resolvedSetId, va
     node.onclick = e => {
       e.stopPropagation();
       const tid = node.dataset.evoId;
-      const setCards = getCachedSetCards(resolvedSetId) || [];
-      const target = setCards.find(c => c.id === tid);
+      const cardMap = getCachedSetCardsMap(resolvedSetId);
+      const target = cardMap ? cardMap.get(tid) : undefined;
       if (!target) return;
       const ownedEvo = getCollection()[resolvedSetId]?.[tid] ?? null;
       tearDownCardDetailEscape();
@@ -4003,13 +4002,12 @@ function renderStatsScreen() {
   };
 
   for (const [setId, cards] of Object.entries(collection)) {
-    const cached = getCachedSetCards(setId) || [];
-    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    const cardMap = getCachedSetCardsMap(setId);
     setCardCounts[setId] = Object.keys(cards).length;
     for (const [cardId, entry] of Object.entries(cards)) {
       totalCards++;
       totalDupes += Math.max(0, entry.count - 1);
-      const apiCard = byId[cardId];
+      const apiCard = cardMap ? cardMap.get(cardId) : undefined;
       const tier    = apiCard ? mapPokemonRarity(apiCard.rarity) : 'common';
       const lineVal = lineValueForCollectionEntry(setId, cardId, entry, valCtx);
       totalValue   += lineVal;

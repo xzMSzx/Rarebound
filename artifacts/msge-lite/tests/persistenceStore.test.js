@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { clearCardPoolCache } from '../data/cardPoolManager.js';
 
 function stubStorage(initial = {}) {
   const store = new Map(Object.entries(initial));
@@ -16,6 +17,7 @@ describe('critical persistence recovery', () => {
     vi.resetModules();
     vi.restoreAllMocks();
     vi.stubGlobal('window', {});
+    clearCardPoolCache();
   });
 
   it('quarantines corrupted collection payloads before returning fallback state', async () => {

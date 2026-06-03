@@ -28,7 +28,7 @@
 import { getCollection, decrementCard }   from './collectionManager.js';
 import { rawCopiesAvailable }             from './agsAvailability.js';
 import { getWishlist }                    from './wishlistManager.js';
-import { getCachedSetCards }              from './cardPoolManager.js';
+import { getCachedSetCardsMap }              from './cardPoolManager.js';
 import { mapPokemonRarity }               from './rarityMapper.js';
 import { isVendorOpen }                   from './vendorManager.js';
 
@@ -400,8 +400,8 @@ function matchesCriteria(setId, cardId, criteria) {
 
   // Type & rarity require API metadata (loaded lazily by cardPoolManager).
   // If a set isn't preloaded yet, that card simply isn't matchable — safe.
-  const cached  = getCachedSetCards(setId) || [];
-  const apiCard = cached.find(c => c.id === cardId);
+  const cardMap = getCachedSetCardsMap(setId);
+  const apiCard = cardMap ? cardMap.get(cardId) : undefined;
   if (!apiCard) return false;
 
   if (criteria.kind === 'type') {
