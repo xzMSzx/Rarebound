@@ -11653,7 +11653,6 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
   --sunpillar-clr-6: var(--sunpillar-6);
 
   clip-path: var(--rb-clip);
-
   background-image:
     var(--rb-grain),
     repeating-linear-gradient( 0deg,
@@ -11681,7 +11680,6 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
       hsla(0, 0%, 0%, 0.15) 20%,
       hsla(0, 0%, 0%, 0.25) 120%
     );
-
   background-blend-mode: screen, hue, hard-light;
   background-size: var(--imgsize) 100%, 200% 700%, 300% 100%, 200% 100%;
   background-position: center, 0% var(--rb-background-y), var(--rb-background-x) var(--rb-background-y), var(--rb-background-x) var(--rb-background-y);
@@ -11693,7 +11691,6 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
   content: "";
   position: absolute;
   inset: 0;
-
   background-image:
     var(--rb-grain),
     repeating-linear-gradient( 0deg,
@@ -11721,7 +11718,6 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
       hsla(0, 0%, 0%, 0.15) 20%,
       hsla(0, 0%, 0%, 0.25) 120%
     );
-
   background-position: center, 0% var(--rb-background-y), calc( var(--rb-background-x) * -1) calc( var(--rb-background-y) * -1), var(--rb-background-x) var(--rb-background-y);
   background-size: var(--imgsize) 100%, 200% 400%, 195% 100%, 200% 100%;
 
