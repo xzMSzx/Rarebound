@@ -20,7 +20,7 @@ import { createPackSimulation }    from './simulations/packSimulation.js';
 import { openPackOverlay }         from './ui/fullscreenOverlay.js';
 import { initMobileLayoutManager } from './ui/mobileLayoutManager.js';
 import {
-  loadSet, getRandomCard, isSetLoaded, getCurrentSetId, getCachedSetCards,
+  loadSet, getRandomCard, isSetLoaded, getCurrentSetId, getCachedSetCards, getCachedSetCardsMap,
 } from './data/cardPoolManager.js';
 import { getDailyCapsules, getCapsuleStocks, getCapsuleStock, tryDispenseCapsule, refreshCapsuleStocks } from './data/capsuleManager.js';
 import { ensureTimer, subscribe, formatMs, nextDailyRefreshTimestamp } from './data/vendorTimers.js';

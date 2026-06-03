@@ -210,6 +210,7 @@ export function getCachedSetCardsMap(setId) {
 
 export function clearCardPoolCache() {
   cardMapCache.clear();
+  Object.keys(rawSetCache).forEach((key) => delete rawSetCache[key]);
 }
 
 function cacheKeyFor(setId) {
