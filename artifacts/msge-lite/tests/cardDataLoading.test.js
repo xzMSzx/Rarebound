@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { normalizeCardData } from '../data/cardDataNormalizer.js';
 import { fetchSetCards } from '../data/setLoader.js';
-import { loadSet, getCachedSetCards } from '../data/cardPoolManager.js';
+import { loadSet, getCachedSetCards, clearCardPoolCache } from '../data/cardPoolManager.js';
 
 function installLocalStorage() {
   const store = new Map();
@@ -20,6 +20,7 @@ describe('card data loading', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     installLocalStorage();
+    clearCardPoolCache();
   });
 
   it('normalizes every image reference to HD before caching consumers see it', () => {

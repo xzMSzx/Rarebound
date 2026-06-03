@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { submitForGrading } from '../data/agsSubmissionManager.js';
 import { canCompleteRequest, findEligibleCards } from '../data/requestManager.js';
+import { clearCardPoolCache } from '../data/cardPoolManager.js';
 
 function stubStorage(initial = {}, throwingKeys = new Set()) {
   const store = new Map(Object.entries(initial));
@@ -21,6 +22,7 @@ describe('AGS persistence safety', () => {
     vi.restoreAllMocks();
     vi.stubGlobal('window', {});
     stubStorage();
+    clearCardPoolCache();
   });
 
   it('does not report a queued submission when AGS storage fails', () => {
