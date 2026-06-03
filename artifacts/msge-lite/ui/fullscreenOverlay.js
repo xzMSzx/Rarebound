@@ -70,7 +70,7 @@ function setRarityStatus(rarity) {
 }
 
 function getVisualRarity(card) {
-  return (card?.visualProfile ?? getCardVisualProfile(card)).rarity;
+  return card?.visualProfile?.rarity ?? getCardVisualProfile(card).rarity;
 }
 
 const PREMIUM_VISUAL_RARITIES = new Set(
