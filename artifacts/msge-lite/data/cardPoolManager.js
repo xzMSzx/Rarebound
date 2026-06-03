@@ -33,6 +33,8 @@ const inFlightLoads = {};
  */
 const rawSetCache = {};
 
+const cardMapCache = new Map();
+
 const CACHE_PREFIX = 'rb_set_hd_v2_';
 const LEGACY_CACHE_PREFIXES = ['rb_set_', 'rb_set_hd_'];
 
@@ -188,6 +190,27 @@ export function isSetLoaded() {
  */
 export function getCachedSetCards(setId) {
   return rawSetCache[setId] ?? null;
+}
+
+export function getCachedSetCardsMap(setId) {
+  if (cardMapCache.has(setId)) {
+    return cardMapCache.get(setId);
+  }
+
+  const cards = getCachedSetCards(setId);
+  if (!cards) return null;
+
+  const map = new Map();
+  for (const card of cards) {
+    map.set(card.id, card);
+  }
+  cardMapCache.set(setId, map);
+  return map;
+}
+
+export function clearCardPoolCache() {
+  cardMapCache.clear();
+  Object.keys(rawSetCache).forEach((key) => delete rawSetCache[key]);
 }
 
 function cacheKeyFor(setId) {

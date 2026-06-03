@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { toggleWishlist, isWishlisted, getWishlist, addToWishlist, removeFromWishlist } from '../data/wishlistManager.js';
+import { clearCardPoolCache } from '../data/cardPoolManager.js';
 
 describe('wishlistManager', () => {
   beforeEach(() => {
+    clearCardPoolCache();
     const store = new Map();
     vi.stubGlobal('localStorage', {
       getItem: vi.fn((key) => store.get(key) || null),

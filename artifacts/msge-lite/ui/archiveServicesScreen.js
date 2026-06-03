@@ -26,7 +26,7 @@ import {
 import { isEligibleRarity } from '../data/cardQualityManager.js';
 import { getCollection } from '../data/collectionManager.js';
 import { rawCopiesAvailable } from '../data/agsAvailability.js';
-import { getCachedSetCards } from '../data/cardPoolManager.js';
+import { getCachedSetCardsMap } from '../data/cardPoolManager.js';
 import { mapPokemonRarity } from '../data/rarityMapper.js';
 import { getMarketValue, getAllMarketValues } from '../data/marketValue.js';
 import { gradedValueFromRaw, gradedDeltaForSlab } from '../data/agsMarketIntegration.js';
@@ -385,10 +385,10 @@ function collectEligibleRows(allValues) {
   const collection = getCollection();
   const rows = [];
   for (const [setId, cards] of Object.entries(collection)) {
-    const cached = getCachedSetCards(setId) || [];
-    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    const cardMap = getCachedSetCardsMap(setId);
+    if (!cardMap) continue;
     for (const [cardId, entry] of Object.entries(cards)) {
-      const apiCard = byId[cardId];
+      const apiCard = cardMap.get(cardId);
       if (!apiCard) continue;
       const tier = mapPokemonRarity(apiCard.rarity);
       if (!isEligibleRarity(tier)) continue;
@@ -566,6 +566,6 @@ function rarityRank(slab) {
 }
 
 function lookupApiCard(setId, cardId) {
-  const cached = getCachedSetCards(setId) || [];
-  return cached.find(c => c.id === cardId) || null;
+  const cardMap = getCachedSetCardsMap(setId);
+  return cardMap ? cardMap.get(cardId) || null : null;
 }
