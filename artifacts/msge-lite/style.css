@@ -11611,3 +11611,149 @@ html[data-reduced-motion="true"] .premium-slab.premium-slab--prestige .premium-s
     rotateY(var(--rb-rotate-y, 0deg))
     scale(var(--rb-scale, 1));
 }
+
+/* ==========================================================================
+   ILLUSTRATION RARE (IR) SUNPILLAR SYSTEM
+   ========================================================================== */
+:root {
+  --sunpillar-1: hsl(2, 100%, 73%);
+  --sunpillar-2: hsl(53, 100%, 69%);
+  --sunpillar-3: hsl(93, 100%, 69%);
+  --sunpillar-4: hsl(176, 100%, 76%);
+  --sunpillar-5: hsl(228, 100%, 74%);
+  --sunpillar-6: hsl(283, 100%, 73%);
+}
+
+/* ==========================================================================
+   ILLUSTRATION RARE (IR) SHOWCASE EFFECTS
+   Scrolled to Showcase Tier Only.
+   ========================================================================== */
+
+.card[data-render-tier="showcase"][data-era="sv"][data-rarity="ir"] {
+  --rb-grain: url('/assets/foils/grain.webp');
+  --rb-clip: polygon(94.8% 2.8%, 95.7% 3.2%, 96.2% 3.8%, 96.2% 96%, 95.9% 96.8%, 94.8% 97.3%, 5% 97.3%, 4.2% 96.9%, 3.8% 96.2%, 3.8% 6.1%, 15% 6.1%, 16% 5%, 17.9% 4%, 19% 2.8%);
+}
+
+.card[data-render-tier="showcase"][data-era="sv"][data-rarity="ir"]:not(.masked) .card__shine {
+  filter: brightness(.7) contrast(2) saturate(.5);
+}
+
+.card[data-render-tier="showcase"][data-era="sv"][data-rarity="ir"] .card__shine,
+.card[data-render-tier="showcase"][data-era="sv"][data-rarity="ir"] .card__shine:after {
+  --space: 5%;
+  --angle: 133deg;
+  --imgsize: 500px;
+
+  /* Fallback sunpillar assignment for IR context */
+  --sunpillar-clr-1: var(--sunpillar-1);
+  --sunpillar-clr-2: var(--sunpillar-2);
+  --sunpillar-clr-3: var(--sunpillar-3);
+  --sunpillar-clr-4: var(--sunpillar-4);
+  --sunpillar-clr-5: var(--sunpillar-5);
+  --sunpillar-clr-6: var(--sunpillar-6);
+
+  clip-path: var(--rb-clip);
+  background-image:
+    var(--rb-grain),
+    repeating-linear-gradient( 0deg,
+      var(--sunpillar-clr-1) calc(var(--space)*1),
+      var(--sunpillar-clr-2) calc(var(--space)*2),
+      var(--sunpillar-clr-3) calc(var(--space)*3),
+      var(--sunpillar-clr-4) calc(var(--space)*4),
+      var(--sunpillar-clr-5) calc(var(--space)*5),
+      var(--sunpillar-clr-6) calc(var(--space)*6),
+      var(--sunpillar-clr-1) calc(var(--space)*7)
+    ),
+    repeating-linear-gradient(
+      var(--angle),
+      #0e152e 0%,
+      hsl(180, 10%, 60%) 3.8%,
+      hsl(180, 29%, 66%) 4.5%,
+      hsl(180, 10%, 60%) 5.2%,
+      #0e152e 10% ,
+      #0e152e 12%
+      ),
+    radial-gradient(
+      farthest-corner circle
+      at var(--rb-pointer-x) var(--rb-pointer-y),
+      hsla(0, 0%, 0%, 0.1) 12%,
+      hsla(0, 0%, 0%, 0.15) 20%,
+      hsla(0, 0%, 0%, 0.25) 120%
+    );
+  background-blend-mode: screen, hue, hard-light;
+  background-size: var(--imgsize) 100%, 200% 700%, 300% 100%, 200% 100%;
+  background-position: center, 0% var(--rb-background-y), var(--rb-background-x) var(--rb-background-y), var(--rb-background-x) var(--rb-background-y);
+
+  filter: brightness(.8) contrast(2.95) saturate(.65);
+}
+
+.card[data-render-tier="showcase"][data-era="sv"][data-rarity="ir"] .card__shine:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    var(--rb-grain),
+    repeating-linear-gradient( 0deg,
+      var(--sunpillar-clr-1) calc(var(--space)*1),
+      var(--sunpillar-clr-2) calc(var(--space)*2),
+      var(--sunpillar-clr-3) calc(var(--space)*3),
+      var(--sunpillar-clr-4) calc(var(--space)*4),
+      var(--sunpillar-clr-5) calc(var(--space)*5),
+      var(--sunpillar-clr-6) calc(var(--space)*6),
+      var(--sunpillar-clr-1) calc(var(--space)*7)
+    ),
+    repeating-linear-gradient(
+      var(--angle),
+      #0e152e 0%,
+      hsl(180, 10%, 60%) 3.8%,
+      hsl(180, 29%, 66%) 4.5%,
+      hsl(180, 10%, 60%) 5.2%,
+      #0e152e 10% ,
+      #0e152e 12%
+      ),
+    radial-gradient(
+      farthest-corner circle
+      at var(--rb-pointer-x) var(--rb-pointer-y),
+      hsla(0, 0%, 0%, 0.1) 12%,
+      hsla(0, 0%, 0%, 0.15) 20%,
+      hsla(0, 0%, 0%, 0.25) 120%
+    );
+  background-position: center, 0% var(--rb-background-y), calc( var(--rb-background-x) * -1) calc( var(--rb-background-y) * -1), var(--rb-background-x) var(--rb-background-y);
+  background-size: var(--imgsize) 100%, 200% 400%, 195% 100%, 200% 100%;
+
+  filter: brightness(1) contrast(2.5) saturate(1.75);
+  mix-blend-mode: soft-light;
+}
+
+/* GLARE LAYERS */
+.card[data-render-tier="showcase"][data-era="sv"][data-rarity="ir"] .card__glare {
+  clip-path: var(--rb-clip);
+
+  background-image:
+    radial-gradient(
+      farthest-corner circle at var(--rb-pointer-x) var(--rb-pointer-y),
+      hsl(0, 0%, 100%) 0%,
+      hsl(0, 0%, 0%) 100%
+    );
+
+  opacity: var(--rb-glare-opacity);
+  mix-blend-mode: overlay;
+  filter: brightness(.9) contrast(1.2);
+}
+
+.card[data-render-tier="showcase"][data-era="sv"][data-rarity="ir"] .card__glare::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image:
+    radial-gradient(
+      farthest-corner circle at var(--rb-pointer-x) var(--rb-pointer-y),
+      hsl(0, 0%, 100%) 5%,
+      hsl(0, 0%, 0%) 120%
+    );
+
+  opacity: calc( var(--rb-glare-opacity) * var(--rb-pointer-from-center) );
+  mix-blend-mode: screen;
+  filter: brightness(.475) contrast(2);
+}
