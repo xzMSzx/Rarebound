@@ -27,7 +27,7 @@ const MAX_DISPLAY_CARDS = 300;
  * @returns {HTMLElement}
  */
 export function createCardElement(card) {
-  const rarity = card.visualProfile?.rarity || getCardVisualProfile(card).rarity;
+  const rarity = (card?.visualProfile ?? getCardVisualProfile(card)).rarity;
   const el = document.createElement('div');
   el.className = `grid-card grid-card-${rarity}`;
   el.dataset.renderTier = CARD_RENDER_TIERS.THUMBNAIL;

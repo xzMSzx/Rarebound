@@ -58,13 +58,13 @@ export function getCardVisualProfile(card) {
 }
 
 export function getCardVisualDataset(card) {
-  const profile = getCardVisualProfile(card);
+  const profile = card?.visualProfile ?? getCardVisualProfile(card);
   return `data-era="${profile.era}" data-rarity="${profile.rarity}"`;
 }
 
 export function applyCardVisualDataset(element, card) {
   if (!element) return;
-  const profile = getCardVisualProfile(card);
+  const profile = card?.visualProfile ?? getCardVisualProfile(card);
   element.dataset.era = profile.era;
   element.dataset.rarity = profile.rarity;
 }
