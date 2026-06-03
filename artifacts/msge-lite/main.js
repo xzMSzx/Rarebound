@@ -210,7 +210,8 @@ function augmentCards(engineCards, setId, vendor) {
     const poolCard = getRandomCard(biasedRarity) || getRandomCard(card.rarity);
     if (!poolCard) return card;
     const visualCard = {
-      rarity: poolCard.apiRarity,
+      rarity: poolCard.rarity,
+      apiRarity: poolCard.apiRarity,
       set: poolCard.set || { name: PACK_STORE[setId]?.name || setId },
     };
     return { ...card, id: poolCard.id || null, setId, name: poolCard.name,
