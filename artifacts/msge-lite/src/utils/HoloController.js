@@ -303,6 +303,17 @@ export class HoloController {
         state.translater.style.setProperty('--rb-pointer-x', `${pointerX * 100}%`);
         state.translater.style.setProperty('--rb-pointer-y', `${pointerY * 100}%`);
 
+        // Additional variables for Illustration Rare
+        state.translater.style.setProperty('--rb-pointer-from-center', interaction.fromCenter);
+        state.translater.style.setProperty('--rb-pointer-from-left', interaction.tiltX);
+        state.translater.style.setProperty('--rb-pointer-from-top', interaction.tiltY);
+
+        // Calculate background position based on interaction (typically inverted or scaled)
+        const bgX = 50 + (interaction.tiltX - 0.5) * 50;
+        const bgY = 50 + (interaction.tiltY - 0.5) * 50;
+        state.translater.style.setProperty('--rb-background-x', `${bgX}%`);
+        state.translater.style.setProperty('--rb-background-y', `${bgY}%`);
+
         const isRotationRest = state.rotationSpring.isAtRest();
         const isInteractionRest = state.interactionSpring.isAtRest();
         state.dirty = !isRotationRest || !isInteractionRest;
