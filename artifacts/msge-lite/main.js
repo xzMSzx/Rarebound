@@ -210,12 +210,12 @@ function augmentCards(engineCards, setId, vendor) {
     const poolCard = getRandomCard(biasedRarity) || getRandomCard(card.rarity);
     if (!poolCard) return card;
     const visualCard = {
-      rarity: poolCard.apiRarity,
+      rarity: poolCard.rarity,
       set: poolCard.set || { name: PACK_STORE[setId]?.name || setId },
     };
     return { ...card, id: poolCard.id || null, setId, name: poolCard.name,
              imageUrl: poolCard.imageUrl, rarityType: poolCard.rarity,
-             apiRarity: poolCard.apiRarity, set: visualCard.set,
+             apiRarity: poolCard.rarity, set: visualCard.set,
              visualProfile: getCardVisualProfile(visualCard),
              isReverseHolo: card.isReverseHolo };
   });
