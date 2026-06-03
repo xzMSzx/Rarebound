@@ -26,17 +26,27 @@ let holoController = null;
  */
 
 const RARITY_LABEL = {
-  common:    'Common',
-  rare:      'Rare',
-  epic:      'Epic',
-  legendary: 'Legendary',
+  common:       'Common',
+  uncommon:     'Uncommon',
+  rare:         'Rare',
+  holo:         'Holo',
+  'double-rare': 'Double Rare',
+  ir:           'IR',
+  'ultra-rare': 'Ultra Rare',
+  sir:          'Special Illustration Rare',
+  hyper:        'Hyper Rare',
 };
 
 const RARITY_SYMBOL = {
-  common:    '◆',
-  rare:      '★',
-  epic:      '✦',
-  legendary: '♛',
+  common:       '◇',
+  uncommon:     '◇◇',
+  rare:         '★',
+  holo:         '★',
+  'double-rare': '★★',
+  ir:           '★★',
+  'ultra-rare': '★★★',
+  sir:          '✦★',
+  hyper:        '♛',
 };
 
 // Phase 5.4.3 — Holo layers (iridescent bands + spotlight reflection) gated

@@ -1,6 +1,6 @@
 {
   "name": "workspace",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "license": "MIT",
   "scripts": {
     "build": "pnpm run typecheck && pnpm -r --if-present run build",

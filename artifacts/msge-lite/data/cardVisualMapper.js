@@ -35,17 +35,26 @@ function getRawRarity(card) {
 export function getCardVisualProfile(card) {
   const setName = getSetName(card);
   const rawRarity = getRawRarity(card);
-  const rarity = VISUAL_RARITY_MAP[rawRarity];
+  const normalizedRaw = (rawRarity || '').trim().toLowerCase();
+
+  const mapKey = Object.keys(VISUAL_RARITY_MAP).find(
+    (k) => k.toLowerCase() === normalizedRaw
+  );
+  const rarity = mapKey ? VISUAL_RARITY_MAP[mapKey] : undefined;
 
   if (!rarity && rawRarity && !warnedRarities.has(rawRarity)) {
     warnedRarities.add(rawRarity);
     console.warn('[cardVisualMapper] Unknown rarity, falling back to common:', rawRarity);
   }
 
-  return {
+  const profile = {
     era: SWSH_SETS.has(setName) ? 'swsh' : 'sv',
     rarity: rarity || 'common',
   };
+
+  console.log(`[cardVisualMapper] Resolved profile for "${card?.name || 'Unknown'}" (Raw: "${rawRarity}") ->`, profile);
+
+  return profile;
 }
 
 export function getCardVisualDataset(card) {

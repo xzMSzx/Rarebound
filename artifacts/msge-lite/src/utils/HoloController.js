@@ -289,7 +289,12 @@ export class HoloController {
         state.translater.style.setProperty('--rb-at-edge', interaction.atEdge);
 
         // Capability driven rendering
-        state.translater.style.setProperty('--rb-glare-opacity', state.capabilities.glare ? 1 : 0);
+        // Reduce base glare when the card is idle/near-center,
+        // but preserve full glare response as pointer moves outward.
+        const glareOpacity = state.capabilities.glare
+          ? 0.35 + 0.65 * interaction.fromCenter
+          : 0;
+        state.translater.style.setProperty('--rb-glare-opacity', glareOpacity);
         
         // Dynamic Idle Shine Tuning:
         // Lerp shine opacity from 0.10 (at center / idle) to 1.00 (at outer edge)

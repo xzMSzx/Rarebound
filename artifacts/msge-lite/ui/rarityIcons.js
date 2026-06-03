@@ -68,11 +68,17 @@ export const RARITY_ICONS = {
   common:                  diamond(),
   uncommon:                multi(diamond() + diamond(), 'rarity-double'),
   rare:                    star('#60a5fa'),
+  holo:                    star('#38bdf8'),
   holoRare:                star('#38bdf8'),
+  'double-rare':           multi(star('#60a5fa') + star('#60a5fa'), 'rarity-double'),
   doubleRare:              multi(star('#60a5fa') + star('#60a5fa'), 'rarity-double'),
+  ir:                      multi(star('#a78bfa') + star('#a78bfa'), 'rarity-double'),
   illustrationRare:        multi(star('#a78bfa') + star('#a78bfa'), 'rarity-double'),
+  'ultra-rare':            multi(goldStar() + goldStar() + goldStar(), 'rarity-triple'),
   ultraRare:               multi(goldStar() + goldStar() + goldStar(), 'rarity-triple'),
+  sir:                     multi(goldSparkle() + goldStar(), 'rarity-double'),
   specialIllustrationRare: multi(goldSparkle() + goldStar(), 'rarity-double'),
+  hyper:                   goldCrown(),
   hyperRare:               goldCrown(),
 };
 

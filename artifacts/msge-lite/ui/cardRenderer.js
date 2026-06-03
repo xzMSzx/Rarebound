@@ -16,6 +16,7 @@
 
 import { RARITY_ICONS, RARITY_ICON_FALLBACK } from './rarityIcons.js';
 import { CARD_RENDER_TIERS, getTierCapabilities } from './renderTiers.js';
+import { getCardVisualProfile } from '../data/cardVisualMapper.js';
 
 const MAX_DISPLAY_CARDS = 300;
 
@@ -26,13 +27,14 @@ const MAX_DISPLAY_CARDS = 300;
  * @returns {HTMLElement}
  */
 export function createCardElement(card) {
+  const rarity = card.visualProfile?.rarity || getCardVisualProfile(card).rarity;
   const el = document.createElement('div');
-  el.className = `grid-card grid-card-${card.rarity}`;
+  el.className = `grid-card grid-card-${rarity}`;
   el.dataset.renderTier = CARD_RENDER_TIERS.THUMBNAIL;
 
   if (card.imageUrl) {
     el.classList.add('grid-card-has-img');
-    el.title = `${card.name ?? card.rarity} — Pack #${card.packNumber}`;
+    el.title = `${card.name ?? rarity} — Pack #${card.packNumber}`;
 
     const img = document.createElement('img');
     img.className = 'grid-card-img';
@@ -42,13 +44,13 @@ export function createCardElement(card) {
     img.decoding = 'async';
     el.appendChild(img);
   } else {
-    el.title = `${card.rarity} — Pack #${card.packNumber}`;
+    el.title = `${rarity} — Pack #${card.packNumber}`;
 
     const iconWrap = document.createElement('span');
     iconWrap.className = 'grid-card-icon';
 
     // Parse safe HTML (SVG or span wrappers) to avoid innerHTML assignment
-    const iconHtml = RARITY_ICONS[card.rarity] ?? RARITY_ICON_FALLBACK;
+    const iconHtml = RARITY_ICONS[rarity] ?? RARITY_ICON_FALLBACK;
     const parser = new DOMParser();
     const doc = parser.parseFromString(iconHtml, 'text/html');
 

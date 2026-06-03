@@ -1229,19 +1229,25 @@ body.is-mobile button      { min-height: 44px; }
 .overlay-status.overlay-rarity-common            { color: #888; }
 .overlay-status.overlay-rarity-uncommon          { color: #5abf88; font-weight: bold; }
 .overlay-status.overlay-rarity-rare              { color: #5aabff; font-weight: bold; }
-.overlay-status.overlay-rarity-holoRare          { color: #88ccff; font-weight: bold; }
-.overlay-status.overlay-rarity-doubleRare        { color: #c47aff; font-weight: bold; }
-.overlay-status.overlay-rarity-illustrationRare  { color: #d490ff; font-weight: bold; }
-.overlay-status.overlay-rarity-ultraRare {
+.overlay-status.overlay-rarity-holoRare,
+.overlay-status.overlay-rarity-holo          { color: #88ccff; font-weight: bold; }
+.overlay-status.overlay-rarity-doubleRare,
+.overlay-status.overlay-rarity-double-rare  { color: #c47aff; font-weight: bold; }
+.overlay-status.overlay-rarity-illustrationRare,
+.overlay-status.overlay-rarity-ir           { color: #d490ff; font-weight: bold; }
+.overlay-status.overlay-rarity-ultraRare,
+.overlay-status.overlay-rarity-ultra-rare   {
   font-weight: bold;
   letter-spacing: 0.12em;
 }
-.overlay-status.overlay-rarity-specialIllustrationRare {
+.overlay-status.overlay-rarity-specialIllustrationRare,
+.overlay-status.overlay-rarity-sir          {
   font-weight: bold;
   letter-spacing: 0.14em;
   font-size: 1.1rem;
 }
-.overlay-status.overlay-rarity-hyperRare {
+.overlay-status.overlay-rarity-hyperRare,
+.overlay-status.overlay-rarity-hyper        {
   font-weight: bold;
   letter-spacing: 0.14em;
   font-size: 1.15rem;
@@ -1256,32 +1262,38 @@ body.is-mobile button      { min-height: 44px; }
   color: #5abf88;
   border-color: #1a4a2a;
 }
-.rarity-reveal-holoRare {
+.rarity-reveal-holoRare,
+.rarity-reveal-holo {
   background: linear-gradient(160deg, #0a1535 0%, #060e25 100%);
   color: #88ccff;
   border-color: #1a3a7a;
 }
-.rarity-reveal-doubleRare {
+.rarity-reveal-doubleRare,
+.rarity-reveal-double-rare {
   background: linear-gradient(160deg, #150a33 0%, #0a0622 100%);
   color: #c47aff;
   border-color: #3a1a66;
 }
-.rarity-reveal-illustrationRare {
+.rarity-reveal-illustrationRare,
+.rarity-reveal-ir {
   background: linear-gradient(160deg, #18083a 0%, #0d0525 100%);
   color: #d490ff;
   border-color: #4a1a78;
 }
-.rarity-reveal-ultraRare {
+.rarity-reveal-ultraRare,
+.rarity-reveal-ultra-rare {
   background: linear-gradient(160deg, #1e1000 0%, #120a00 100%);
   color: #ffcf40;
   border-color: #664a00;
 }
-.rarity-reveal-specialIllustrationRare {
+.rarity-reveal-specialIllustrationRare,
+.rarity-reveal-sir {
   background: linear-gradient(160deg, #1c0a15 0%, #100610 100%);
   color: #ff90c8;
   border-color: #661040;
 }
-.rarity-reveal-hyperRare {
+.rarity-reveal-hyperRare,
+.rarity-reveal-hyper {
   background: linear-gradient(160deg, #1a0800 0%, #100500 100%);
   color: #fbbf24;
   border-color: #783200;

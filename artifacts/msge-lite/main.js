@@ -2473,7 +2473,7 @@ async function playPendingSession() {
 
     lockBodyScroll();
     try {
-      if (session.currentRevealIndex === 0) {
+            if (session.currentRevealIndex === 0) {
         const animationDone = openPackInteraction(setId);
         await animationDone;
       }
@@ -4392,3 +4392,4 @@ function renderWishlistScreen() {
     container.appendChild(section);
   });
 }
+

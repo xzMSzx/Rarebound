@@ -14,6 +14,7 @@
 
 import { attachSwipeController } from './swipeController.js';
 import { updatePendingSessionIndex } from '../data/pendingPackManager.js';
+import { getCardVisualProfile } from '../data/cardVisualMapper.js';
 
 import {
   initAnimator,
@@ -67,6 +68,14 @@ function setRarityStatus(rarity) {
   el.innerHTML = RARITY_ICONS[rarity] ?? RARITY_ICON_FALLBACK;
   el.className = `overlay-status overlay-rarity-${rarity}`;
 }
+
+function getVisualRarity(card) {
+  return card?.visualProfile?.rarity || getCardVisualProfile(card).rarity;
+}
+
+const PREMIUM_VISUAL_RARITIES = new Set(
+  Object.keys(RARITY_ICONS).filter((key) => key !== 'common' && key !== 'uncommon' && key !== 'rare')
+);
 
 /**
  * Phase 5.2.5 — Show or hide the "Reverse Holo" caption as a flex-flow sibling
@@ -130,23 +139,6 @@ function waitForTap(el) {
   });
 }
 
-// ─── Rarity helpers ───────────────────────────────────────────────────────────
-
-const KNOWN_RARITIES = new Set([
-  'common', 'uncommon', 'rare', 'holoRare', 'doubleRare',
-  'illustrationRare', 'ultraRare', 'specialIllustrationRare', 'hyperRare',
-]);
-
-const HIGH_RARITY = new Set([
-  'holoRare', 'doubleRare', 'illustrationRare',
-  'ultraRare', 'specialIllustrationRare', 'hyperRare',
-]);
-
-function safeRarity(card) {
-  const r = card?.rarity;
-  return KNOWN_RARITIES.has(r) ? r : 'common';
-}
-
 // ─── Skip summary ─────────────────────────────────────────────────────────────
 
 /**
@@ -168,7 +160,7 @@ function showSkipSummary(allCards) {
   container.className = 'skip-summary-container';
 
   for (const card of allCards) {
-    const rarity = safeRarity(card);
+    const rarity = getVisualRarity(card);
     const badge  = document.createElement('div');
     badge.className = `skip-summary-card rarity-summary-${rarity}`;
 
@@ -195,7 +187,7 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
     const stage = cardStage();
     if (!ov || !stage) { resolve(); return; }
 
-    const hasSuspense = cards.some((c) => HIGH_RARITY.has(c.rarity));
+    const hasSuspense = cards.some((c) => PREMIUM_VISUAL_RARITIES.has(getVisualRarity(c)));
 
     // Targeted preload: ensure pack reveal images are warmed and decoded
     // to avoid Safari PWA hydration failures on the flip moment.
@@ -290,9 +282,10 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
       setHint('');
 
       const card = cards[cardIndex];
-      const isSuspenseCard = HIGH_RARITY.has(card.rarity);
+      const rarity = getVisualRarity(card);
+      const isSuspenseCard = PREMIUM_VISUAL_RARITIES.has(rarity);
       await revealCard(
-        card.rarity,                          // engine 4-tier — drives glow/pulse class
+        rarity,                               // visual rarity used for reveal icon and back-face styling
         isSuspenseCard && hasSuspense,
         card.imageUrl ?? null,
         card.isReverseHolo === true,          // Phase 5.2 — pipe foil flag through to animator
@@ -303,7 +296,7 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
       if (done) return;
 
       // Unicode symbol with rarity-${rarity} class activates premium CSS rule
-      setRarityStatus(card.rarity);
+      setRarityStatus(rarity);
       // Phase 5.2.5 — show the reverse-holo caption below the rarity diamond.
       setReverseHoloLabel(card.isReverseHolo === true);
       setHint(cardIndex < cards.length - 1
@@ -330,7 +323,8 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
     function showCurrentBack() {
       revealed = false;
       const card = cards[cardIndex];
-      const isSuspenseCard = HIGH_RARITY.has(card.rarity);
+      const rarity = getVisualRarity(card);
+      const isSuspenseCard = PREMIUM_VISUAL_RARITIES.has(rarity);
       showMystery(hasSuspense && isSuspenseCard);
       setCounter(cardIndex + 1, cards.length);
       setStatus(`Pack #${packNumber}`, 'overlay-pack-label');
