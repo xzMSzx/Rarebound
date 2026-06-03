@@ -211,11 +211,12 @@ function augmentCards(engineCards, setId, vendor) {
     if (!poolCard) return card;
     const visualCard = {
       rarity: poolCard.rarity,
+      apiRarity: poolCard.apiRarity,
       set: poolCard.set || { name: PACK_STORE[setId]?.name || setId },
     };
     return { ...card, id: poolCard.id || null, setId, name: poolCard.name,
              imageUrl: poolCard.imageUrl, rarityType: poolCard.rarity,
-             apiRarity: poolCard.rarity, set: visualCard.set,
+             apiRarity: poolCard.apiRarity, set: visualCard.set,
              visualProfile: getCardVisualProfile(visualCard),
              isReverseHolo: card.isReverseHolo };
   });
