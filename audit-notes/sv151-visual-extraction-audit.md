@@ -28,11 +28,11 @@
 - Uses `mask: var(--foil)` with luminance masking on `.card__glare2`.
 
 **Texture Assets:**
-- `var(--iri9)`
-- `var(--iri8)`
-- `var(--iri7)`
-- `var(--foil)`
-- `var(--mask)`
+- `var(--iri9)` (Hosted externally: `https://poke-holo.b-cdn.net/foils/151/iri-9.webp`)
+- `var(--iri8)` (Hosted externally: `https://poke-holo.b-cdn.net/foils/151/iri-8.webp`)
+- `var(--iri7)` (Hosted externally: `https://poke-holo.b-cdn.net/foils/151/iri-7.webp`)
+- `var(--foil)` (Note: In Simey's repo, `--foil` is typically defined elsewhere per card or defaults. It is *not* `illusion.png` for SIR, as `illusion.png` is only applied in `ex-full-art.css`.)
+- `var(--mask)` (Card-specific alpha mask image)
 
 **Blend Modes:**
 - `exclusion`, `hard-light`, `overlay`, `plus-lighter`, `multiply`
@@ -41,13 +41,13 @@
 - `--shift`, `--glitter-size`, `--rotate-x`, `--rotate-delta`, `--background-y`, `--background-x`, `--holo`, `--iri7`, `--iri8`, `--iri9`, `--mask`, `--card-opacity`, `--pointer-from-center`, `--pointer-from-left`, `--pointer-from-top`, `--pointer-x`, `--pointer-y`, `--foil`
 
 **Dependencies on `base.css`:**
-- Relies on `.card__glitter` and `.card__glare2` DOM nodes/styles which are defined in `base.css` (including `display: none` base states, grid layouts, and z-indexes).
+- Relies on `.card__glitter` and `.card__glare2` DOM nodes/styles which are explicitly defined in `public/css/cards/base.css` (lines 247-287 for glitter, 303-323 for glare2) including `display: none` base states, grid layouts, and z-indexes.
 - Depends on `base.css` for interactive CSS variables mapping to pointer positions.
 
 ## 3. IR Analysis (`illustration-rare.css`)
 
 **Texture Layers:**
-- Uses `var(--grain)` in `.card__shine` background-image.
+- Uses `var(--grain)` in `.card__shine` background-image. (Locally hosted: `/img/grain.webp`)
 
 **Gradients:**
 - Uses multiple complex `repeating-linear-gradient` (for sunpillars and angled color stops).
@@ -121,9 +121,9 @@
 - Interactive hover selectors (`.card:not(.interactive):hover`).
 
 **Assets Required:**
-- `grain.webp`
-- Foil/Glitter textures (`iri7`, `iri8`, `iri9` which may be hosted externally or in root style files).
-- Specific SVG clip-paths (`--clip`) and foil masks.
+- `public/img/grain.webp` (for IR)
+- External foil textures (`iri7.webp`, `iri8.webp`, `iri9.webp`) for SIR.
+- Specific SVG clip-paths (`--clip`).
 
 **Potential Conflicts:**
 - Missing DOM nodes for glitter/secondary glares.
@@ -133,4 +133,3 @@
 - `public/css/cards/base.css` (for extracting base sunpillar variables and clip-path configurations)
 - `public/css/cards/illustration-rare.css` (for IR)
 - `public/css/cards/ex-special-illustration-rare.css` (for SIR)
-- Any asset files referenced by variables in the above (e.g., `public/img/grain.webp`, `public/img/illusion.png`).
