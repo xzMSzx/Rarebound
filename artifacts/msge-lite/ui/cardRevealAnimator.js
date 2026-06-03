@@ -1,7 +1,7 @@
 import { playCardFlip, playRareChime, playUltraHit } from './audioManager.js';
 import { CARD_RENDER_TIERS, getTierCapabilities } from './renderTiers.js';
 import { HoloController } from '../src/utils/HoloController.js';
-import { applyCardVisualDataset } from '../data/cardVisualMapper.js';
+import { applyCardVisualDataset, getCardVisualProfile } from '../data/cardVisualMapper.js';
 
 let holoController = null;
 
@@ -302,12 +302,16 @@ export function showMystery(isSuspense = false) {
  * Guards every async continuation: if _overlayState is no longer 'revealing'
  * the function returns early so no DOM writes occur after skip.
  *
- * @param {string}       rarity
+ * @param {string}       rarityArg
  * @param {boolean}      isSuspense  — slower flip + shake when true
  * @param {string|null}  imageUrl    — Pokémon card image URL, or null for placeholder
  * @returns {Promise<void>}            resolves when flip completes (or aborted early)
  */
-export async function revealCard(rarity, isSuspense = false, imageUrl = null, isReverseHolo = false, realRarity = null, visualCard = null) {
+export async function revealCard(rarityArg, isSuspense = false, imageUrl = null, isReverseHolo = false, realRarity = null, visualCard = null) {
+  const rarity = visualCard
+    ? (visualCard?.visualProfile ?? getCardVisualProfile(visualCard)).rarity
+    : rarityArg;
+
   if (!rarity) return;
   if (!_currentCard || _overlayState !== 'revealing') return;
   const { wrapper, inner, backFace } = _currentCard;
