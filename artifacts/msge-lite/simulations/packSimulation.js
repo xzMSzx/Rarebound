@@ -66,7 +66,7 @@ const STATS_TIER = {
  * @returns {'common'|'uncommon'|'reverse'|'rare'|'hit'}
  */
 function getSlotPool(slot) {
-  if (slot <= 5)   return 'common';
+  if (slot <= 4)   return 'common';
   if (slot <= 7)   return 'uncommon';
   if (slot === 8)  return 'reverse';
   if (slot === 9)  return 'rare';
@@ -120,7 +120,13 @@ function rollHitSlot() {
   cumulative += table.illustrationRare ?? 0;
   if (roll < cumulative) return 'illustrationRare';
 
-  return 'doubleRare';
+  cumulative += table.doubleRare ?? 0;
+  if (roll < cumulative) return 'doubleRare';
+
+  cumulative += table.holoRare ?? 0;
+  if (roll < cumulative) return 'holoRare';
+
+  return 'holoRare';
 }
 
 // ─── Unique ID helper ─────────────────────────────────────────────────────────

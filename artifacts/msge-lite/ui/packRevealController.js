@@ -17,7 +17,7 @@ import {
   applyRarityGlow,
   delay,
 } from './animationSystem.js';
-import { normalizeRarityKey } from '../data/cardVisualMapper.js';
+import { normalizeRarityKey, getCardVisualProfile } from '../data/cardVisualMapper.js';
 
 // ─── DOM helpers ─────────────────────────────────────────────────────────────
 
@@ -63,11 +63,13 @@ export async function revealPack(cards, packNumber) {
   const cardInners   = [];   // inner flipping elements
 
   for (let i = 0; i < cards.length; i++) {
-    const rarity = normalizeRarityKey(cards[i].rarity) || 'common';
+    const profile = cards[i]?.visualProfile ?? getCardVisualProfile(cards[i]);
+    const rarity = normalizeRarityKey(profile.rarity) || 'common';
 
     // Outer wrapper (perspective + glow target)
     const wrapper = document.createElement('div');
     wrapper.className = `reveal-card-wrapper rarity-${rarity}`;
+    wrapper.setAttribute('data-rarity', rarity); // Ensure data-rarity attribute exists with resolved rarity
 
     // Inner flipping element
     const inner = document.createElement('div');

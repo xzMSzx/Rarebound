@@ -67,15 +67,21 @@ export function normalizeRarityKey(rawRarity) {
 export function getCardVisualProfile(card) {
   const setName = getSetName(card);
   const rawRarity = getRawRarity(card);
-  const rarity = normalizeRarityKey(rawRarity);
+  let rarity = normalizeRarityKey(rawRarity);
 
   if (!rarity && rawRarity && !warnedRarities.has(rawRarity)) {
     warnedRarities.add(rawRarity);
     console.warn('[cardVisualMapper] Unknown rarity, falling back to common:', rawRarity);
   }
 
+  const era = SWSH_SETS.has(setName) ? 'swsh' : 'sv';
+
+  if (era === 'sv' && String(rawRarity).trim().toLowerCase() === 'rare') {
+    rarity = 'holo';
+  }
+
   const profile = {
-    era: SWSH_SETS.has(setName) ? 'swsh' : 'sv',
+    era,
     rarity: rarity || 'common',
   };
 

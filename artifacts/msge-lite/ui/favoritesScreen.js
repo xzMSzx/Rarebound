@@ -19,6 +19,7 @@ import { getCollection } from '../data/collectionManager.js';
 import { getCachedSetCards } from '../data/cardPoolManager.js';
 import { getAllMarketValues, getMarketValue } from '../data/marketValue.js';
 import { mapPokemonRarity } from '../data/rarityMapper.js';
+import { getCardVisualProfile, normalizeRarityKey } from '../data/cardVisualMapper.js';
 import { getCompletedSlabs } from '../data/agsSubmissionManager.js';
 import { tierLabel } from '../data/agsGradingEngine.js';
 import { lockBodyScroll, unlockBodyScroll } from './scrollManager.js';
@@ -84,11 +85,12 @@ function buildFavoriteRows() {
       if (!fav.has(cardId)) continue;
       const apiCard = byId[cardId];
       if (!apiCard) continue;
-      const rarity = mapPokemonRarity(apiCard.rarity) || 'common';
+      const profile = apiCard?.visualProfile ?? getCardVisualProfile(apiCard);
+      const rarity = normalizeRarityKey(profile.rarity) || 'common';
       const value  = allValues[cardId] ?? getMarketValue(cardId, rarity);
       const slab   = gradedByCard.get(cardId) || null;
       rows.push({
-        setId, cardId, apiCard, entry, rarity, value, slab,
+        setId, cardId, apiCard, entry, rarity, value, slab, profile,
         rarityIdx: RARITY_ORDER.indexOf(rarity),
       });
     }
@@ -149,7 +151,7 @@ function renderFavoritesScreen() {
 }
 
 function renderFavoriteTile(row) {
-  const { setId, cardId, apiCard, rarity, value, slab } = row;
+  const { setId, cardId, apiCard, rarity, value, slab, profile } = row;
   const img = apiCard.images?.large || apiCard.images?.small || '';
   const slabBadge = slab
     ? `<div class="favorite-tile__slab">${slab.grade?.label || tierLabel(slab.grade?.tier?.id)}</div>`
@@ -157,7 +159,7 @@ function renderFavoriteTile(row) {
   const rarityLbl = RARITY_LABELS[rarity] || rarity;
 
   return `
-    <button class="favorite-tile" data-fav-card="${cardId}" data-fav-set="${setId}" type="button" data-render-tier="${CARD_RENDER_TIERS.THUMBNAIL}">
+    <button class="favorite-tile" data-fav-card="${cardId}" data-fav-set="${setId}" type="button" data-render-tier="${CARD_RENDER_TIERS.THUMBNAIL}" data-era="${profile.era}" data-rarity="${rarity}">
       <div class="favorite-tile__art-wrap">
         ${img
           ? `<img class="favorite-tile__art" src="${img}" alt="${apiCard.name}" loading="lazy" decoding="async" />`

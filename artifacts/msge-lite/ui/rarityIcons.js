@@ -72,14 +72,22 @@ export const RARITY_ICONS = {
   holoRare:                star('#38bdf8'),
   'double-rare':           multi(star('#60a5fa') + star('#60a5fa'), 'rarity-double'),
   doubleRare:              multi(star('#60a5fa') + star('#60a5fa'), 'rarity-double'),
+  'Double Rare':           multi(star('#60a5fa') + star('#60a5fa'), 'rarity-double'),
+  ex:                      multi(star('#60a5fa') + star('#60a5fa'), 'rarity-double'),
   ir:                      multi(star('#a78bfa') + star('#a78bfa'), 'rarity-double'),
   illustrationRare:        multi(star('#a78bfa') + star('#a78bfa'), 'rarity-double'),
+  'Illustration Rare':     multi(star('#a78bfa') + star('#a78bfa'), 'rarity-double'),
   'ultra-rare':            multi(goldStar() + goldStar() + goldStar(), 'rarity-triple'),
   ultraRare:               multi(goldStar() + goldStar() + goldStar(), 'rarity-triple'),
+  'Ultra Rare':            multi(goldStar() + goldStar() + goldStar(), 'rarity-triple'),
+  ur:                      multi(goldStar() + goldStar() + goldStar(), 'rarity-triple'),
   sir:                     multi(goldSparkle() + goldStar(), 'rarity-double'),
   specialIllustrationRare: multi(goldSparkle() + goldStar(), 'rarity-double'),
+  'Special Illustration Rare': multi(goldSparkle() + goldStar(), 'rarity-double'),
   hyper:                   goldCrown(),
   hyperRare:               goldCrown(),
+  'Hyper Rare':            goldCrown(),
+  hr:                      goldCrown(),
 };
 
 /** Safe fallback for unknown rarity keys. */
