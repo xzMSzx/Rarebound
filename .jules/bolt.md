@@ -10,3 +10,6 @@
 ## 2024-05-22 - Operation-Scoped Map Caching in Milestone Manager
 **Learning:** Functions evaluating milestone progress (`countByTiers`, etc.) looped over the whole collection, performing an `Array.find` on set cards for every user card. This resulted in significant O(N^2) overhead during milestone checks.
 **Action:** Replaced `Array.find` with a Map lookup (`_sweepMapCache.get(setId).get(cardId)`). To prevent breaking test state while maintaining performance, the Map cache is lazily initialized and explicitly cleared in the `finally` block of the top-level sweep functions (`getMilestoneStatus`, `getCategoryStatus`), matching the existing `_sweepCollection` paradigm.
+## 2024-05-25 - Converting Array to Object dynamically in loops
+**Learning:** Reconstructing objects/maps dynamically from arrays in tight UI loops (e.g., `Object.fromEntries(cached.map(c => [c.id, c]))`) produces severe O(N) penalties during rendering.
+**Action:** When a mapping is needed inside UI loops, utilize operation-scoped or module-level memoization. For cards, use `getCachedSetCardsMap(setId)` provided by `cardPoolManager` instead of recreating objects on every iteration.
