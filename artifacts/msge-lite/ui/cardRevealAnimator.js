@@ -1,7 +1,7 @@
 import { playCardFlip, playRareChime, playUltraHit } from './audioManager.js';
 import { CARD_RENDER_TIERS, getTierCapabilities } from './renderTiers.js';
 import { HoloController } from '../src/utils/HoloController.js';
-import { applyCardVisualDataset, getCardVisualProfile } from '../data/cardVisualMapper.js';
+import { applyCardVisualDataset, getCardVisualProfile, normalizeRarityKey } from '../data/cardVisualMapper.js';
 
 let holoController = null;
 
@@ -49,22 +49,73 @@ const RARITY_SYMBOL = {
   hyper:        '♛',
 };
 
+// Phase 6.2 — Dynamic rarity-based suspense timing
+// Baseline (slots 1-8): 300ms flip
+// Premium rarities add additional suspense delay before flip
+const RARITY_SUSPENSE_DELAY = {
+  common:       0,
+  uncommon:     0,
+  rare:         50,
+  holo:         75,
+  'double-rare': 125,
+  ir:           175,
+  'ultra-rare': 225,
+  sir:          300,
+  hyper:        400,
+};
+
+function getSuspenseDelayForRarity(rarity) {
+  const normalized = normalizeRarityKey(rarity) || 'common';
+  return RARITY_SUSPENSE_DELAY[normalized] || 0;
+}
+
 // Phase 5.4.3 — Holo layers (iridescent bands + spotlight reflection) gated
-// by REAL Pokémon rarity (card.rarityType), not the engine's 4-tier system.
+// by the normalized visual rarity from card.visualProfile.rarity.
 // The engine emits common/rare/epic/legendary, but the actual Pokémon rarity
-// flowing in via rarityType uses the camelCase TCG taxonomy below.
+// flowing in via visualProfile is the application's single source of truth.
 //
 // Commons & uncommons stay clean. Reverse-holos are excluded so the
 // foil-sweep effect doesn't visually compete with the holo.
 const HOLO_RARITIES = new Set([
   'rare',
-  'holoRare',
-  'doubleRare',
-  'illustrationRare',
-  'ultraRare',
-  'specialIllustrationRare',
-  'hyperRare',
+  'holo',
+  'double-rare',
+  'ir',
+  'ultra-rare',
+  'sir',
+  'hyper',
 ]);
+
+const NORMALIZED_RARITIES = [
+  'common',
+  'uncommon',
+  'rare',
+  'holo',
+  'double-rare',
+  'ir',
+  'ultra-rare',
+  'sir',
+  'hyper',
+];
+
+function setWrapperRarity(wrapper, inner, rarity) {
+  const normalized = normalizeRarityKey(rarity) || 'common';
+  NORMALIZED_RARITIES.forEach((key) => {
+    wrapper.classList.remove(`rarity-${key}`);
+    inner.classList.remove(`rarity-${key}`);
+  });
+  wrapper.classList.add(`rarity-${normalized}`);
+  inner.classList.add(`rarity-${normalized}`);
+  wrapper.setAttribute('data-rarity', normalized);
+}
+
+function clearSuspenseGlow(wrapper) {
+  const inner = wrapper.querySelector('.overlay-card-inner');
+  wrapper.classList.remove('suspense-glow', 'suspense-glow-large');
+  if (inner) {
+    inner.classList.remove('suspense-glow', 'suspense-glow-large');
+  }
+}
 
 // ─── Overlay state ────────────────────────────────────────────────────────────
 
@@ -93,6 +144,7 @@ function buildCard(container) {
   wrapper.setAttribute('data-render-tier', 'showcase');
   wrapper.setAttribute('data-rb-interactive', 'true');
   wrapper.setAttribute('data-card-state', 'interactive');
+  wrapper.setAttribute('data-rarity', 'common');
   applyCardVisualDataset(wrapper, null);
 
   const animator = document.createElement('div');
@@ -146,6 +198,7 @@ function renderFront(frontFace, isSuspense) {
       alt="Card back"
       draggable="false"
       decoding="async"
+      onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #2a2410 0%, #1a140c 100%)'; this.parentElement.style.borderRadius='12px';"
     />
   `;
 }
@@ -231,10 +284,9 @@ function renderBack(backFace, rarity, imageUrl = null, isReverseHolo = false, re
     backFace.appendChild(sweep);
   }
 
-  // Phase 5.4.3 — gate on the REAL Pokémon rarity, not the engine 4-tier
-  // value. realRarity comes from card.rarityType (set by main.js augmentCards).
-  // If a caller forgets to pass it, fall back to the engine rarity so legacy
-  // calls still trigger holo on whatever simple 'rare' cards exist.
+  // Phase 5.4.3 — gate on the normalized visual rarity, not the engine 4-tier
+  // value. realRarity should be derived from visualProfile.rarity, and we
+  // fall back to the normalized reveal rarity for legacy callers.
   const rarityForHolo = realRarity ?? rarity;
   const tier = backFace.parentElement?.parentElement?.dataset.renderTier || CARD_RENDER_TIERS.SHOWCASE;
   const capabilities = getTierCapabilities(tier);
@@ -272,9 +324,10 @@ export function initAnimator(container) {
  * Show the mystery card back. Call once per card before reveal.
  * @param {boolean} isSuspense
  */
-export function showMystery(isSuspense = false) {
+export function showMystery(isSuspense = false, rarity = 'common') {
   if (!_container) return;
   _currentCard = buildCard(_container);
+  setWrapperRarity(_currentCard.wrapper, _currentCard.inner, rarity);
 
   // Phase 6.5.2 — wrap image injection in rAF so the browser has one layout
   // pass before the card back image mounts, preventing the ghost-line flicker.
@@ -293,7 +346,7 @@ export function showMystery(isSuspense = false) {
   _currentCard.inner.classList.remove('overlay-flipped');
 
   if (isSuspense) {
-    _currentCard.wrapper.classList.add('suspense-glow-large');
+    _currentCard.inner.classList.add('suspense-glow');
   }
 }
 
@@ -308,22 +361,37 @@ export function showMystery(isSuspense = false) {
  * @returns {Promise<void>}            resolves when flip completes (or aborted early)
  */
 export async function revealCard(rarityArg, isSuspense = false, imageUrl = null, isReverseHolo = false, realRarity = null, visualCard = null) {
-  const rarity = visualCard
-    ? (visualCard?.visualProfile ?? getCardVisualProfile(visualCard)).rarity
-    : rarityArg;
+  const rarity = normalizeRarityKey(
+    visualCard
+      ? (visualCard?.visualProfile ?? getCardVisualProfile(visualCard)).rarity
+      : rarityArg
+  ) || 'common';
+
+  realRarity = normalizeRarityKey(realRarity) || rarity;
 
   if (!rarity) return;
   if (!_currentCard || _overlayState !== 'revealing') return;
   const { wrapper, inner, backFace } = _currentCard;
   applyCardVisualDataset(wrapper, visualCard);
+  setWrapperRarity(wrapper, inner, rarity);
+  clearSuspenseGlow(wrapper);
 
   // Fill the reveal face just before flipping. realRarity drives the holo
-  // gating in renderBack; rarity (engine 4-tier) drives the glow/pulse class.
+  // gating in renderBack; rarity drives the same normalized reveal styling.
   renderBack(backFace, rarity, imageUrl, isReverseHolo, realRarity);
+
+  // Phase 6.2 — Dynamic rarity-based suspense: add delay before animation
+  const rarityDelay = isSuspense ? getSuspenseDelayForRarity(rarity) : 0;
+  const flipDuration = isSuspense ? 600 : 300;
+  if (rarityDelay > 0) {
+    await _wait(rarityDelay);
+    // ── State guard after rarity delay await ────────────────────────────
+    if (_overlayState !== 'revealing') return;
+  }
 
   // Suspense: shake first, then slow flip
   if (isSuspense) {
-    wrapper.classList.remove('suspense-glow-large');
+    wrapper.classList.remove('suspense-glow');
     await _shake(wrapper);
     // ── State guard after shake await ──────────────────────────────────
     if (_overlayState !== 'revealing') return;
@@ -355,23 +423,23 @@ export async function revealCard(rarityArg, isSuspense = false, imageUrl = null,
   // Phase 5.5 — premium reveal effects. Triggers AFTER the flip lands so the
   // burst/sparkles read as a celebration of the reveal rather than overlapping
   // the spin. Tier-scaled (per spec Section 6/8):
-  //   doubleRare / illustrationRare       → burst only
-  //   ultraRare                           → burst + sparkles
-  //   specialIllustrationRare / hyperRare → burst + sparkles + background glow
+  //   double-rare / ir       → burst only
+  //   ultra-rare             → burst + sparkles
+  //   sir / hyper            → burst + sparkles + background glow
   // All elements append to the wrapper and self-clean via setTimeout so we
   // never leak DOM nodes if the user opens many packs in a row. Effects skip
   // entirely on reverse-holos (they have their own foil-sweep celebration)
   // and on commons / uncommons / plain rares.
   if (!isReverseHolo) {
     const BURST_TIERS = new Set([
-      'doubleRare', 'illustrationRare',
-      'ultraRare', 'specialIllustrationRare', 'hyperRare',
+      'double-rare', 'ir',
+      'ultra-rare', 'sir', 'hyper',
     ]);
     const SPARKLE_TIERS = new Set([
-      'ultraRare', 'specialIllustrationRare', 'hyperRare',
+      'ultra-rare', 'sir', 'hyper',
     ]);
     const BG_TIERS = new Set([
-      'specialIllustrationRare', 'hyperRare',
+      'sir', 'hyper',
     ]);
 
     const tier = wrapper.dataset.renderTier;
@@ -396,8 +464,8 @@ export async function revealCard(rarityArg, isSuspense = false, imageUrl = null,
     // Phase 5.6 — tier-scaled audio cue. Ultra+ gets the bass-thump impact,
     // anything else holo-worthy gets the lighter chime. Commons/uncommons
     // and reverse-holos stay silent (the flip whoosh above is enough).
-    const ULTRA_AUDIO = new Set(['ultraRare', 'specialIllustrationRare', 'hyperRare']);
-    const CHIME_AUDIO = new Set(['rare', 'holoRare', 'doubleRare', 'illustrationRare']);
+    const ULTRA_AUDIO = new Set(['ultra-rare', 'sir', 'hyper']);
+    const CHIME_AUDIO = new Set(['rare', 'holo', 'double-rare', 'ir']);
     if (ULTRA_AUDIO.has(realRarity))      playUltraHit();
     else if (CHIME_AUDIO.has(realRarity)) playRareChime();
   }

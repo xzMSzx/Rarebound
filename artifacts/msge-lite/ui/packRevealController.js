@@ -15,9 +15,9 @@ import {
   applySuspenseGlow,
   removeSuspenseGlow,
   applyRarityGlow,
-  applyLegendaryEffect,
   delay,
 } from './animationSystem.js';
+import { normalizeRarityKey } from '../data/cardVisualMapper.js';
 
 // ─── DOM helpers ─────────────────────────────────────────────────────────────
 
@@ -52,9 +52,10 @@ export async function revealPack(cards, packNumber) {
   if (status) { status.textContent = ''; status.className = 'pack-status-msg'; }
 
   // Detect whether any card warrants suspense treatment
-  const hasSuspense = cards.some(
-    (c) => c.rarity === 'epic' || c.rarity === 'legendary'
-  );
+  const hasSuspense = cards.some((c) => {
+    const rarity = normalizeRarityKey(c.rarity) || 'common';
+    return rarity !== 'common' && rarity !== 'uncommon' && rarity !== 'rare';
+  });
 
   // ── Build all card DOM nodes ──────────────────────────────────────────────
 
@@ -62,11 +63,11 @@ export async function revealPack(cards, packNumber) {
   const cardInners   = [];   // inner flipping elements
 
   for (let i = 0; i < cards.length; i++) {
-    const rarity = cards[i].rarity;
+    const rarity = normalizeRarityKey(cards[i].rarity) || 'common';
 
     // Outer wrapper (perspective + glow target)
     const wrapper = document.createElement('div');
-    wrapper.className = 'reveal-card-wrapper';
+    wrapper.className = `reveal-card-wrapper rarity-${rarity}`;
 
     // Inner flipping element
     const inner = document.createElement('div');
@@ -81,8 +82,7 @@ export async function revealPack(cards, packNumber) {
     const back = document.createElement('div');
     back.className = `reveal-card-face reveal-card-back rarity-face-${rarity}`;
     back.innerHTML = `
-      <span class="reveal-rarity-label">${rarity.charAt(0).toUpperCase() + rarity.slice(1)}</span>
-      <span class="reveal-slot-label">Slot ${i + 1}</span>
+      <span class="reveal-rarity-label">${rarity.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</span>
     `;
 
     inner.appendChild(front);
@@ -112,7 +112,7 @@ export async function revealPack(cards, packNumber) {
 
   for (let i = 0; i < cardInners.length; i++) {
     const { inner, wrapper, rarity } = cardInners[i];
-    const isSuspenseCard = rarity === 'epic' || rarity === 'legendary';
+    const isSuspenseCard = rarity !== 'common' && rarity !== 'uncommon' && rarity !== 'rare';
 
     // Remove suspense pre-glow just before this card flips
     removeSuspenseGlow(wrapper);
@@ -122,26 +122,26 @@ export async function revealPack(cards, packNumber) {
     // Post-flip: apply rarity glow
     applyRarityGlow(wrapper, rarity);
 
-    // Legendary gets the golden pulse on top of the glow
-    if (rarity === 'legendary') applyLegendaryEffect(wrapper);
-
     await delay(300); // gap between cards
   }
 
   // ── Final status message ──────────────────────────────────────────────────
 
   if (status) {
-    const rarities = cards.map((c) => c.rarity);
-    const best = rarities.includes('legendary') ? 'legendary'
-      : rarities.includes('epic')      ? 'epic'
-      : rarities.includes('rare')      ? 'rare'
-      : 'common';
+    const rarities = cards.map((c) => normalizeRarityKey(c.rarity) || 'common');
+    const order = ['hyper', 'sir', 'ultra-rare', 'ir', 'double-rare', 'holo', 'rare', 'uncommon', 'common'];
+    const best = order.find((tier) => rarities.includes(tier)) || 'common';
 
     const msgs = {
-      legendary: '★★ LEGENDARY PULL! ★★',
-      epic:      '★ Epic card pulled!',
-      rare:      'Rare hit!',
-      common:    'Pack opened.',
+      hyper:      '★☆ Hyper Rare pull! ☆★',
+      sir:        '★ Special Illustration Rare pulled!',
+      'ultra-rare': '★ Ultra Rare pull!',
+      ir:         '★ Illustration Rare hit!',
+      'double-rare': '★ Double Rare hit!',
+      holo:       '★ Holo pull!',
+      rare:       'Rare hit!',
+      uncommon:   'Uncommon pack pull.',
+      common:     'Pack opened.',
     };
 
     status.textContent = msgs[best];

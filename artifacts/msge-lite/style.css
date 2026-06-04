@@ -386,9 +386,14 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 .reveal-slot-label   { font-size: 0.55rem; color: rgba(255,255,255,0.35); }
 
 .rarity-face-common    { background-color: #1a1a1a; color: #888; }
+.rarity-face-uncommon  { background-color: #101612; color: #5abf88; }
 .rarity-face-rare      { background-color: #0a1a33; color: #5aabff; }
-.rarity-face-epic      { background-color: #160a33; color: #c47aff; }
-.rarity-face-legendary { background-color: #221400; color: #ffcf40; }
+.rarity-face-holo      { background-color: #0a1535; color: #88ccff; }
+.rarity-face-double-rare { background-color: #110830; color: #c47aff; }
+.rarity-face-ir        { background-color: #14083a; color: #d490ff; }
+.rarity-face-ultra-rare { background-color: #1e1000; color: #ffcf40; }
+.rarity-face-sir       { background-color: #1c0a15; color: #ff90c8; }
+.rarity-face-hyper     { background-color: #1a0800; color: #fbbf24; }
 
 /* ─── SHARED GLOW EFFECTS ────────────────────────────────────────────── */
 
@@ -532,6 +537,27 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   transition: transform 0.12s ease-out;
 }
 
+.overlay-card-inner.rarity-common,
+.reveal-card-wrapper.rarity-common { box-shadow: none; }
+.overlay-card-inner.rarity-uncommon,
+.reveal-card-wrapper.rarity-uncommon { box-shadow: 0 0 10px rgba(220, 220, 220, 0.24); }
+.overlay-card-inner.rarity-rare,
+.reveal-card-wrapper.rarity-rare { box-shadow: 0 0 12px rgba(80, 130, 255, 0.36); }
+.overlay-card-inner.rarity-holo,
+.reveal-card-wrapper.rarity-holo { box-shadow: 0 0 14px rgba(0, 210, 255, 0.42); }
+.overlay-card-inner.rarity-double-rare,
+.reveal-card-wrapper.rarity-double-rare { box-shadow: 0 0 16px rgba(170, 90, 255, 0.46); }
+.overlay-card-inner.rarity-ir,
+.reveal-card-wrapper.rarity-ir { box-shadow: inset 0 0 6px rgba(255, 215, 130, 0.20), 0 0 18px rgba(225, 145, 80, 0.50); }
+.overlay-card-inner.rarity-ultra-rare,
+.reveal-card-wrapper.rarity-ultra-rare { box-shadow: 0 0 18px rgba(255, 205, 70, 0.52); }
+.overlay-card-inner.rarity-sir,
+.reveal-card-wrapper.rarity-sir { box-shadow: 0 0 20px rgba(255, 220, 90, 0.62); }
+.overlay-card-inner.rarity-hyper,
+.reveal-card-wrapper.rarity-hyper { box-shadow: 0 0 24px rgba(255, 245, 160, 0.75); }
+.overlay-card-inner.suspense-glow,
+.reveal-card-wrapper.suspense-glow { box-shadow: 0 0 12px 2px rgba(255, 255, 255, 0.09); }
+
 /* ─── Large card inner (flip container) ──────────────────────────────── */
 
 .overlay-card-inner {
@@ -540,6 +566,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.3s ease;
+  will-change: transform;
   border-radius: 12px;
   /* Phase 5.4.1 — DO NOT add isolation/opacity<1/filter/mix-blend-mode here.
    * Per CSS spec, any of those force this element to FLATTEN its 3D rendering
@@ -672,7 +699,7 @@ button.btn-analysis:hover { background-color: #14281a; border-color: #449944; co
 
 /* ─── Overlay glow (larger scale) ───────────────────────────────────── */
 
-.suspense-glow-large                   { box-shadow: 0 0 30px 5px rgba(255,180,50,0.35) !important; }
+/* Legacy large suspense bloom removed; rarity-based card wrapper glow now drives the effect. */
 
 /* ─── Overlay shake ──────────────────────────────────────────────────── */
 
@@ -1230,24 +1257,24 @@ body.is-mobile button      { min-height: 44px; }
 .overlay-status.overlay-rarity-uncommon          { color: #5abf88; font-weight: bold; }
 .overlay-status.overlay-rarity-rare              { color: #5aabff; font-weight: bold; }
 .overlay-status.overlay-rarity-holoRare,
-.overlay-status.overlay-rarity-holo          { color: #88ccff; font-weight: bold; }
+.overlay-status.overlay-rarity-holo              { color: #88ccff; font-weight: bold; }
 .overlay-status.overlay-rarity-doubleRare,
-.overlay-status.overlay-rarity-double-rare  { color: #c47aff; font-weight: bold; }
+.overlay-status.overlay-rarity-double-rare       { color: #c47aff; font-weight: bold; }
 .overlay-status.overlay-rarity-illustrationRare,
-.overlay-status.overlay-rarity-ir           { color: #d490ff; font-weight: bold; }
+.overlay-status.overlay-rarity-ir                { color: #d490ff; font-weight: bold; }
 .overlay-status.overlay-rarity-ultraRare,
-.overlay-status.overlay-rarity-ultra-rare   {
+.overlay-status.overlay-rarity-ultra-rare        {
   font-weight: bold;
   letter-spacing: 0.12em;
 }
 .overlay-status.overlay-rarity-specialIllustrationRare,
-.overlay-status.overlay-rarity-sir          {
+.overlay-status.overlay-rarity-sir               {
   font-weight: bold;
   letter-spacing: 0.14em;
   font-size: 1.1rem;
 }
 .overlay-status.overlay-rarity-hyperRare,
-.overlay-status.overlay-rarity-hyper        {
+.overlay-status.overlay-rarity-hyper             {
   font-weight: bold;
   letter-spacing: 0.14em;
   font-size: 1.15rem;
@@ -1302,12 +1329,18 @@ body.is-mobile button      { min-height: 44px; }
 /* ─── Collection grid — new rarity card styles ───────────────────────── */
 
 .grid-card-uncommon          { background-color: #0a1a12; color: #5abf88; border-color: #1a3a22; }
-.grid-card-holoRare          { background-color: #0a1535; color: #88ccff; border-color: #1a3a7a; }
-.grid-card-doubleRare        { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
-.grid-card-illustrationRare  { background-color: #14083a; color: #d490ff; border-color: #4a1a78; }
-.grid-card-ultraRare         { background-color: #1e1000; color: #ffcf40; border-color: #664a00; }
-.grid-card-specialIllustrationRare { background-color: #1c0a15; color: #ff90c8; border-color: #661040; }
-.grid-card-hyperRare         { background-color: #1a0800; color: #fbbf24; border-color: #783200; }
+.grid-card-holoRare,
+.grid-card-holo              { background-color: #0a1535; color: #88ccff; border-color: #1a3a7a; }
+.grid-card-doubleRare,
+.grid-card-double-rare       { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
+.grid-card-illustrationRare,
+.grid-card-ir                 { background-color: #14083a; color: #d490ff; border-color: #4a1a78; }
+.grid-card-ultraRare,
+.grid-card-ultra-rare        { background-color: #1e1000; color: #ffcf40; border-color: #664a00; }
+.grid-card-specialIllustrationRare,
+.grid-card-sir                { background-color: #1c0a15; color: #ff90c8; border-color: #661040; }
+.grid-card-hyperRare,
+.grid-card-hyper             { background-color: #1a0800; color: #fbbf24; border-color: #783200; }
 
 /* ─── Skip summary — 2×5 grid layout ────────────────────────────────── */
 
@@ -1335,12 +1368,18 @@ body.is-mobile button      { min-height: 44px; }
 .rarity-summary-common                  { background-color: #1a1a1a; color: #888;    border-color: #2a2a2a; }
 .rarity-summary-uncommon                { background-color: #0a1a12; color: #5abf88; border-color: #1a3a22; }
 .rarity-summary-rare                    { background-color: #091830; color: #5aabff; border-color: #1a3a66; }
-.rarity-summary-holoRare                { background-color: #0a1535; color: #88ccff; border-color: #1a3a7a; }
-.rarity-summary-doubleRare              { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
-.rarity-summary-illustrationRare        { background-color: #14083a; color: #d490ff; border-color: #4a1a78; }
-.rarity-summary-ultraRare               { background-color: #1e1000; color: #ffcf40; border-color: #664a00; }
-.rarity-summary-specialIllustrationRare { background-color: #1c0a15; color: #ff90c8; border-color: #661040; }
-.rarity-summary-hyperRare               { background-color: #1a0800; color: #fbbf24; border-color: #783200; }
+.rarity-summary-holoRare,
+.rarity-summary-holo                  { background-color: #0a1535; color: #88ccff; border-color: #1a3a7a; }
+.rarity-summary-doubleRare,
+.rarity-summary-double-rare           { background-color: #110830; color: #c47aff; border-color: #3a1a66; }
+.rarity-summary-illustrationRare,
+.rarity-summary-ir                    { background-color: #14083a; color: #d490ff; border-color: #4a1a78; }
+.rarity-summary-ultraRare,
+.rarity-summary-ultra-rare           { background-color: #1e1000; color: #ffcf40; border-color: #664a00; }
+.rarity-summary-specialIllustrationRare,
+.rarity-summary-sir                   { background-color: #1c0a15; color: #ff90c8; border-color: #661040; }
+.rarity-summary-hyperRare,
+.rarity-summary-hyper                { background-color: #1a0800; color: #fbbf24; border-color: #783200; }
 
 @media (max-width: 700px) {
   .skip-summary-grid            { gap: 8px; }
@@ -2893,11 +2932,16 @@ body.is-mobile button      { min-height: 44px; }
   opacity: 0.7;
 }
 
-.cdp-rarity-hyperRare              { color: #ff60e0; opacity: 1; }
-.cdp-rarity-specialIllustrationRare { color: #a78bfa; opacity: 1; }
-.cdp-rarity-ultraRare              { color: #38d9f5; opacity: 1; }
-.cdp-rarity-illustrationRare       { color: #ffd700; opacity: 1; }
-.cdp-rarity-doubleRare             { color: #f0c040; opacity: 0.9; }
+.cdp-rarity-hyperRare,
+.cdp-rarity-hyper                   { color: #ff60e0; opacity: 1; }
+.cdp-rarity-specialIllustrationRare,
+.cdp-rarity-sir                     { color: #a78bfa; opacity: 1; }
+.cdp-rarity-ultraRare,
+.cdp-rarity-ultra-rare              { color: #38d9f5; opacity: 1; }
+.cdp-rarity-illustrationRare,
+.cdp-rarity-ir                       { color: #ffd700; opacity: 1; }
+.cdp-rarity-doubleRare,
+.cdp-rarity-double-rare              { color: #f0c040; opacity: 0.9; }
 
 .cdp-set {
   font-size: 12px;

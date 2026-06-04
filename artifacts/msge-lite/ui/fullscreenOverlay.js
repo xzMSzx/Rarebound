@@ -14,7 +14,7 @@
 
 import { attachSwipeController } from './swipeController.js';
 import { updatePendingSessionIndex } from '../data/pendingPackManager.js';
-import { getCardVisualProfile } from '../data/cardVisualMapper.js';
+import { getCardVisualProfile, normalizeRarityKey } from '../data/cardVisualMapper.js';
 
 import {
   initAnimator,
@@ -70,7 +70,8 @@ function setRarityStatus(rarity) {
 }
 
 function getVisualRarity(card) {
-  return card?.visualProfile?.rarity ?? getCardVisualProfile(card).rarity;
+  const rarity = card?.visualProfile?.rarity ?? getCardVisualProfile(card).rarity;
+  return normalizeRarityKey(rarity) || 'common';
 }
 
 const PREMIUM_VISUAL_RARITIES = new Set(
@@ -289,7 +290,7 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
         isSuspenseCard && hasSuspense,
         card.imageUrl ?? null,
         card.isReverseHolo === true,          // Phase 5.2 — pipe foil flag through to animator
-        card.rarityType ?? card.rarity,       // Phase 5.4.3 — REAL Pokémon rarity gates the holo
+        rarity,                               // Phase 5.4.3 — real visual rarity from visualProfile
         card,
       );
 
@@ -325,7 +326,7 @@ export function openPackOverlay(cards, packNumber, startIndex = 0) {
       const card = cards[cardIndex];
       const rarity = getVisualRarity(card);
       const isSuspenseCard = PREMIUM_VISUAL_RARITIES.has(rarity);
-      showMystery(hasSuspense && isSuspenseCard);
+      showMystery(hasSuspense && isSuspenseCard, rarity);
       setCounter(cardIndex + 1, cards.length);
       setStatus(`Pack #${packNumber}`, 'overlay-pack-label');
       setReverseHoloLabel(false);   // Phase 5.2.5 — clear any prior RH caption

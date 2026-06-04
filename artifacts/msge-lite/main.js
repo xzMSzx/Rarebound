@@ -2396,6 +2396,22 @@ async function buyPackFromVendor(setId, price, vendor, btn) {
     engine.stepSimulation();
     const newCards = augmentCards(engine.state.cards.slice(-10), setId, vendor);
     
+const DEBUG_CARD = {
+  id: "sv3pt5-181",
+  name: "Dragonair",
+  rarity: "Illustration Rare",
+  set: {
+    id: "sv3pt5",
+    name: "151",
+    series: "Scarlet & Violet"
+  },
+  imageUrl: "https://images.pokemontcg.io/sv3pt5/181_hires.png"
+};
+
+if (newCards?.length > 0) {
+  newCards[newCards.length - 1] = DEBUG_CARD;
+}
+
     const session = {
       id: Date.now().toString() + Math.random().toString(36).substring(2),
       purchaseType: 'single_pack',

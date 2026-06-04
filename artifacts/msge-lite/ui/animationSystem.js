@@ -6,6 +6,8 @@
  * It only operates on DOM elements passed in from outside.
  */
 
+import { normalizeRarityKey } from '../data/cardVisualMapper.js';
+
 /**
  * Utility: wait for ms milliseconds.
  * @param {number} ms
@@ -20,8 +22,23 @@ export function delay(ms) {
  * @param {HTMLElement} element
  * @param {string} rarity - 'common' | 'rare' | 'epic' | 'legendary'
  */
+const NORMALIZED_RARITIES = [
+  'common',
+  'uncommon',
+  'rare',
+  'holo',
+  'double-rare',
+  'ir',
+  'ultra-rare',
+  'sir',
+  'hyper',
+];
+
 export function applyRarityGlow(element, rarity) {
+  const normalized = normalizeRarityKey(rarity) || 'common';
+  NORMALIZED_RARITIES.forEach((key) => element.classList.remove(`rarity-${key}`));
   element.classList.remove('glow-common', 'glow-rare', 'glow-epic', 'glow-legendary');
+  element.classList.add(`rarity-${normalized}`);
 }
 
 /**
