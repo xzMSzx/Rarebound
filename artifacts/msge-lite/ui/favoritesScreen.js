@@ -16,7 +16,7 @@
 
 import { getFavorites, removeFavorite } from '../data/favoritesManager.js';
 import { getCollection } from '../data/collectionManager.js';
-import { getCachedSetCards } from '../data/cardPoolManager.js';
+import { getCachedSetCards, getCachedSetCardsMap } from '../data/cardPoolManager.js';
 import { getAllMarketValues, getMarketValue } from '../data/marketValue.js';
 import { mapPokemonRarity } from '../data/rarityMapper.js';
 import { getCompletedSlabs } from '../data/agsSubmissionManager.js';
@@ -78,11 +78,11 @@ function buildFavoriteRows() {
 
   const rows = [];
   for (const [setId, cards] of Object.entries(collection)) {
-    const cached = getCachedSetCards(setId) || [];
-    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    // ⚡ Bolt: Using pre-computed Map lookup instead of O(N) Object.fromEntries(cached.map...) per set
+    const cardMap = getCachedSetCardsMap(setId);
     for (const [cardId, entry] of Object.entries(cards)) {
       if (!fav.has(cardId)) continue;
-      const apiCard = byId[cardId];
+      const apiCard = cardMap ? cardMap.get(cardId) : null;
       if (!apiCard) continue;
       const rarity = mapPokemonRarity(apiCard.rarity) || 'common';
       const value  = allValues[cardId] ?? getMarketValue(cardId, rarity);
