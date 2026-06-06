@@ -221,7 +221,7 @@ function renderRegistryPanel(registrySorted, totalArchive) {
       </div>
       <div class="ags-registry-grid" id="ags-registry-grid"></div>
       ${registrySorted.length > 30 ? `
-        <button class="ags-show-more" id="ags-registry-toggle" type="button">
+        <button class="ags-show-more" id="ags-registry-toggle" type="button" aria-expanded="${_state.expandedRegistry ? 'true' : 'false'}" aria-controls="ags-registry-grid">
           ${_state.expandedRegistry ? 'Show fewer' : `Show all ${registrySorted.length}`}
         </button>
       ` : ''}
@@ -307,9 +307,9 @@ function renderEligiblePanel(eligibleRows) {
       ${eligibleRows.length === 0
         ? `<div class="ags-empty">Pull a Double Rare or higher card to unlock submission.</div>`
         : `
-          <div class="ags-eligible-grid">${visible.map(renderEligibleTile).join('')}</div>
+          <div class="ags-eligible-grid" id="ags-eligible-grid">${visible.map(renderEligibleTile).join('')}</div>
           ${eligibleRows.length > 30 ? `
-            <button class="ags-show-more" id="ags-eligible-toggle" type="button">
+            <button class="ags-show-more" id="ags-eligible-toggle" type="button" aria-expanded="${_state.expandedEligible ? 'true' : 'false'}" aria-controls="ags-eligible-grid">
               ${_state.expandedEligible ? 'Show fewer' : `Show all ${eligibleRows.length}`}
             </button>
           ` : ''}
