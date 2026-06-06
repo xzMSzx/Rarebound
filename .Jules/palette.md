@@ -14,3 +14,7 @@
 ## 2024-05-18 - Add aria-labels to settings toggle switches
 **Learning:** Found multiple custom toggle switches (`<input type="checkbox">`) inside the developer diagnostic section without explicitly associated descriptive context strings accessible to screen readers. This pattern is common for custom CSS toggle designs where the visual label isn't directly bound using `for`/`id` or implicitly associated by nesting within a common `<label>`.
 **Action:** Always add descriptive `aria-label` attributes to explicitly define the function (e.g. `aria-label="Toggle Developer Diagnostics"`) when a toggle input lacks a valid explicit or implicit text string association.
+
+## 2024-06-06 - Accessible expandable sections
+**Learning:** Found a pattern of missing ARIA attributes (`aria-expanded` and `aria-controls`) on expandable UI sections acting like accordions (e.g. "Show more" toggles in grid layouts). The class toggle visual states were not communicated to screen readers.
+**Action:** Added `aria-expanded` and `aria-controls` explicitly on the relevant elements. Whenever an expanding element is added, always manage these ARIA states concurrently with the visual class toggles to ensure accessible interpretation.
