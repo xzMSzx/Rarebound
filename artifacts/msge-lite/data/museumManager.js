@@ -6,7 +6,7 @@
  */
 
 import { getCollection, decrementCard } from './collectionManager.js';
-import { getCachedSetCards } from './cardPoolManager.js';
+import { getCachedSetCards, getCachedSetCardsMap } from './cardPoolManager.js';
 import { mapPokemonRarity } from './rarityMapper.js';
 import { rawCopiesAvailable } from './agsAvailability.js';
 import { addPrestigeBonus } from './prestigeManager.js';
@@ -110,8 +110,9 @@ export function getActiveExhibition() {
 export function matchesMuseumCriteria(setId, cardId, criteria) {
   if (criteria.kind === 'set') return criteria.setIds.includes(setId);
   
-  const cached = getCachedSetCards(setId) || [];
-  const apiCard = cached.find(c => c.id === cardId);
+  // ⚡ Bolt: Replace O(N) Array.find with O(1) Map lookup
+  const cardMap = getCachedSetCardsMap(setId);
+  const apiCard = cardMap ? cardMap.get(cardId) : null;
   if (!apiCard) return false;
 
   if (criteria.setIds && !criteria.setIds.includes(setId)) return false;
