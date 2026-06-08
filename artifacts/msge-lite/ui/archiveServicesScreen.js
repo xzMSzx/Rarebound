@@ -173,13 +173,16 @@ function renderArchiveServicesScreen(hooks) {
 // ─── Tab nav ─────────────────────────────────────────────────────────────────
 
 function renderTabNav({ registry, active, eligible }) {
-  const tab = (id, label, count) => `
-    <button class="rb-pill ags-tab-pill ${_state.activeTab === id ? 'is-active' : ''}"
-            data-tab="${id}" type="button">
-      <span class="rb-pill__label">${label}</span>
-      <span class="rb-pill__count">${count}</span>
-    </button>
-  `;
+  const tab = (id, label, count) => {
+    const isActive = _state.activeTab === id;
+    return `
+      <button class="rb-pill ags-tab-pill ${isActive ? 'is-active' : ''}"
+              data-tab="${id}" type="button" role="tab" aria-selected="${isActive ? 'true' : 'false'}">
+        <span class="rb-pill__label">${label}</span>
+        <span class="rb-pill__count">${count}</span>
+      </button>
+    `;
+  };
   return `
     <nav class="rb-pill-row ags-tab-nav" role="tablist" aria-label="Archive Services sections">
       ${tab('registry', 'Registry', registry)}
