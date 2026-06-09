@@ -10,3 +10,6 @@
 ## 2024-05-22 - Operation-Scoped Map Caching in Milestone Manager
 **Learning:** Functions evaluating milestone progress (`countByTiers`, etc.) looped over the whole collection, performing an `Array.find` on set cards for every user card. This resulted in significant O(N^2) overhead during milestone checks.
 **Action:** Replaced `Array.find` with a Map lookup (`_sweepMapCache.get(setId).get(cardId)`). To prevent breaking test state while maintaining performance, the Map cache is lazily initialized and explicitly cleared in the `finally` block of the top-level sweep functions (`getMilestoneStatus`, `getCategoryStatus`), matching the existing `_sweepCollection` paradigm.
+## 2024-05-25 - Safe Map Caching from Pool Manager
+**Learning:** Using `getCachedSetCardsMap(setId)` provides an O(1) Map representation of set cards, resolving major O(N) array `.find` bottlenecks in nested loops over the collection (such as during `getEligibleMuseumCards`).
+**Action:** When evaluating cards across the whole collection (e.g. `getCollection()`), prefer importing and using `getCachedSetCardsMap` instead of `getCachedSetCards().find(...)`. Make sure to safely handle `undefined` Map results with `map ? map.get(id) : null` depending on test mock state.
