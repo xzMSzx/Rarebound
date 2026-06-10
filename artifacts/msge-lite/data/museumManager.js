@@ -5,7 +5,7 @@
  * Persistent archive contributions and prestigious thematic exhibitions.
  */
 
-import { getCollection, decrementCard } from './collectionManager.js';
+import { getCollection, decrementCard, runWithCollectionCache } from './collectionManager.js';
 import { getCachedSetCards } from './cardPoolManager.js';
 import { mapPokemonRarity } from './rarityMapper.js';
 import { rawCopiesAvailable } from './agsAvailability.js';
@@ -107,11 +107,23 @@ export function getActiveExhibition() {
   return s.exhibition;
 }
 
-export function matchesMuseumCriteria(setId, cardId, criteria) {
+export function matchesMuseumCriteria(setId, cardId, criteria, apiCardCache = null) {
   if (criteria.kind === 'set') return criteria.setIds.includes(setId);
   
-  const cached = getCachedSetCards(setId) || [];
-  const apiCard = cached.find(c => c.id === cardId);
+  let apiCard = null;
+  if (apiCardCache) {
+    let map = apiCardCache.get(setId);
+    if (!map) {
+      const cached = getCachedSetCards(setId) || [];
+      map = new Map();
+      for (let i = 0; i < cached.length; i++) map.set(cached[i].id, cached[i]);
+      apiCardCache.set(setId, map);
+    }
+    apiCard = map.get(cardId);
+  } else {
+    const cached = getCachedSetCards(setId) || [];
+    apiCard = cached.find(c => c.id === cardId);
+  }
   if (!apiCard) return false;
 
   if (criteria.setIds && !criteria.setIds.includes(setId)) return false;
@@ -128,23 +140,26 @@ export function matchesMuseumCriteria(setId, cardId, criteria) {
 }
 
 export function getEligibleMuseumCards(criteria) {
-  const collection = getCollection();
-  const eligible = [];
+  let eligible = [];
+  runWithCollectionCache(() => {
+    const collection = getCollection();
+    const apiCardCache = new Map();
   
-  for (const setId of Object.keys(collection)) {
-    for (const cardId of Object.keys(collection[setId])) {
-      const entry = collection[setId][cardId];
-      if (!matchesMuseumCriteria(setId, cardId, criteria)) continue;
-      
-      const rawCount = rawCopiesAvailable(setId, cardId, entry.count);
-      const entryLocked = entry.locked !== false;
-      const available = entryLocked ? Math.max(0, rawCount - 1) : rawCount;
-      
-      if (available > 0) {
-        eligible.push({ setId, cardId, available });
+    for (const setId of Object.keys(collection)) {
+      for (const cardId of Object.keys(collection[setId])) {
+        const entry = collection[setId][cardId];
+        if (!matchesMuseumCriteria(setId, cardId, criteria, apiCardCache)) continue;
+
+        const rawCount = rawCopiesAvailable(setId, cardId, entry.count);
+        const entryLocked = entry.locked !== false;
+        const available = entryLocked ? Math.max(0, rawCount - 1) : rawCount;
+
+        if (available > 0) {
+          eligible.push({ setId, cardId, available });
+        }
       }
     }
-  }
+  });
   return eligible;
 }
 
