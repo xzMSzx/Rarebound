@@ -127,7 +127,7 @@ function renderFavoritesScreen() {
 
   screen.innerHTML = `
     <div class="screen-header favorites-screen-header">
-      <button class="screen-back-btn" id="favorites-back-btn">← Back</button>
+      <button class="screen-back-btn" id="favorites-back-btn" aria-label="Go back">← Back</button>
       <div class="screen-title-row">
         <div class="screen-title">Favorite Collection</div>
         <div class="screen-subtitle">Curated highlights from your archive.</div>
