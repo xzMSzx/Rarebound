@@ -428,7 +428,7 @@ function devToolsHTML() {
 function getSettingsHTML(s, dev) {
   return `
     <div class="screen-header">
-      <button class="screen-back-btn" id="settings-back-btn">← Back</button>
+      <button class="screen-back-btn" id="settings-back-btn" aria-label="Go back">← Back</button>
       <h2>Settings</h2>
       <div></div>
     </div>
