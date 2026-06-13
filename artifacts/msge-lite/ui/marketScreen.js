@@ -146,7 +146,7 @@ function renderMarketScreen() {
 
   screen.innerHTML = `
     <div class="screen-header">
-      <button class="screen-back-btn" id="market-back-btn">← Back</button>
+      <button class="screen-back-btn" id="market-back-btn" aria-label="Go back">← Back</button>
       <h2>Market Trends</h2>
       <div></div>
     </div>
