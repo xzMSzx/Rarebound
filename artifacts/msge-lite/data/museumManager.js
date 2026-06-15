@@ -6,7 +6,7 @@
  */
 
 import { getCollection, decrementCard } from './collectionManager.js';
-import { getCachedSetCards } from './cardPoolManager.js';
+import { getCachedSetCardsMap } from './cardPoolManager.js';
 import { mapPokemonRarity } from './rarityMapper.js';
 import { rawCopiesAvailable } from './agsAvailability.js';
 import { addPrestigeBonus } from './prestigeManager.js';
@@ -110,8 +110,10 @@ export function getActiveExhibition() {
 export function matchesMuseumCriteria(setId, cardId, criteria) {
   if (criteria.kind === 'set') return criteria.setIds.includes(setId);
   
-  const cached = getCachedSetCards(setId) || [];
-  const apiCard = cached.find(c => c.id === cardId);
+  // ⚡ Bolt Optimization: Use O(1) Map lookup instead of O(N) Array.find()
+  // Since this is called in nested loops for the entire collection in getEligibleMuseumCards,
+  // replacing Array.find with Map lookup significantly reduces CPU overhead.
+  const apiCard = getCachedSetCardsMap(setId)?.get(cardId);
   if (!apiCard) return false;
 
   if (criteria.setIds && !criteria.setIds.includes(setId)) return false;
