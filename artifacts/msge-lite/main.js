@@ -3212,15 +3212,22 @@ function renderCollectionFilters() {
   const host = document.getElementById('collection-filters');
   if (!host) return;
   host.innerHTML = `
-    <button class="rb-pill collection-filter-pill is-active" data-filter="all"       type="button">All</button>
-    <button class="rb-pill collection-filter-pill"           data-filter="favorites" type="button">★ Favorites</button>
-    <button class="rb-pill collection-filter-pill"           data-filter="wishlist"  type="button">☆ Wishlist</button>
-    <button class="rb-pill collection-filter-pill"           data-filter="archived"  type="button">⬢ Archived</button>
+    <button class="rb-pill collection-filter-pill is-active" data-filter="all"       type="button" role="tab" aria-selected="true">All</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="favorites" type="button" role="tab" aria-selected="false">★ Favorites</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="wishlist"  type="button" role="tab" aria-selected="false">☆ Wishlist</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="archived"  type="button" role="tab" aria-selected="false">⬢ Archived</button>
   `;
   host.querySelectorAll('.collection-filter-pill').forEach(pill => {
     const f = pill.getAttribute('data-filter');
     const handler = () => {
       haptic('soft');
+      // Desynchronizing aria state fix: visually, we shouldn't change aria-selected
+      // if these just route to other screens. But we'll add update logic just in case
+      // "all" becomes part of a multi-tab view later.
+      host.querySelectorAll('.collection-filter-pill').forEach(p => {
+         p.setAttribute('aria-selected', p === pill ? 'true' : 'false');
+         p.classList.toggle('is-active', p === pill);
+      });
       if (f === 'favorites')      { _openFavoritesScreen(); return; }
       if (f === 'wishlist')       { openWishlistScreen();   return; }
       if (f === 'archived')       { setAgsActiveTab('registry'); openAgsScreen(); return; }
