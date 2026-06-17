@@ -6,7 +6,7 @@
  */
 
 import { getCollection, decrementCard } from './collectionManager.js';
-import { getCachedSetCards } from './cardPoolManager.js';
+import { getCachedSetCards, getCachedSetCardsMap } from './cardPoolManager.js';
 import { mapPokemonRarity } from './rarityMapper.js';
 import { rawCopiesAvailable } from './agsAvailability.js';
 import { addPrestigeBonus } from './prestigeManager.js';
@@ -107,11 +107,19 @@ export function getActiveExhibition() {
   return s.exhibition;
 }
 
-export function matchesMuseumCriteria(setId, cardId, criteria) {
+export function matchesMuseumCriteria(setId, cardId, criteria, cardMapCache = null) {
   if (criteria.kind === 'set') return criteria.setIds.includes(setId);
   
-  const cached = getCachedSetCards(setId) || [];
-  const apiCard = cached.find(c => c.id === cardId);
+  let apiCard;
+  if (cardMapCache) {
+    if (!cardMapCache.has(setId)) {
+      cardMapCache.set(setId, getCachedSetCardsMap(setId) || new Map());
+    }
+    apiCard = cardMapCache.get(setId).get(cardId);
+  } else {
+    const cachedMap = getCachedSetCardsMap(setId);
+    apiCard = cachedMap ? cachedMap.get(cardId) : null;
+  }
   if (!apiCard) return false;
 
   if (criteria.setIds && !criteria.setIds.includes(setId)) return false;
@@ -130,11 +138,12 @@ export function matchesMuseumCriteria(setId, cardId, criteria) {
 export function getEligibleMuseumCards(criteria) {
   const collection = getCollection();
   const eligible = [];
+  const cardMapCache = new Map();
   
   for (const setId of Object.keys(collection)) {
     for (const cardId of Object.keys(collection[setId])) {
       const entry = collection[setId][cardId];
-      if (!matchesMuseumCriteria(setId, cardId, criteria)) continue;
+      if (!matchesMuseumCriteria(setId, cardId, criteria, cardMapCache)) continue;
       
       const rawCount = rawCopiesAvailable(setId, cardId, entry.count);
       const entryLocked = entry.locked !== false;
