@@ -16,7 +16,7 @@
 
 import { getFavorites, removeFavorite } from '../data/favoritesManager.js';
 import { getCollection } from '../data/collectionManager.js';
-import { getCachedSetCards } from '../data/cardPoolManager.js';
+import { getCachedSetCardsMap } from '../data/cardPoolManager.js';
 import { getAllMarketValues, getMarketValue } from '../data/marketValue.js';
 import { mapPokemonRarity } from '../data/rarityMapper.js';
 import { getCardVisualProfile, normalizeRarityKey } from '../data/cardVisualMapper.js';
@@ -79,11 +79,10 @@ function buildFavoriteRows() {
 
   const rows = [];
   for (const [setId, cards] of Object.entries(collection)) {
-    const cached = getCachedSetCards(setId) || [];
-    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    const cardMap = getCachedSetCardsMap(setId);
     for (const [cardId, entry] of Object.entries(cards)) {
       if (!fav.has(cardId)) continue;
-      const apiCard = byId[cardId];
+      const apiCard = cardMap ? cardMap.get(cardId) : undefined;
       if (!apiCard) continue;
       const profile = apiCard?.visualProfile ?? getCardVisualProfile(apiCard);
       const rarity = normalizeRarityKey(profile.rarity) || 'common';
