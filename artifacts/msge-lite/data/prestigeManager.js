@@ -16,7 +16,7 @@
  */
 
 import { getCollection } from './collectionManager.js';
-import { getCachedSetCards } from './cardPoolManager.js';
+import { getCachedSetCards, getCachedSetCardsMap } from './cardPoolManager.js';
 import { mapPokemonRarity } from './rarityMapper.js';
 import { getClaimedMilestones } from './milestoneManager.js';
 
@@ -62,11 +62,11 @@ export function getPrestigeScore() {
 
   for (const [setId, cards] of Object.entries(collection)) {
     const cached = getCachedSetCards(setId) || [];
-    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    const cardMap = getCachedSetCardsMap(setId);
     const ownedCount = Object.keys(cards).length;
 
     for (const cardId of Object.keys(cards)) {
-      const apiCard = byId[cardId];
+      const apiCard = cardMap ? cardMap.get(cardId) : undefined;
       const tier    = apiCard ? mapPokemonRarity(apiCard.rarity) : 'common';
       score += RARITY_WEIGHT[tier] || 0;
     }

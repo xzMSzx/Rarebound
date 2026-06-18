@@ -185,14 +185,13 @@ export function getOrCreateQuality(setId, cardId, copyN, rarity) {
 }
 
 /** All eligible copies the player owns, derived from collection counts. */
-export function listAllOwnedQuality(getCollectionFn, mapRarityFn, getCachedSetCardsFn) {
+export function listAllOwnedQuality(getCollectionFn, mapRarityFn, getCachedSetCardsMapFn) {
   const out = [];
   const collection = getCollectionFn();
   for (const [setId, cards] of Object.entries(collection)) {
-    const cached = getCachedSetCardsFn(setId) || [];
-    const byId   = Object.fromEntries(cached.map(c => [c.id, c]));
+    const cardMap = getCachedSetCardsMapFn(setId);
     for (const [cardId, entry] of Object.entries(cards)) {
-      const apiCard = byId[cardId];
+      const apiCard = cardMap ? cardMap.get(cardId) : undefined;
       if (!apiCard) continue;
       const tier = mapRarityFn(apiCard.rarity);
       if (!ELIGIBLE_RARITIES.has(tier)) continue;
