@@ -14,3 +14,6 @@
 ## 2024-05-18 - Add aria-labels to settings toggle switches
 **Learning:** Found multiple custom toggle switches (`<input type="checkbox">`) inside the developer diagnostic section without explicitly associated descriptive context strings accessible to screen readers. This pattern is common for custom CSS toggle designs where the visual label isn't directly bound using `for`/`id` or implicitly associated by nesting within a common `<label>`.
 **Action:** Always add descriptive `aria-label` attributes to explicitly define the function (e.g. `aria-label="Toggle Developer Diagnostics"`) when a toggle input lacks a valid explicit or implicit text string association.
+## 2025-05-24 - Accessible Unicode Navigation Buttons
+**Learning:** Using geometric Unicode characters like `←` in buttons (e.g., `← Back`) causes screen readers to awkwardly announce the symbol.
+**Action:** Always define a clear `aria-label` (e.g., `aria-label="Go back"`) for navigation buttons incorporating non-alphanumeric Unicode characters.
