@@ -1,0 +1,11 @@
+--- artifacts/msge-lite/data/agsSubmissionManager.js
++++ artifacts/msge-lite/data/agsSubmissionManager.js
+@@ -48,7 +48,7 @@
+   };
+ }
+
+-function load() {
++export function load() {
+   const result = readJson(STORAGE_KEY, null, isPlainObject);
+   const raw = result.value;
+   if (!raw) {

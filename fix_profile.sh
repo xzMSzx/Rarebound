@@ -1,0 +1,1 @@
+sed -i "s/let activeProfileId = localStorage.getItem('rb_active_profile_id') || 'guest';/let activeProfileId = (typeof localStorage !== 'undefined' ? localStorage.getItem('rb_active_profile_id') : null) || 'guest';/g" artifacts/msge-lite/data/profileStorage.js
