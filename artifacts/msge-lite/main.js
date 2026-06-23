@@ -1057,7 +1057,7 @@ function renderCollectorArchive(el) {
 
   el.innerHTML = `
     <div class="screen-header">
-      <button class="screen-back-btn" id="archive-back-btn">← Back</button>
+      <button class="screen-back-btn" id="archive-back-btn" aria-label="Go back">← Back</button>
       <h2>Collector Archive</h2>
       <div></div>
     </div>
@@ -1125,7 +1125,7 @@ function renderCollectorProgression() {
 
   el.innerHTML = `
     <div class="screen-header">
-      <button class="screen-back-btn" id="progression-back-btn">← Back</button>
+      <button class="screen-back-btn" id="progression-back-btn" aria-label="Go back">← Back</button>
       <h2>Collector Progression</h2>
       <div></div>
     </div>
@@ -1238,7 +1238,7 @@ function renderDuplicateVault() {
 
   el.innerHTML = `
     <div class="screen-header">
-      <button class="screen-back-btn" id="vault-back-btn">← Back</button>
+      <button class="screen-back-btn" id="vault-back-btn" aria-label="Go back">← Back</button>
       <h2>Duplicate Vault</h2>
       <div></div>
     </div>
