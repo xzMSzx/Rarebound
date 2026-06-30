@@ -14,3 +14,6 @@
 ## 2024-05-18 - Add aria-labels to settings toggle switches
 **Learning:** Found multiple custom toggle switches (`<input type="checkbox">`) inside the developer diagnostic section without explicitly associated descriptive context strings accessible to screen readers. This pattern is common for custom CSS toggle designs where the visual label isn't directly bound using `for`/`id` or implicitly associated by nesting within a common `<label>`.
 **Action:** Always add descriptive `aria-label` attributes to explicitly define the function (e.g. `aria-label="Toggle Developer Diagnostics"`) when a toggle input lacks a valid explicit or implicit text string association.
+## 2026-06-30 - Add aria-selected to Custom Tabs
+**Learning:** Elements grouping with `role="tablist"` but omitting `role="tab"` and `aria-selected` on their nested button children fail to provide essential context to screen readers, leaving the tab's current selected state inaccessible.
+**Action:** When creating custom tab interfaces (e.g., using `role="tablist"`), always ensure nested buttons explicitly set `role="tab"` and properly manage `aria-selected` ('true' or 'false') reflecting the active tab state.
