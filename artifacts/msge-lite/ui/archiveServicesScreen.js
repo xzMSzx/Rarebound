@@ -122,7 +122,7 @@ function renderArchiveServicesScreen(hooks) {
 
   screen.innerHTML = `
     <div class="screen-header ags-screen-header ags-screen-header--minimal">
-      <button class="screen-back-btn" id="ags-back-btn">← Back</button>
+      <button class="screen-back-btn" id="ags-back-btn" aria-label="Go back">← Back</button>
       <div class="screen-spacer"></div>
       <div class="screen-spacer"></div>
     </div>
@@ -175,7 +175,7 @@ function renderArchiveServicesScreen(hooks) {
 function renderTabNav({ registry, active, eligible }) {
   const tab = (id, label, count) => `
     <button class="rb-pill ags-tab-pill ${_state.activeTab === id ? 'is-active' : ''}"
-            data-tab="${id}" type="button">
+            data-tab="${id}" type="button" role="tab" aria-selected="${_state.activeTab === id ? 'true' : 'false'}">
       <span class="rb-pill__label">${label}</span>
       <span class="rb-pill__count">${count}</span>
     </button>

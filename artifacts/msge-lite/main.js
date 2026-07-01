@@ -1057,7 +1057,7 @@ function renderCollectorArchive(el) {
 
   el.innerHTML = `
     <div class="screen-header">
-      <button class="screen-back-btn" id="archive-back-btn">← Back</button>
+      <button class="screen-back-btn" id="archive-back-btn" aria-label="Go back">← Back</button>
       <h2>Collector Archive</h2>
       <div></div>
     </div>
@@ -1125,7 +1125,7 @@ function renderCollectorProgression() {
 
   el.innerHTML = `
     <div class="screen-header">
-      <button class="screen-back-btn" id="progression-back-btn">← Back</button>
+      <button class="screen-back-btn" id="progression-back-btn" aria-label="Go back">← Back</button>
       <h2>Collector Progression</h2>
       <div></div>
     </div>
@@ -1238,7 +1238,7 @@ function renderDuplicateVault() {
 
   el.innerHTML = `
     <div class="screen-header">
-      <button class="screen-back-btn" id="vault-back-btn">← Back</button>
+      <button class="screen-back-btn" id="vault-back-btn" aria-label="Go back">← Back</button>
       <h2>Duplicate Vault</h2>
       <div></div>
     </div>
@@ -3212,10 +3212,10 @@ function renderCollectionFilters() {
   const host = document.getElementById('collection-filters');
   if (!host) return;
   host.innerHTML = `
-    <button class="rb-pill collection-filter-pill is-active" data-filter="all"       type="button">All</button>
-    <button class="rb-pill collection-filter-pill"           data-filter="favorites" type="button">★ Favorites</button>
-    <button class="rb-pill collection-filter-pill"           data-filter="wishlist"  type="button">☆ Wishlist</button>
-    <button class="rb-pill collection-filter-pill"           data-filter="archived"  type="button">⬢ Archived</button>
+    <button class="rb-pill collection-filter-pill is-active" data-filter="all"       type="button" role="tab" aria-selected="true">All</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="favorites" type="button" role="tab" aria-selected="false">★ Favorites</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="wishlist"  type="button" role="tab" aria-selected="false">☆ Wishlist</button>
+    <button class="rb-pill collection-filter-pill"           data-filter="archived"  type="button" role="tab" aria-selected="false">⬢ Archived</button>
   `;
   host.querySelectorAll('.collection-filter-pill').forEach(pill => {
     const f = pill.getAttribute('data-filter');
