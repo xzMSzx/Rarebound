@@ -670,7 +670,7 @@ function render() {
 
   screenEl.innerHTML = `
     <div class="screen-header">
-      <button class="screen-back-btn" id="help-back-btn">← Back</button>
+      <button class="screen-back-btn" id="help-back-btn" aria-label="Go back">← Back</button>
       <h2>Help Center</h2>
       <div></div>
     </div>
