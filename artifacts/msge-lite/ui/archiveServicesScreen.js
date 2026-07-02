@@ -122,7 +122,7 @@ function renderArchiveServicesScreen(hooks) {
 
   screen.innerHTML = `
     <div class="screen-header ags-screen-header ags-screen-header--minimal">
-      <button class="screen-back-btn" id="ags-back-btn">← Back</button>
+      <button class="screen-back-btn" id="ags-back-btn" aria-label="Go back">← Back</button>
       <div class="screen-spacer"></div>
       <div class="screen-spacer"></div>
     </div>
