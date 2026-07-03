@@ -175,6 +175,7 @@ function renderArchiveServicesScreen(hooks) {
 function renderTabNav({ registry, active, eligible }) {
   const tab = (id, label, count) => `
     <button class="rb-pill ags-tab-pill ${_state.activeTab === id ? 'is-active' : ''}"
+            role="tab" aria-selected="${_state.activeTab === id ? 'true' : 'false'}"
             data-tab="${id}" type="button">
       <span class="rb-pill__label">${label}</span>
       <span class="rb-pill__count">${count}</span>
