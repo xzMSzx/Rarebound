@@ -5,8 +5,8 @@
  * Persistent archive contributions and prestigious thematic exhibitions.
  */
 
-import { getCollection, decrementCard } from './collectionManager.js';
-import { getCachedSetCards } from './cardPoolManager.js';
+import { getCollection, decrementCard, runWithCollectionCache } from './collectionManager.js';
+import { getCachedSetCardsMap, getCachedSetCards } from './cardPoolManager.js';
 import { mapPokemonRarity } from './rarityMapper.js';
 import { rawCopiesAvailable } from './agsAvailability.js';
 import { addPrestigeBonus } from './prestigeManager.js';
@@ -110,8 +110,8 @@ export function getActiveExhibition() {
 export function matchesMuseumCriteria(setId, cardId, criteria) {
   if (criteria.kind === 'set') return criteria.setIds.includes(setId);
   
-  const cached = getCachedSetCards(setId) || [];
-  const apiCard = cached.find(c => c.id === cardId);
+  const setMap = getCachedSetCardsMap(setId);
+  const apiCard = setMap ? setMap.get(cardId) : null;
   if (!apiCard) return false;
 
   if (criteria.setIds && !criteria.setIds.includes(setId)) return false;
@@ -128,24 +128,26 @@ export function matchesMuseumCriteria(setId, cardId, criteria) {
 }
 
 export function getEligibleMuseumCards(criteria) {
-  const collection = getCollection();
-  const eligible = [];
-  
-  for (const setId of Object.keys(collection)) {
-    for (const cardId of Object.keys(collection[setId])) {
-      const entry = collection[setId][cardId];
-      if (!matchesMuseumCriteria(setId, cardId, criteria)) continue;
-      
-      const rawCount = rawCopiesAvailable(setId, cardId, entry.count);
-      const entryLocked = entry.locked !== false;
-      const available = entryLocked ? Math.max(0, rawCount - 1) : rawCount;
-      
-      if (available > 0) {
-        eligible.push({ setId, cardId, available });
+  return runWithCollectionCache(() => {
+    const collection = getCollection();
+    const eligible = [];
+
+    for (const setId of Object.keys(collection)) {
+      for (const cardId of Object.keys(collection[setId])) {
+        const entry = collection[setId][cardId];
+        if (!matchesMuseumCriteria(setId, cardId, criteria)) continue;
+
+        const rawCount = rawCopiesAvailable(setId, cardId, entry.count);
+        const entryLocked = entry.locked !== false;
+        const available = entryLocked ? Math.max(0, rawCount - 1) : rawCount;
+
+        if (available > 0) {
+          eligible.push({ setId, cardId, available });
+        }
       }
     }
-  }
-  return eligible;
+    return eligible;
+  });
 }
 
 export function contributeToMuseum(setId, cardId) {
