@@ -10,3 +10,6 @@
 ## 2024-05-22 - Operation-Scoped Map Caching in Milestone Manager
 **Learning:** Functions evaluating milestone progress (`countByTiers`, etc.) looped over the whole collection, performing an `Array.find` on set cards for every user card. This resulted in significant O(N^2) overhead during milestone checks.
 **Action:** Replaced `Array.find` with a Map lookup (`_sweepMapCache.get(setId).get(cardId)`). To prevent breaking test state while maintaining performance, the Map cache is lazily initialized and explicitly cleared in the `finally` block of the top-level sweep functions (`getMilestoneStatus`, `getCategoryStatus`), matching the existing `_sweepCollection` paradigm.
+## 2024-07-08 - Array.find vs Map lookup in Museum Manager
+**Learning:** `matchesMuseumCriteria` in `artifacts/msge-lite/data/museumManager.js` performs `cached.find(c => c.id === cardId)` for every item in the collection during `getEligibleMuseumCards`. This resulted in O(N^2) overhead.
+**Action:** Replaced `Array.find` with a Map lookup (`setMap.get(cardId)`). The Map is lazily fetched via `getCachedSetCardsMap(setId)` once per set, rather than per card. To prevent breaking state-dependent vitest tests, wrap `getEligibleMuseumCards` in `runWithCollectionCache()` to ensure O(1) collection lookup and minimal JSON parsing, following codebase patterns.
