@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b1118">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TNT Territory Optimizer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+<canvas id="map"></canvas>
+<div class="topbar">
+  <button id="menuBtn" class="iconbtn" aria-label="Menu">☰</button>
+  <div class="pill"><span class="tag">TNT</span><span id="countMeta" class="meta">0/285 banners</span></div>
+  <div class="spacer"></div>
+  <button id="undoBtn" class="iconbtn" aria-label="Undo">↶</button>
+  <button id="redoBtn" class="iconbtn" aria-label="Redo">↷</button>
+  <div id="dataPill" class="pill"><span id="dataDot" class="status-dot"></span><span id="dataText" class="meta">map data…</span></div>
+</div>
+<div id="coordHud" class="coordhud">X:600 Y:600 · 100%</div>
+<div class="legend"><div class="badge">🟢 keep · 🔵 build · 🔴 disconnected</div><div class="badge">tap facility = target</div></div>
+<div class="bottom"><div class="toolbar">
+  <button class="tool on" data-tool="pan"><span class="ico">✋</span><span>MOVE</span><small>pan/select</small></button>
+  <button class="tool" data-tool="hq"><span class="ico">🏰</span><span>HQ</span><small>max 2</small></button>
+  <button class="tool" data-tool="banner"><span class="ico">🚩</span><span>BANNER</span><small>existing</small></button>
+  <button class="tool" data-tool="target"><span class="ico">🎯</span><span>TARGET</span><small>outpost</small></button>
+  <button id="optBtn" class="tool optimize"><span class="ico">⚡</span><span>OPTIMISE</span><small>fewest banners</small></button>
+</div></div>
+<div id="drawer" class="drawer">
+  <button id="closeDrawer" class="iconbtn close">×</button>
+  <h2>TNT Territory Optimizer</h2><div class="sub">Mobile-first planner for Kingshot banner routing. Exact game coordinates, facility no-build zones, connected-territory validation, and resource-aware route planning.</div>
+  <div class="section"><div class="section-title">Quick actions</div><div class="row wrap">
+    <button id="coordBtn" class="secondary">⌖ Add by coordinate</button><button id="facilityBtn" class="secondary">🏛 Find facility</button><button id="fitBtn" class="secondary">◎ Fit plan</button>
+  </div></div>
+  <div class="section"><div class="section-title">Route objective</div>
+    <div class="switchrow"><span>Prefer resource-rich ties</span><input id="resourceAware" type="checkbox" checked></div>
+    <div class="switchrow"><span>Use existing TNT banners as free anchors</span><input id="useExisting" type="checkbox" checked></div>
+    <div class="switchrow"><span>Show planned territory</span><input id="showPlanTerr" type="checkbox" checked></div>
+  </div>
+  <div class="section"><div class="section-title">Map layers</div>
+    <div class="switchrow"><span>Permanent facilities</span><input id="showStruct" type="checkbox" checked></div>
+    <div class="switchrow"><span>No-build zones</span><input id="showFZones" type="checkbox" checked></div>
+    <div class="switchrow"><span>Resource nodes</span><input id="showNodes" type="checkbox" checked></div>
+    <div class="switchrow"><span>Mountains / lakes</span><input id="showTerrain" type="checkbox" checked></div>
+    <div class="switchrow"><span>Zone rings</span><input id="showZones" type="checkbox" checked></div>
+    <div class="switchrow"><span>Coordinate grid</span><input id="showGrid" type="checkbox" checked></div>
+  </div>
+  <div class="section"><div class="section-title">Kingshot geometry</div>
+    <div class="row"><div class="field"><label>Banner territory radius</label><input id="bannerRadius" type="number" min="1" max="10" value="3"></div><div class="field"><label>HQ territory radius</label><input id="hqRadius" type="number" min="1" max="15" value="6"></div></div>
+    <div class="row" style="margin-top:8px"><div class="field"><label>Max banner link step</label><input id="linkReach" type="number" min="2" max="12" value="7"></div><div class="field"><label>Resource coverage %</label><input id="resourcePct" type="number" min="50" max="100" value="75"></div></div>
+    <div class="sub" style="margin-top:7px">Defaults follow the community-calibrated 1×1 banner +3 territory model. The exact geometry remains editable because community map authors note some sizes vary by server generation.</div>
+  </div>
+  <div class="section"><div class="section-title">Bulk entry</div><div class="field"><label>Paste one item per line: <span class="kbd">HQ x y</span>, <span class="kbd">B x y</span>, or <span class="kbd">T x y</span></label><textarea id="bulkText" placeholder="HQ 415 203\nB 422 203\nB 429 203\nT 486 327"></textarea></div><button id="bulkBtn" class="primary" style="width:100%;margin-top:7px">Import coordinates</button></div>
+  <div class="section"><div class="section-title">Plan data</div><div class="row wrap"><button id="saveBtn" class="secondary">💾 Export JSON</button><button id="loadBtn" class="secondary">📥 Import JSON</button><button id="pngBtn" class="secondary">🖼 PNG</button><button id="resetBtn" class="danger">Clear plan</button><input id="fileInput" type="file" accept="application/json,.json" hidden></div></div>
+  <div class="section"><div class="section-title">Verified rules & sources</div>
+    <div class="rule"><b>Official:</b> a target facility can be attacked when it is adjacent to existing alliance territory/HQ; otherwise territory must be extended to it.</div>
+    <div class="rule"><b>Official:</b> ≥75% of an Alliance resource mine must be inside alliance territory to produce resources.</div>
+    <div class="rule"><b>In-game help/community transcription:</b> new Banners must be connected to existing alliance territory and all active banners must remain contiguous back to an HQ.</div>
+    <div class="rule community"><b>Community-calibrated geometry:</b> map footprints, rings and no-build zones are based on Biggs/ksmapper data. Biggs marks adjustable sizes because server generations can vary.</div>
+    <div class="source">Sources: <a target="_blank" href="https://centurygames.helpshift.com/hc/en/140-kingshot/faq/9394-is-it-required-to-build-alliance-banners-next-to-the-structures-to-be-attacked/">Kingshot Help — facility adjacency</a> · <a target="_blank" href="https://centurygames.helpshift.com/hc/en/140-kingshot/faq/9400-do-i-get-access-to-the-nearby-alliance-resource-points-just-by-building-an-alliance-banner/">Kingshot Help — 75% resource rule</a> · <a target="_blank" href="https://github.com/Bleezy-D/Alliance-Layout-Planner">Biggs Alliance Layout Planner (MIT)</a> · <a target="_blank" href="https://kingshot.fandom.com/wiki/Territory">Territory help transcription</a>.</div>
+  </div>
+</div>
+<div id="sheet" class="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
+<div id="modalWrap" class="modalwrap"><div class="modal"><button id="closeModal" class="iconbtn close">×</button><div id="modalBody"></div></div></div>
+<div id="toast" class="toast"></div>
+</div>
+<script src="map.js"></script>
+<script src="app1.js"></script>
+<script src="app2.js"></script>
+<script src="app3.js"></script>
+<script src="app4.js"></script>
+<script src="app5.js"></script>
+</body>
+</html>
